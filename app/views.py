@@ -9,12 +9,20 @@ from .models import *
 def index(request):
     return HttpResponse("Hello")
 
+# Renders the login page
 def login():
     pass
 
+# Renders the register page
 def register():
     pass
 
+# Renders the error page
+def error():
+    pass
+
+# Renders the diary page
 def diary():
     pass
+
 
