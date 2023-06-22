@@ -70,13 +70,23 @@ class User(AbstractUser):
 
 # Food class has data about the amount of calories, macronutrients, and nutrients.
 class Food(models.Model):
-    name = models.CharField()
+    name = models.CharField(max_length=64)
+    protein = models.FloatField()
+    carb = models.FloatField()
+    fat = models.FloatField()
+
+    note = models.TextField()
+
+    def get_calories(self):
+        pass
 
 
 
 # A collection of Food
 class Recipe(models.Model):
-    pass
+    name = models.CharField()
+    foods = models.ManyToManyField(Food, blank=False)
+    note = models.TextField()
 
 
 # DailyEntry contains information about your total calories intake for the day, exercised, etc.
