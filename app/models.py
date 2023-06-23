@@ -84,16 +84,17 @@ class MeasureUnit(models.Model):
 
 
 class FoodPortion(models.Model):
-    pass
+    # An id of the food in FDC database
+    fdc_id = models.IntegerField()
+    measure_unit_id = models.IntegerField()
 
 
 # Food class has data about the amount of calories, macronutrients, and nutrients.
 class Food(models.Model):
+    # An id of the food in FDC database
     fdc_id = models.IntegerField()
-    name = models.CharField(max_length=64)
-    protein = models.FloatField()
-    carb = models.FloatField()
-    fat = models.FloatField()
+    # Description of the food (i.e. its name)
+    description = models.CharField(max_length=64)
 
     note = models.TextField()
 
