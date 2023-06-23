@@ -73,11 +73,23 @@ class User(AbstractUser):
 
 # Nutrient is made as a model because there are hundreds of nutrients
 class Nutrient(models.Model):
+    name = models.CharField(max_length=64)
+    # The standard unit of measure for the nutrient (per 100g of food)
+    unit_name = models.CharField(max_length=32)
+
+
+# MeasureUnit will store all the names of all the units
+class MeasureUnit(models.Model):
+    unit_name = models.CharField(max_length=32)
+
+
+class FoodPortion(models.Model):
     pass
 
 
 # Food class has data about the amount of calories, macronutrients, and nutrients.
 class Food(models.Model):
+    fdc_id = models.IntegerField()
     name = models.CharField(max_length=64)
     protein = models.FloatField()
     carb = models.FloatField()
@@ -93,7 +105,7 @@ class Food(models.Model):
 
 # A collection of Food
 class Recipe(models.Model):
-    name = models.CharField()
+    name = models.CharField(max_length=64)
     foods = models.ManyToManyField(Food, blank=False)
     note = models.TextField()
 
