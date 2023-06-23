@@ -2,6 +2,8 @@ from django.utils.translation import gettext_lazy as _
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 
+# Calories here means kcal
+
 # A shorthand for each unit
 UNIT_CHOICES = (("cm", "centimeters"), ("kg", "kilograms"), ("in", "inches"), ("ft", "feet"), ("lbs", "pounds"))
 
@@ -63,9 +65,15 @@ class User(AbstractUser):
     def get_bmi(self):
         return self.weight / pow((self.height * unit_conversions[("cm", "m")]), 2)
 
+    # Return calories as a float
     def get_calories(self):
         # TODO
         pass
+
+
+# Nutrient is made as a model because there are hundreds of nutrients
+class Nutrient(models.Model):
+    pass
 
 
 # Food class has data about the amount of calories, macronutrients, and nutrients.
@@ -77,6 +85,7 @@ class Food(models.Model):
 
     note = models.TextField()
 
+    # Return calories as a float
     def get_calories(self):
         pass
 
