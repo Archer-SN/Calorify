@@ -65,23 +65,9 @@ class User(AbstractUser):
     def get_bmi(self):
         return self.weight / pow((self.height * unit_conversions[("cm", "m")]), 2)
 
-    # Return calories as a float
-    def get_calories(self):
+    # Return TDEE as a float
+    def get_tdee(self):
         # TODO
-        pass
-
-
-# Food class has data about the amount of calories, macronutrients, and nutrients.
-class Food(models.Model):
-    # An id of the food in FDC database
-    fdc_id = models.IntegerField(primary_key=True)
-    # Description of the food (i.e. its name)
-    description = models.CharField(max_length=64)
-
-    note = models.TextField()
-
-    # Return calories as a float
-    def get_calories(self):
         pass
 
 
@@ -90,6 +76,37 @@ class Nutrient(models.Model):
     name = models.CharField(max_length=64)
     # The standard unit of measure for the nutrient (per 100g of food)
     unit_name = models.CharField(max_length=32)
+
+
+# Top level type for all types of nutrient converter.
+# There are 3 types: fat, protein, carbohydrates
+# Nutrient converter converts micronutrients to macronutrients
+class FoodNutrientConverter(models.Model):
+    pass
+
+
+# This contains the multiplication factors that will be used
+# when calculating energy from macronutrients for a specific food
+class FoodCalorieConverter(models.Model):
+    food_nutrient_conversion_factor = models.ForeignKey(FoodNutrientConverter, on_delete=models.CASCADE)
+    # The multiplication factors for each macronutrient
+    protein_value = models.FloatField()
+    fat_value = models.FloatField()
+    carbohydrate_value = models.FloatField()
+
+
+# Food class has data about the amount of calories, macronutrients, and nutrients.
+class Food(models.Model):
+    # An id of the food in FDC database
+    fdc_id = models.IntegerField(primary_key=True)
+    # Description of the food (i.e. its name)
+    description = models.CharField(max_length=64)
+    note = models.TextField()
+    food_nutrient = models.OneToOneField(FoodNutrientConverter, related_name="food")
+
+    # Return calories as a float
+    def get_calories(self):
+        pass
 
 
 # MeasureUnit will store all the names of all the units
@@ -103,24 +120,6 @@ class FoodNutrient(models.Model):
     # The nutrient of which the food nutrient pertains
     nutrient = models.ManyToManyField(Nutrient, related_name="food_nutrient", on_delete=models.CASCADE)
     amount = models.FloatField()
-
-# Top level type for all types of nutrient converter.
-# There are 3 types: fat, protein, carbohydrates
-# Nutrient converter converts micronutrients to macronutrients
-class FoodNutrientConverter(models.Model):
-    food = models.OneToOneField(Food, related_name="food_nutrient_conversion_factor",on_delete=models.CASCADE)
-
-
-# This contains the multiplication factors that will be used
-# when calculating energy from macronutrients for a specific food
-class FoodCalorieConverter(models.Model):
-    food_nutrient_conversion_factor = models.ForeignKey(FoodNutrientConverter, on_delete=models.CASCADE)
-    # The multiplication factors for each macronutrient
-    protein_value = models.FloatField()
-    fat_value = models.FloatField()
-    carbohydrate_value = models.FloatField()
-
-
 
 
 # This model store the portion of each food
@@ -153,7 +152,7 @@ class Recipe(models.Model):
 # DailyEntry contains information about your total calories intake for the day, exercised, etc.
 class DailyEntry(models.Model):
     food = models.ManyToManyField(Food, blank=True)
-
+    date = models.DateField()
     # TODO: Track Macronutrients
     # TODO: Return the total calories consumed
     def total_calories(self):
