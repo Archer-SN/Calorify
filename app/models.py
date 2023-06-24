@@ -71,6 +71,20 @@ class User(AbstractUser):
         pass
 
 
+# Food class has data about the amount of calories, macronutrients, and nutrients.
+class Food(models.Model):
+    # An id of the food in FDC database
+    fdc_id = models.IntegerField(primary_key=True)
+    # Description of the food (i.e. its name)
+    description = models.CharField(max_length=64)
+
+    note = models.TextField()
+
+    # Return calories as a float
+    def get_calories(self):
+        pass
+
+
 # Nutrient is made as a model because there are hundreds of nutrients
 class Nutrient(models.Model):
     name = models.CharField(max_length=64)
@@ -83,34 +97,50 @@ class MeasureUnit(models.Model):
     unit_name = models.CharField(max_length=32)
 
 
-# This model store the portion of each food
-class FoodPortion(models.Model):
-    # An id of the food in FDC database
-    fdc_id = models.IntegerField()
-    measure_unit_id = models.IntegerField()
-
+# A nutrient value for each food
+class FoodNutrient(models.Model):
+    food = models.ForeignKey(Food, related_name="food_nutrient", on_delete=models.CASCADE)
+    # The nutrient of which the food nutrient pertains
+    nutrient = models.ManyToManyField(Nutrient, related_name="food_nutrient", on_delete=models.CASCADE)
     amount = models.FloatField()
 
+# Top level type for all types of nutrient converter.
+# There are 3 types: fat, protein, carbohydrates
+# Nutrient converter converts micronutrients to macronutrients
+class FoodNutrientConverter(models.Model):
+    food = models.OneToOneField(Food, related_name="food_nutrient_conversion_factor",on_delete=models.CASCADE)
 
+
+# This contains the multiplication factors that will be used
+# when calculating energy from macronutrients for a specific food
+class FoodCalorieConverter(models.Model):
+    food_nutrient_conversion_factor = models.ForeignKey(FoodNutrientConverter, on_delete=models.CASCADE)
+    # The multiplication factors for each macronutrient
+    protein_value = models.FloatField()
+    fat_value = models.FloatField()
+    carbohydrate_value = models.FloatField()
+
+
+
+
+# This model store the portion of each food
+class FoodPortion(models.Model):
+    # The food that this portion relates to
+    food = models.ForeignKey(Food, related_name="food_portion", on_delete=models.CASCADE)
+    measure_unit_id = models.IntegerField()
+    # Amount of the food
+    amount = models.FloatField()
+    portion_description = models.CharField(max_length=64)
+    # Weight of the food portion in gram
+    gram_weight = models.FloatField()
+
+
+# The category of food
 class FoodCategory(models.Model):
     # The name of the category
     description = models.CharField(max_length=64)
     # Food group code
     code = models.IntegerField()
-
-
-# Food class has data about the amount of calories, macronutrients, and nutrients.
-class Food(models.Model):
-    # An id of the food in FDC database
-    fdc_id = models.IntegerField()
-    # Description of the food (i.e. its name)
-    description = models.CharField(max_length=64)
-
-    note = models.TextField()
-
-    # Return calories as a float
-    def get_calories(self):
-        pass
 
 
 # A collection of Food
