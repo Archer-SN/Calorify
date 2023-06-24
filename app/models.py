@@ -83,10 +83,20 @@ class MeasureUnit(models.Model):
     unit_name = models.CharField(max_length=32)
 
 
+# This model store the portion of each food
 class FoodPortion(models.Model):
     # An id of the food in FDC database
     fdc_id = models.IntegerField()
     measure_unit_id = models.IntegerField()
+
+    amount = models.FloatField()
+
+
+class FoodCategory(models.Model):
+    # The name of the category
+    description = models.CharField(max_length=64)
+    # Food group code
+    code = models.IntegerField()
 
 
 # Food class has data about the amount of calories, macronutrients, and nutrients.
@@ -103,7 +113,6 @@ class Food(models.Model):
         pass
 
 
-
 # A collection of Food
 class Recipe(models.Model):
     name = models.CharField(max_length=64)
@@ -114,8 +123,8 @@ class Recipe(models.Model):
 # DailyEntry contains information about your total calories intake for the day, exercised, etc.
 class DailyEntry(models.Model):
     food = models.ManyToManyField(Food, blank=True)
+
     # TODO: Track Macronutrients
     # TODO: Return the total calories consumed
     def total_calories(self):
         pass
-
