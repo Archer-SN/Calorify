@@ -51,8 +51,8 @@ with open(FOOD_NUTRIENT_CF_PATH) as f:
     reader = csv.reader(f)
     for row in reader:
         if row[0] != "id":
-            food_nutrient_cf, created = FoodNutrientConversionFactor.objects.get_or_create(id=row[0])
-            food_nutrient_cf.add(Food.objects.get(fdc_id=row[1]))
+            food = Food.objects.get(fdc_id=row[1])
+            food_nutrient_cf, created = FoodNutrientConversionFactor.objects.get_or_create(id=row[0], food=food)
 
 # Populate FoodFatConversionFactor models
 # Not sure whether this file exists (It is not in FDC_data folder)
@@ -67,33 +67,43 @@ with open(FOOD_PROTEIN_CF_PATH) as f:
     reader = csv.reader(f)
     for row in reader:
         if row[0] != "food_nutrient_conversion_factor_id":
-            food_protein_cf, created = FoodProteinConversionFactor.objects.get_or_create(value=row[1])
-            food_protein_cf.add(FoodNutrientConversionFactor.objects.get(id=row[0]))
+            food_nutrient_cf = FoodNutrientConversionFactor.objects.get(id=row[0])
+            food_protein_cf, created = FoodProteinConversionFactor.objects.get_or_create(food_nutrient_cf=food_nutrient_cf,value=row[1])
 
 # Populate FoodCalorieConversionFactor models
 with open(FOOD_CALORIE_CF_PATH) as f:
     reader = csv.reader(f)
     for row in reader:
-        if row[0] != "id":
-            _, created =
+        if row[0] != "food_nutrient_conversion_factor_id":
+            food_nutrient_cf = FoodNutrientConversionFactor.objects.get(id=row[0])
+            food_calorie_cf, created = FoodCalorieConversionFactor.objects.get_or_create(
+                food_nutrient_cf=food_nutrient_cf, protein_value=row[1],
+                fat_value=row[2],
+                carbohydrate_value=row[3])
 
 # Populate MeasureUnit models
 with open(MEASURE_UNIT_PATH) as f:
     reader = csv.reader(f)
     for row in reader:
         if row[0] != "id":
-            _, created =
+            _, created = MeasureUnit.objects.get_or_create(id=row[0], unit_name=row[1])
 
 # Populate FoodPortion models
 with open(FOOD_PORTION_PATH) as f:
     reader = csv.reader(f)
     for row in reader:
         if row[0] != "id":
-            _, created =
+            food = Food.objects.get(fdc_id=row[1])
+            food_portion, created = FoodPortion.objects.get_or_create(id=row[0], food=food, amount=row[3],
+                                                                      measure_unit_id=row[4],
+                                                                      portion_description=row[5], gram_weight=row[7])
 
 # Populate FoodNutrient models
 with open(FOOD_NUTRIENT_PATH) as f:
     reader = csv.reader(f)
     for row in reader:
         if row[0] != "id":
-            _, created =
+            nutrient = Nutrient.objects.get(id=row[2])
+            food = Food.objects.get(fdc_id=row[1])
+            food_nutrient, created = FoodNutrient.objects.get_or_create(id=row[0], amount=row[3], nutrient=nutrient,
+                                                                        food=food)

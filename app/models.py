@@ -110,19 +110,21 @@ class FoodNutrientConversionFactor(models.Model):
 
 
 class FoodFatConversionFactor(models.Model):
-    food_nutrient_converter = models.OneToOneField(FoodNutrientConversionFactor, related_name="food_fat_converter",
+    food_nutrient_cf = models.OneToOneField(FoodNutrientConversionFactor, related_name="food_fat_converter",
                                                    on_delete=models.CASCADE)
+    value = models.FloatField()
 
 
 class FoodProteinConversionFactor(models.Model):
-    food_nutrient_converter = models.OneToOneField(FoodNutrientConversionFactor, related_name="food_protein_converter",
+    food_nutrient_cf = models.OneToOneField(FoodNutrientConversionFactor, related_name="food_protein_converter",
                                                    on_delete=models.CASCADE)
+    value = models.FloatField()
 
 
 # This contains the multiplication factors that will be used
 # when calculating energy from macronutrients for a specific food
 class FoodCalorieConversionFactor(models.Model):
-    food_nutrient_conversion_factor = models.OneToOneField(FoodNutrientConversionFactor,
+    food_nutrient_cf = models.OneToOneField(FoodNutrientConversionFactor,
                                                         related_name="food_calorie_converter",
                                                         on_delete=models.CASCADE)
     # The multiplication factors for each macronutrient
