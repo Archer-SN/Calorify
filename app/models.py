@@ -44,7 +44,7 @@ class User(AbstractUser):
     height = models.IntegerField()
     body_fat = models.FloatField()
 
-    activity_level = models.FloatField(choices=ActivityLevel)
+    activity_level = models.FloatField(choices=ActivityLevel.choices)
 
     # TODO : Macronutrients target for protein, carbs, and fats.
 
@@ -105,7 +105,7 @@ class FoodFatConversionFactor(models.Model):
 
 
 class FoodProteinConversionFactor(models.Model):
-    food_nutrient_converter = models.OneToOneField(FoodNutrientConversionFactor, related_name="food_fat_converter",
+    food_nutrient_converter = models.OneToOneField(FoodNutrientConversionFactor, related_name="food_protein_converter",
                                                    on_delete=models.CASCADE)
 
 
@@ -129,7 +129,7 @@ class MeasureUnit(models.Model):
 class FoodNutrient(models.Model):
     food = models.ForeignKey(Food, related_name="food_nutrient", on_delete=models.CASCADE)
     # The nutrient of which the food nutrient pertains
-    nutrient = models.ManyToManyField(Nutrient, related_name="food_nutrient", on_delete=models.CASCADE)
+    nutrient = models.ManyToManyField(Nutrient, related_name="food_nutrient")
     # The amount of the nutrient in food per 100g
     amount = models.FloatField()
 
