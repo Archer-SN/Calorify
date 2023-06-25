@@ -44,7 +44,7 @@ with open(FOOD_PATH) as f:
     for row in reader:
         if row[0] != "fdc_id":
             food, created = Food.objects.get_or_create(fdc_id=row[0], description=row[2])
-            food.add(FoodCategory.objects.get(id=row[3]))
+            food.food_category.add(FoodCategory.objects.get(id=row[3]))
 
 # Populate FoodNutrientConversionFactor models
 with open(FOOD_NUTRIENT_CF_PATH) as f:
