@@ -79,18 +79,28 @@ class Nutrient(models.Model):
     unit_name = models.CharField(max_length=32)
 
 
+# The category of food
+class FoodCategory(models.Model):
+    # The name of the category
+    description = models.CharField(max_length=64)
+    # Food group code
+    code = models.IntegerField()
+
+
 # Food class has data about the amount of calories, macronutrients, and nutrients.
 class Food(models.Model):
     # An id of the food in FDC database
-    fdc_id = models.IntegerField(primary_key=True)
+    fdc_id = models.BigAutoField(primary_key=True)
     # Description of the food (i.e. its name)
     description = models.CharField(max_length=64)
+    food_category = models.ManyToManyField(FoodCategory)
     note = models.TextField()
 
     # Return calories as a float
     # TODO
     def get_calories(self):
         pass
+
 
 # Top level type for all types of nutrient converter.
 # There are 3 types: fat, protein, carbohydrates
@@ -112,7 +122,8 @@ class FoodProteinConversionFactor(models.Model):
 # This contains the multiplication factors that will be used
 # when calculating energy from macronutrients for a specific food
 class FoodCalorieConversionFactor(models.Model):
-    food_nutrient_conversion_factor = models.ForeignKey(FoodNutrientConversionFactor, related_name="food_calorie_converter",
+    food_nutrient_conversion_factor = models.OneToOneField(FoodNutrientConversionFactor,
+                                                        related_name="food_calorie_converter",
                                                         on_delete=models.CASCADE)
     # The multiplication factors for each macronutrient
     protein_value = models.FloatField()
@@ -144,14 +155,6 @@ class FoodPortion(models.Model):
     portion_description = models.CharField(max_length=64)
     # Weight of the food portion in gram
     gram_weight = models.FloatField()
-
-
-# The category of food
-class FoodCategory(models.Model):
-    # The name of the category
-    description = models.CharField(max_length=64)
-    # Food group code
-    code = models.IntegerField()
 
 
 # A collection of Food
