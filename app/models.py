@@ -79,6 +79,9 @@ class Nutrient(models.Model):
     # The standard unit of measure for the nutrient (per 100g of food)
     unit_name = models.CharField(max_length=32)
 
+    def __self__(self):
+        return self.name
+
 
 # The category of food
 class FoodCategory(models.Model):
