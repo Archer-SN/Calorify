@@ -7,7 +7,7 @@ from .models import *
 # This function handles the index page
 # It just renders a html file
 def index(request):
-    return HttpResponse(Nutrient.objects.get(id=1004).name)
+    return HttpResponse(Nutrient.objects.all())
 
 # Renders the login page
 def login():
