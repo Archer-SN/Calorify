@@ -57,8 +57,11 @@ with open(FOOD_NUTRIENT_CF_PATH) as f:
     reader = csv.reader(f)
     for row in reader:
         if row[0] != "id":
-            food = Food.objects.get(fdc_id=row[1])
-            food_nutrient_cf, created = FoodNutrientConversionFactor.objects.get_or_create(id=row[0], food=food)
+            try:
+                food = Food.objects.get(fdc_id=row[1])
+                food_nutrient_cf, created = FoodNutrientConversionFactor.objects.get_or_create(id=row[0], food=food)
+            except Food.DoesNotExist:
+                food_nutrient_cf, created = FoodNutrientConversionFactor.objects.get_or_create(id=row[0])
 
 print("FoodNutrientConversionFactor Done!")
 
@@ -91,7 +94,9 @@ with open(FOOD_CALORIE_CF_PATH) as f:
                 food_nutrient_cf=food_nutrient_cf, protein_value=row[1],
                 fat_value=row[2],
                 carbohydrate_value=row[3])
+
 print("FoodCalorieConversionFactor Done!")
+
 # Populate MeasureUnit models
 with open(MEASURE_UNIT_PATH) as f:
     reader = csv.reader(f)
@@ -106,10 +111,17 @@ with open(FOOD_PORTION_PATH) as f:
     reader = csv.reader(f)
     for row in reader:
         if row[0] != "id":
-            food = Food.objects.get(fdc_id=row[1])
-            food_portion, created = FoodPortion.objects.get_or_create(id=row[0], food=food, amount=row[3],
-                                                                      measure_unit_id=row[4],
-                                                                      portion_description=row[5], gram_weight=row[7])
+            try:
+                food = Food.objects.get(fdc_id=row[1])
+                food_portion, created = FoodPortion.objects.get_or_create(id=row[0], food=food, amount=row[3],
+                                                                          measure_unit_id=row[4],
+                                                                          portion_description=row[5],
+                                                                          gram_weight=row[7])
+            except Food.DoesNotExist:
+                food_portion, created = FoodPortion.objects.get_or_create(id=row[0], amount=row[3],
+                                                                          measure_unit_id=row[4],
+                                                                          portion_description=row[5],
+                                                                          gram_weight=row[7])
 
 print("FoodPortion Done!")
 
@@ -119,9 +131,13 @@ with open(FOOD_NUTRIENT_PATH) as f:
     for row in reader:
         if row[0] != "id":
             nutrient = Nutrient.objects.get(id=row[2])
-            food = Food.objects.get(fdc_id=row[1])
-            food_nutrient, created = FoodNutrient.objects.get_or_create(id=row[0], amount=row[3], nutrient=nutrient,
-                                                                        food=food)
+            try:
+                food = Food.objects.get(fdc_id=row[1])
+                food_nutrient, created = FoodNutrient.objects.get_or_create(id=row[0], amount=row[3], nutrient=nutrient,
+                                                                            food=food)
+            except Food.DoesNotExist:
+                food_nutrient, created = FoodNutrient.objects.get_or_create(id=row[0], amount=row[3], nutrient=nutrient,
+                                                                            )
 
 print("FoodNutrient Done!")
 print("Done!")
