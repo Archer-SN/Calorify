@@ -110,18 +110,19 @@ class Food(models.Model):
 # There are 3 types: fat, protein, carbohydrates
 # Nutrient converter converts micronutrients to macronutrients
 class FoodNutrientConversionFactor(models.Model):
-    food = models.OneToOneField(Food, related_name="food_nutrient_converter", on_delete=models.CASCADE)
+    food = models.OneToOneField(Food, blank=True, related_name="food_nutrient_converter", on_delete=models.CASCADE)
 
 
 class FoodFatConversionFactor(models.Model):
-    food_nutrient_cf = models.OneToOneField(FoodNutrientConversionFactor, related_name="food_fat_converter",
-                                                   on_delete=models.CASCADE)
+    food_nutrient_cf = models.OneToOneField(FoodNutrientConversionFactor, blank=True, related_name="food_fat_converter",
+                                            on_delete=models.CASCADE)
     value = models.FloatField()
 
 
 class FoodProteinConversionFactor(models.Model):
-    food_nutrient_cf = models.OneToOneField(FoodNutrientConversionFactor, related_name="food_protein_converter",
-                                                   on_delete=models.CASCADE)
+    food_nutrient_cf = models.OneToOneField(FoodNutrientConversionFactor, blank=True,
+                                            related_name="food_protein_converter",
+                                            on_delete=models.CASCADE)
     value = models.FloatField()
 
 
@@ -129,8 +130,9 @@ class FoodProteinConversionFactor(models.Model):
 # when calculating energy from macronutrients for a specific food
 class FoodCalorieConversionFactor(models.Model):
     food_nutrient_cf = models.OneToOneField(FoodNutrientConversionFactor,
-                                                        related_name="food_calorie_converter",
-                                                        on_delete=models.CASCADE)
+                                            blank=True,
+                                            related_name="food_calorie_converter",
+                                            on_delete=models.CASCADE)
     # The multiplication factors for each macronutrient
     protein_value = models.FloatField()
     fat_value = models.FloatField()
@@ -144,7 +146,7 @@ class MeasureUnit(models.Model):
 
 # A nutrient value for each food
 class FoodNutrient(models.Model):
-    food = models.ForeignKey(Food, related_name="food_nutrient", on_delete=models.CASCADE)
+    food = models.ForeignKey(Food, blank=True, related_name="food_nutrient", on_delete=models.CASCADE)
     # The nutrient of which the food nutrient pertains
     nutrient = models.ManyToManyField(Nutrient, related_name="food_nutrient")
     # The amount of the nutrient in food per 100g
@@ -154,7 +156,7 @@ class FoodNutrient(models.Model):
 # This model store the default portion of each food
 class FoodPortion(models.Model):
     # The food that this portion relates to
-    food = models.ForeignKey(Food, related_name="food_portion", on_delete=models.CASCADE)
+    food = models.ForeignKey(Food, blank=True, related_name="food_portion", on_delete=models.CASCADE)
     measure_unit_id = models.IntegerField()
     # Amount of the food
     amount = models.FloatField()
