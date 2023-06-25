@@ -2,6 +2,7 @@ from django.utils.translation import gettext_lazy as _
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from math import floor
+from datetime import datetime
 
 # Calories here means kcal
 
@@ -168,7 +169,7 @@ class Recipe(models.Model):
 
 # DailyEntry contains information about your total calories intake for the day, exercised, etc.
 class DailyEntry(models.Model):
-    date = models.DateField()
+    date = models.DateField(default=datetime.now())
 
     # TODO: Track Macronutrients
     # TODO: Return the total calories consumed
