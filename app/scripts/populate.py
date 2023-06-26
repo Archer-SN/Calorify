@@ -15,8 +15,8 @@ FOOD_PATH = FDC_DATA_PATH + "food.csv"
 FOOD_NUTRIENT_CF_PATH = FDC_DATA_PATH + "food_nutrient_conversion_factor.csv"
 FOOD_FAT_CF_PATH = FDC_DATA_PATH + "foot_fat_conversion_factor.csv"
 FOOD_PROTEIN_CF_PATH = FDC_DATA_PATH + "food_protein_conversion_factor.csv"
-FOOD_CALORIE_CF_PATH = FDC_DATA_PATH + "food_calories_conversion_factor.csv"
-MEASURE_UNIT_PATH = FDC_DATA_PATH + "measure_unit_path.csv"
+FOOD_CALORIE_CF_PATH = FDC_DATA_PATH + "food_calorie_conversion_factor.csv"
+MEASURE_UNIT_PATH = FDC_DATA_PATH + "measure_unit.csv"
 FOOD_NUTRIENT_PATH = FDC_DATA_PATH + "food_nutrient.csv"
 FOOD_PORTION_PATH = FDC_DATA_PATH + "food_portion.csv"
 FOOD_CATEGORY_PATH = FDC_DATA_PATH + "food_category.csv"
@@ -121,6 +121,7 @@ def measure_unit():
 
     print("MeasureUnit Done!")
 
+
 # Populate FoodPortion models
 def food_portion():
     with open(FOOD_PORTION_PATH) as f:
@@ -141,6 +142,7 @@ def food_portion():
 
     print("FoodPortion Done!")
 
+
 # Populate FoodNutrient models
 def food_nutrient():
     with open(FOOD_NUTRIENT_PATH) as f:
@@ -150,24 +152,23 @@ def food_nutrient():
                 nutrient = Nutrient.objects.get(id=row[2])
                 try:
                     food = Food.objects.get(fdc_id=row[1])
-                    food_nutrient, created = FoodNutrient.objects.get_or_create(id=row[0], amount=row[3], nutrient=nutrient,
+                    food_nutrient, created = FoodNutrient.objects.get_or_create(id=row[0], amount=row[3],
                                                                                 food=food)
+                    food_nutrient.nutrient.add(nutrient)
                 except Food.DoesNotExist:
-                    food_nutrient, created = FoodNutrient.objects.get_or_create(id=row[0], amount=row[3], nutrient=nutrient,
+                    food_nutrient, created = FoodNutrient.objects.get_or_create(id=row[0], amount=row[3],
                                                                                 )
+                    food_nutrient.nutrient.add(nutrient)
 
     print("FoodNutrient Done!")
 
 
-nutrient()
-food_category()
-food()
-measure_unit()
-food_portion()
-food_nutrient()
-
-# Buggy
-# TODO: FIX BUG
-food_nutrient()
+#nutrient()
+#food_category()
+#food()
+#measure_unit()
+#food_portion()
+#food_nutrient()
+food_nutrient_cf()
 food_calorie_cf()
 food_protein_cf()

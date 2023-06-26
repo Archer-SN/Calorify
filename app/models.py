@@ -1,4 +1,5 @@
 from django.utils.translation import gettext_lazy as _
+from django.utils import timezone
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from math import floor
@@ -24,6 +25,10 @@ unit_conversions = {
     ("m", "cm"): 100,
 }
 
+PROTEIN_ID = 1003
+TOTAL_LIPIDS_ID = 1004
+CARBS_ID = 1005
+
 
 # Create your models here.
 
@@ -40,17 +45,22 @@ class User(AbstractUser):
     sex = models.CharField(max_length=1, choices=SEX_CHOICES)
 
     # Store weight in kg
-    weight = models.IntegerField()
+    weight = models.IntegerField(default=60)
     # Store height in cm
-    height = models.IntegerField()
-    body_fat = models.FloatField()
+    height = models.IntegerField(default=170)
+    body_fat = models.FloatField(default=15)
+    year_born = models.DateField(default=timezone.now())
 
-    activity_level = models.FloatField(choices=ActivityLevel.choices)
+    activity_level = models.FloatField(choices=ActivityLevel.choices, default=ActivityLevel.SEDENTARY)
 
     # TODO : Macronutrients target for protein, carbs, and fats.
 
     def __str__(self):
         return self.username
+
+    # TODO
+    def age(self):
+        pass
 
     def to_lbs(self):
         return round(self.weight * unit_conversions[("kg", "lbs")])
@@ -67,10 +77,17 @@ class User(AbstractUser):
     def get_bmi(self):
         return self.weight / pow((self.height * unit_conversions[("cm", "m")]), 2)
 
+    # Calculate basal metabolic rate
+    def get_bmr(self):
+        if self.sex == "M":
+            return (10 * self.weight) + (6.25 * self.height) - (5 * self.age()) + 5
+        else:
+            return (10 * self.weight) + (6.25 * self.height) - (5 * self.age()) - 161
+
     # Return TDEE as a float
     def get_tdee(self):
-        # TODO
-        pass
+        bmr = self.get_bmr()
+        return bmr + (bmr * self.activity_level)
 
 
 # Nutrient is made as a model because there are hundreds of nutrients
@@ -100,30 +117,34 @@ class Food(models.Model):
     food_category = models.ManyToManyField(FoodCategory)
     note = models.TextField()
 
-    # Return calories as a float
-    # TODO
-    def get_calories(self):
-        pass
+    def __str__(self):
+        return self.description
+
+    # Returns a dictionary of calorie factors for fat, protein, and carbs
+    def get_calorie_factors(self):
+        return self.food_nutrient_converter.food_calorie_converter.calorie_factorts()
 
 
 # Top level type for all types of nutrient converter.
 # There are 3 types: fat, protein, carbohydrates
 # Nutrient converter converts micronutrients to macronutrients
 class FoodNutrientConversionFactor(models.Model):
-    food = models.OneToOneField(Food, blank=True, related_name="food_nutrient_converter", on_delete=models.CASCADE)
+    food = models.OneToOneField(Food, blank=True, null=True, related_name="food_nutrient_converter",
+                                on_delete=models.CASCADE)
 
 
 class FoodFatConversionFactor(models.Model):
-    food_nutrient_cf = models.OneToOneField(FoodNutrientConversionFactor, blank=True, related_name="food_fat_converter",
+    food_nutrient_cf = models.OneToOneField(FoodNutrientConversionFactor, blank=True, null=True,
+                                            related_name="food_fat_converter",
                                             on_delete=models.CASCADE)
-    value = models.FloatField()
+    value = models.FloatField(null=True, )
 
 
 class FoodProteinConversionFactor(models.Model):
-    food_nutrient_cf = models.OneToOneField(FoodNutrientConversionFactor, blank=True,
+    food_nutrient_cf = models.OneToOneField(FoodNutrientConversionFactor, blank=True, null=True,
                                             related_name="food_protein_converter",
                                             on_delete=models.CASCADE)
-    value = models.FloatField()
+    value = models.FloatField(null=True, )
 
 
 # This contains the multiplication factors that will be used
@@ -131,12 +152,18 @@ class FoodProteinConversionFactor(models.Model):
 class FoodCalorieConversionFactor(models.Model):
     food_nutrient_cf = models.OneToOneField(FoodNutrientConversionFactor,
                                             blank=True,
+                                            null=True,
                                             related_name="food_calorie_converter",
                                             on_delete=models.CASCADE)
     # The multiplication factors for each macronutrient
-    protein_value = models.FloatField()
-    fat_value = models.FloatField()
-    carbohydrate_value = models.FloatField()
+    fat_value = models.FloatField(null=True)
+    protein_value = models.FloatField(null=True)
+    carbohydrate_value = models.FloatField(null=True)
+
+    # Returns a dictionary of calorie factors for fat, protein, and carbs
+    def calorie_factors(self):
+        factors = {"fats": self.fat_value, "protein": self.protein_value, "carbohydrates": self.carbohydrate_value}
+        return factors
 
 
 # MeasureUnit will store all the names of all the units
@@ -174,22 +201,38 @@ class Recipe(models.Model):
 
 # DailyEntry contains information about your total calories intake for the day, exercised, etc.
 class DailyEntry(models.Model):
-    date = models.DateField(default=datetime.now())
+    date = models.DateField(default=timezone.now())
 
     # TODO: Track Macronutrients
     # TODO: Return the total calories consumed
     def total_calories(self):
-        pass
+        total = 0
+        for user_food in UserFood.objects.filter(daily_entry=self):
+            total += user_food.get_calories()
+        return total
 
 
 # Food entry created by the user
-# Nutrient id:  Total lipids: 1004, Protein: 1003, Carbohydrates: 1005
 class UserFood(models.Model):
     food = models.ForeignKey(Food, related_name="user_food", on_delete=models.CASCADE)
     daily_entry = models.ForeignKey(DailyEntry, related_name="user_food", on_delete=models.CASCADE)
     # Food amount in grams
     amount = models.FloatField()
 
-    # TODO
+    # Return the total amount of protein in grams
+    def get_protein(self):
+        return self.food.food_nutrient.objects.get(id=PROTEIN_ID).amount
+
+    # Return the total amount of carbs in grams
+    def get_carbs(self):
+        return self.food.food_nutrient.objects.get(id=CARBS_ID).amount
+
+    # Return the total amount of fat in grams
+    def get_fats(self):
+        return self.food.food_nutrient.objects.get(id=TOTAL_LIPIDS_ID).amount
+
+    # Return the total calories from all macronutrients
     def get_calories(self):
-        pass
+        cf = self.food.get_calorie_factors()
+        return (cf["protein"] * self.get_protein()) + (cf["carbohydrates"] * self.get_carbs()) + (
+                    cf["fats"] * self.get_fats())

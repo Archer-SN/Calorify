@@ -7,7 +7,10 @@ from .models import *
 # This function handles the index page
 # It just renders a html file
 def index(request):
-    return HttpResponse(Nutrient.objects.all())
+    daily_entry = DailyEntry.objects.create()
+    food = Food.objects.get(fdc_id=2514746)
+    user_food = UserFood.objects.create(food=food, daily_entry=daily_entry, amount=100)
+    return HttpResponse(user_food.get_calories())
 
 # Renders the login page
 def login():
