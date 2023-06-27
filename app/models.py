@@ -1,5 +1,4 @@
 from django.utils.translation import gettext_lazy as _
-from django.utils import timezone
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from math import floor
@@ -49,7 +48,7 @@ class User(AbstractUser):
     # Store height in cm
     height = models.IntegerField(default=170)
     body_fat = models.FloatField(default=15)
-    year_born = models.DateField(default=timezone.now())
+    year_born = models.DateField(default=datetime.now)
 
     activity_level = models.FloatField(choices=ActivityLevel.choices, default=ActivityLevel.SEDENTARY)
 
@@ -184,7 +183,7 @@ class FoodNutrient(models.Model):
 class FoodPortion(models.Model):
     # The food that this portion relates to
     food = models.ForeignKey(Food, blank=True, related_name="food_portion", on_delete=models.CASCADE)
-    measure_unit_id = models.IntegerField()
+    measure_unit = models.ForeignKey(MeasureUnit, default=None, null=True, blank=True,related_name="food_portion", on_delete=models.CASCADE)
     # Amount of the food
     amount = models.FloatField()
     portion_description = models.CharField(max_length=64)
@@ -201,7 +200,7 @@ class Recipe(models.Model):
 
 # DailyEntry contains information about your total calories intake for the day, exercised, etc.
 class DailyEntry(models.Model):
-    date = models.DateField(default=timezone.now())
+    date = models.DateField(default=datetime.now)
 
     # TODO: Track Macronutrients
     # TODO: Return the total calories consumed
@@ -215,6 +214,7 @@ class DailyEntry(models.Model):
 # Food entry created by the user
 class UserFood(models.Model):
     food = models.ForeignKey(Food, related_name="user_food", on_delete=models.CASCADE)
+    # The daily entry this food belongs to
     daily_entry = models.ForeignKey(DailyEntry, related_name="user_food", on_delete=models.CASCADE)
     # Food amount in grams
     amount = models.FloatField()

@@ -52,8 +52,11 @@ def food():
         reader = csv.reader(f)
         for row in reader:
             if row[0] != "fdc_id":
-                food, created = Food.objects.get_or_create(fdc_id=row[0], description=row[2])
-                # food.food_category.add(FoodCategory.objects.get(id=row[3]))
+                try:
+                    food, created = Food.objects.get_or_create(fdc_id=row[0], description=row[2])
+                    food.food_category.add(FoodCategory.objects.get(id=row[3]))
+                except FoodCategory.DoesNotExist:
+                    pass
 
     print("Food Done!")
 
@@ -68,8 +71,7 @@ def food_nutrient_cf():
                     food = Food.objects.get(fdc_id=row[1])
                     food_nutrient_cf, created = FoodNutrientConversionFactor.objects.get_or_create(id=row[0], food=food)
                 except Food.DoesNotExist:
-                    food_nutrient_cf, created = FoodNutrientConversionFactor.objects.get_or_create(id=row[0])
-
+                    pass
     print("FoodNutrientConversionFactor Done!")
 
 
@@ -89,9 +91,12 @@ def food_protein_cf():
         reader = csv.reader(f)
         for row in reader:
             if row[0] != "food_nutrient_conversion_factor_id":
-                food_nutrient_cf = FoodNutrientConversionFactor.objects.get(id=row[0])
-                food_protein_cf, created = FoodProteinConversionFactor.objects.get_or_create(
-                    food_nutrient_cf=food_nutrient_cf, value=row[1])
+                try:
+                    food_nutrient_cf = FoodNutrientConversionFactor.objects.get(id=row[0])
+                    food_protein_cf, created = FoodProteinConversionFactor.objects.get_or_create(
+                        food_nutrient_cf=food_nutrient_cf, value=row[1])
+                except FoodNutrientConversionFactor.DoesNotExist:
+                    pass
 
     print("FoodProteinConversionFactor Done!")
 
@@ -102,11 +107,14 @@ def food_calorie_cf():
         reader = csv.reader(f)
         for row in reader:
             if row[0] != "food_nutrient_conversion_factor_id":
-                food_nutrient_cf = FoodNutrientConversionFactor.objects.get(id=row[0])
-                food_calorie_cf, created = FoodCalorieConversionFactor.objects.get_or_create(
-                    food_nutrient_cf=food_nutrient_cf, protein_value=row[1],
-                    fat_value=row[2],
-                    carbohydrate_value=row[3])
+                try:
+                    food_nutrient_cf = FoodNutrientConversionFactor.objects.get(id=row[0])
+                    food_calorie_cf, created = FoodCalorieConversionFactor.objects.get_or_create(
+                        food_nutrient_cf=food_nutrient_cf, protein_value=row[1],
+                        fat_value=row[2],
+                        carbohydrate_value=row[3])
+                except FoodNutrientConversionFactor.DoesNotExist:
+                    pass
 
     print("FoodCalorieConversionFactor Done!")
 
@@ -130,15 +138,15 @@ def food_portion():
             if row[0] != "id":
                 try:
                     food = Food.objects.get(fdc_id=row[1])
+                    measure_unit = MeasureUnit.objects.get(id=row[4])
                     food_portion, created = FoodPortion.objects.get_or_create(id=row[0], food=food, amount=row[3],
-                                                                              measure_unit_id=row[4],
+                                                                              measure_unit_id=measure_unit,
                                                                               portion_description=row[5],
                                                                               gram_weight=row[7])
                 except Food.DoesNotExist:
-                    food_portion, created = FoodPortion.objects.get_or_create(id=row[0], amount=row[3],
-                                                                              measure_unit_id=row[4],
-                                                                              portion_description=row[5],
-                                                                              gram_weight=row[7])
+                    pass
+                except FoodPortion.DoesNotExist:
+                    pass
 
     print("FoodPortion Done!")
 
@@ -149,26 +157,26 @@ def food_nutrient():
         reader = csv.reader(f)
         for row in reader:
             if row[0] != "id":
-                nutrient = Nutrient.objects.get(id=row[2])
                 try:
+                    nutrient = Nutrient.objects.get(id=row[2])
                     food = Food.objects.get(fdc_id=row[1])
                     food_nutrient, created = FoodNutrient.objects.get_or_create(id=row[0], amount=row[3],
                                                                                 food=food)
                     food_nutrient.nutrient.add(nutrient)
                 except Food.DoesNotExist:
-                    food_nutrient, created = FoodNutrient.objects.get_or_create(id=row[0], amount=row[3],
-                                                                                )
-                    food_nutrient.nutrient.add(nutrient)
+                    pass
+                except Nutrient.DoesNotExist:
+                    pass
 
     print("FoodNutrient Done!")
 
 
-#nutrient()
-#food_category()
-#food()
-#measure_unit()
-#food_portion()
-#food_nutrient()
+nutrient()
+food_category()
+food()
+measure_unit()
+food_portion()
+food_nutrient()
 food_nutrient_cf()
 food_calorie_cf()
 food_protein_cf()
