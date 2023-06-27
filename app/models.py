@@ -28,6 +28,10 @@ PROTEIN_ID = 1003
 TOTAL_LIPIDS_ID = 1004
 CARBS_ID = 1005
 
+# The calories, protein, carbs, fat, etc. intake will be based on this amount
+# This is like "per 100g"
+BASE_AMOUNT = 100
+
 
 # Create your models here.
 
@@ -57,9 +61,8 @@ class User(AbstractUser):
     def __str__(self):
         return self.username
 
-    # TODO
     def age(self):
-        pass
+        return datetime.now().year - self.year_born.year
 
     def to_lbs(self):
         return round(self.weight * unit_conversions[("kg", "lbs")])
@@ -183,7 +186,8 @@ class FoodNutrient(models.Model):
 class FoodPortion(models.Model):
     # The food that this portion relates to
     food = models.ForeignKey(Food, blank=True, related_name="food_portion", on_delete=models.CASCADE)
-    measure_unit = models.ForeignKey(MeasureUnit, default=None, null=True, blank=True,related_name="food_portion", on_delete=models.CASCADE)
+    measure_unit = models.ForeignKey(MeasureUnit, default=None, null=True, blank=True, related_name="food_portion",
+                                     on_delete=models.CASCADE)
     # Amount of the food
     amount = models.FloatField()
     portion_description = models.CharField(max_length=64)
@@ -200,15 +204,23 @@ class Recipe(models.Model):
 
 # DailyEntry contains information about your total calories intake for the day, exercised, etc.
 class DailyEntry(models.Model):
+    user = models.ForeignKey(User, null=True, default=None, related_name="user_food", on_delete=models.CASCADE)
     date = models.DateField(default=datetime.now)
 
-    # TODO: Track Macronutrients
-    # TODO: Return the total calories consumed
     def total_calories(self):
         total = 0
         for user_food in UserFood.objects.filter(daily_entry=self):
             total += user_food.get_calories()
         return total
+
+    def total_macro(self):
+        # Total macro in grams
+        total_macro = {"protein": 0, "carbohydrates": 0, "fats": 0}
+        for user_food in UserFood.objects.filter(daily_entry=self):
+            total_macro["protein"] += user_food.get_protein
+            total_macro["carbohydrates"] += user_food.get_carbs
+            total_macro["fats"] += user_food.get_fats
+        return total_macro
 
 
 # Food entry created by the user
@@ -221,18 +233,18 @@ class UserFood(models.Model):
 
     # Return the total amount of protein in grams
     def get_protein(self):
-        return self.food.food_nutrient.objects.get(id=PROTEIN_ID).amount
+        return (self.food.food_nutrient.objects.get(id=PROTEIN_ID).amount / BASE_AMOUNT) * self.amount
 
     # Return the total amount of carbs in grams
     def get_carbs(self):
-        return self.food.food_nutrient.objects.get(id=CARBS_ID).amount
+        return self.food.food_nutrient.objects.get(id=CARBS_ID).amount / BASE_AMOUNT * self.amount
 
     # Return the total amount of fat in grams
     def get_fats(self):
-        return self.food.food_nutrient.objects.get(id=TOTAL_LIPIDS_ID).amount
+        return (self.food.food_nutrient.objects.get(id=TOTAL_LIPIDS_ID).amount / BASE_AMOUNT) * self.amount
 
     # Return the total calories from all macronutrients
     def get_calories(self):
         cf = self.food.get_calorie_factors()
         return (cf["protein"] * self.get_protein()) + (cf["carbohydrates"] * self.get_carbs()) + (
-                    cf["fats"] * self.get_fats())
+                cf["fats"] * self.get_fats())

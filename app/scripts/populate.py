@@ -51,7 +51,7 @@ def food():
     with open(FOOD_PATH) as f:
         reader = csv.reader(f)
         for row in reader:
-            if row[0] != "fdc_id":
+            if row[0] != "fdc_id" and row[3].isnumeric():
                 try:
                     food, created = Food.objects.get_or_create(fdc_id=row[0], description=row[2])
                     food.food_category.add(FoodCategory.objects.get(id=row[3]))
@@ -140,7 +140,7 @@ def food_portion():
                     food = Food.objects.get(fdc_id=row[1])
                     measure_unit = MeasureUnit.objects.get(id=row[4])
                     food_portion, created = FoodPortion.objects.get_or_create(id=row[0], food=food, amount=row[3],
-                                                                              measure_unit_id=measure_unit,
+                                                                              measure_unit=measure_unit,
                                                                               portion_description=row[5],
                                                                               gram_weight=row[7])
                 except Food.DoesNotExist:
