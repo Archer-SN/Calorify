@@ -91,6 +91,16 @@ class User(AbstractUser):
         bmr = self.get_bmr()
         return bmr + (bmr * self.activity_level)
 
+# TODO:
+# Keep
+class WeightHistory:
+    pass
+
+# TODO:
+class Challenge:
+    pass
+
+
 
 # Nutrient is made as a model because there are hundreds of nutrients
 class Nutrient(models.Model):
@@ -191,7 +201,7 @@ class MeasureUnit(models.Model):
 class FoodNutrient(models.Model):
     food = models.ForeignKey(Food, blank=True, related_name="food_nutrient", on_delete=models.CASCADE)
     # The nutrient of which the food nutrient pertains
-    nutrient = models.ManyToManyField(Nutrient, related_name="food_nutrient")
+    nutrient = models.OneToOneField(Nutrient, related_name="food_nutrient", on_delete=models.CASCADE)
     # The amount of the nutrient in food per 100g
     amount = models.FloatField()
 

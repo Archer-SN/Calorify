@@ -161,8 +161,7 @@ def food_nutrient():
                     nutrient = Nutrient.objects.get(id=row[2])
                     food = Food.objects.get(fdc_id=row[1])
                     food_nutrient, created = FoodNutrient.objects.get_or_create(id=row[0], amount=row[3],
-                                                                                food=food)
-                    food_nutrient.nutrient.add(nutrient)
+                                                                                food=food, nutrient=nutrient)
                 except Food.DoesNotExist:
                     pass
                 except Nutrient.DoesNotExist:
@@ -171,12 +170,12 @@ def food_nutrient():
     print("FoodNutrient Done!")
 
 
-#nutrient()
-#food_category()
-#food()
-#measure_unit()
-#food_portion()
-#food_nutrient()
-#food_nutrient_cf()
+nutrient()
+food_category()
+food()
+measure_unit()
+food_portion()
+food_nutrient_cf()
 food_calorie_cf()
 food_protein_cf()
+food_nutrient()
