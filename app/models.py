@@ -122,9 +122,15 @@ class Food(models.Model):
     def __str__(self):
         return self.description
 
+    def has_food_nutrient_converter(self):
+        return hasattr(self, "food_nutrient_converter")
+
     # Returns a dictionary of calorie factors for fat, protein, and carbs
     def get_calorie_factors(self):
-        return self.food_nutrient_converter.food_calorie_converter.calorie_factorts()
+        if self.has_food_nutrient_converter():
+            calorie_factors = self.food_nutrient_converter.food_calorie_converter.calorie_factors()
+            return calorie_factors
+        return FoodCalorieConversionFactor.default_factors()
 
 
 # Top level type for all types of nutrient converter.
@@ -165,6 +171,14 @@ class FoodCalorieConversionFactor(models.Model):
     # Returns a dictionary of calorie factors for fat, protein, and carbs
     def calorie_factors(self):
         factors = {"fats": self.fat_value, "protein": self.protein_value, "carbohydrates": self.carbohydrate_value}
+        return factors
+
+    # Returns a dictionary of default calorie factors
+    # (i.e. 1 gram of protein = 4 calories, 1 gram = 4 calories, 1 gram of fat = 9 calories)
+    # This is for food that does not have a nutrient converter
+    @staticmethod
+    def default_factors():
+        factors = {"fats": 9, "protein": 4, "carbohydrates": 4}
         return factors
 
 
@@ -217,9 +231,9 @@ class DailyEntry(models.Model):
         # Total macro in grams
         total_macro = {"protein": 0, "carbohydrates": 0, "fats": 0}
         for user_food in UserFood.objects.filter(daily_entry=self):
-            total_macro["protein"] += user_food.get_protein
-            total_macro["carbohydrates"] += user_food.get_carbs
-            total_macro["fats"] += user_food.get_fats
+            total_macro["protein"] += user_food.get_nutrient(PROTEIN_ID)
+            total_macro["carbohydrates"] += user_food.get_nutrient(CARBS_ID)
+            total_macro["fats"] += user_food.get_nutrient(TOTAL_LIPIDS_ID)
         return total_macro
 
 
@@ -231,20 +245,17 @@ class UserFood(models.Model):
     # Food amount in grams
     amount = models.FloatField()
 
-    # Return the total amount of protein in grams
-    def get_protein(self):
-        return (self.food.food_nutrient.objects.get(id=PROTEIN_ID).amount / BASE_AMOUNT) * self.amount
-
-    # Return the total amount of carbs in grams
-    def get_carbs(self):
-        return self.food.food_nutrient.objects.get(id=CARBS_ID).amount / BASE_AMOUNT * self.amount
-
-    # Return the total amount of fat in grams
-    def get_fats(self):
-        return (self.food.food_nutrient.objects.get(id=TOTAL_LIPIDS_ID).amount / BASE_AMOUNT) * self.amount
+    def get_nutrient(self, nutrient_id):
+        # Returns the total amount of the nutrient with respect to the current amount of food
+        try:
+            nutrient_amount = self.food.food_nutrient.get(id=nutrient_id).amount
+            return (nutrient_amount / BASE_AMOUNT) * self.amount
+        # If the food nutrient does not exist in the database
+        except FoodNutrient.DoesNotExist:
+            return 0
 
     # Return the total calories from all macronutrients
     def get_calories(self):
         cf = self.food.get_calorie_factors()
-        return (cf["protein"] * self.get_protein()) + (cf["carbohydrates"] * self.get_carbs()) + (
-                cf["fats"] * self.get_fats())
+        return (cf["protein"] * self.get_nutrient(PROTEIN_ID)) + (cf["carbohydrates"] * self.get_nutrient(CARBS_ID)) + (
+                cf["fats"] * self.get_nutrient(TOTAL_LIPIDS_ID))

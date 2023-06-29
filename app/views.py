@@ -10,16 +10,16 @@ from .models import *
 def index(request):
     user, created = User.objects.get_or_create(username="RAM", email="ram314@gmail.com", weight=78, height=176, body_fat=20, year_born=datetime(2000, 1, 1))
     if created:
-        user.set_password(123)
+        user.set_password("123")
         user.save()
     daily_entry = DailyEntry.objects.create()
-    foods = Food.objects.all()[0:10]
+    foods = Food.objects.all()[1000:2000]
     x = 10
     for food in foods:
         UserFood.objects.create(food=food, daily_entry=daily_entry, amount=x)
         x += 10
 
-    return HttpResponse(daily_entry.get_calories())
+    return HttpResponse(daily_entry.total_calories())
 
 # Renders the login page
 def login():
