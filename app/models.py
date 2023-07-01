@@ -121,10 +121,10 @@ class FoodCategory(models.Model):
 
 # Food class has data about the amount of calories, macronutrients, and nutrients.
 class Food(models.Model):
-    # An id of the food in FDC database
-    fdc_id = models.BigAutoField(primary_key=True)
-    # Description of the food (i.e. its name)
-    description = models.CharField(max_length=64)
+    # An id of the food in EDAMAM database
+    food_id = models.CharField()
+    # Label of the food (i.e. its name)
+    label = models.CharField(max_length=64)
     food_category = models.ForeignKey(FoodCategory, null=True, on_delete=models.CASCADE)
     note = models.TextField()
 
@@ -133,6 +133,7 @@ class Food(models.Model):
 
 # MeasureUnit will store all the names of all the units
 class MeasureUnit(models.Model):
+    uri = models.CharField()
     unit_name = models.CharField(max_length=32)
 
 
@@ -171,7 +172,10 @@ class DailyEntry(models.Model):
     date = models.DateField(default=datetime.now)
 
     def total_calories(self):
-        pass
+        total = 0
+        for user_food in self.userfood_set.all():
+            total += user_food.get_nutrients()["ENERC_KCAL"]
+
     def total_macro(self):
         pass
 
@@ -184,3 +188,10 @@ class UserFood(models.Model):
     # Food amount in grams
     amount = models.FloatField(default=0)
 
+    # Return the amount of each nutrient in the food
+    def get_nutrients(self):
+        nutrients_dict = {}
+        for food_nutrient in self.food.foodnutrient_set.all():
+            nutrient_name = food_nutrient.nutrient.name
+            nutrients_dict[nutrient_name] = (food_nutrient.amount / BASE_AMOUNT) * self.amount
+        return nutrients_dict

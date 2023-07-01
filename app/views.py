@@ -25,7 +25,9 @@ def index(request):
     r = requests.get(
         "https://api.edamam.com/api/food-database/v2/parser?app_id={app_id}&app_key={app_key}&ingr={food_name}&nutrition-type=cooking".format(
             app_id=EDAMAM_APP_ID, app_key=EDAMAM_KEY, food_name="banana"))
-    return HttpResponse(r)
+    banana = r["parsed"][0]
+
+    return HttpResponse(DailyEntry)
 
 
 # Renders the login page
