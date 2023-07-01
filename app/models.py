@@ -131,67 +131,6 @@ class Food(models.Model):
     def __str__(self):
         return self.description
 
-    def has_food_nutrient_converter(self):
-        return hasattr(self, "food_nutrient_converter")
-
-    def has_food_calorie_converter(self):
-        return hasattr(self, "food_calorie_converter")
-
-    # Returns a dictionary of calorie factors for fat, protein, and carbs
-    def get_calorie_factors(self):
-        if self.has_food_nutrient_converter() and self.has_food_calorie_converter():
-            calorie_factors = self.food_nutrient_converter.food_calorie_converter.calorie_factors()
-            return calorie_factors
-        return FoodCalorieConversionFactor.default_factors()
-
-
-# Top level type for all types of nutrient converter.
-# There are 3 types: fat, protein, carbohydrates
-# Nutrient converter converts micronutrients to macronutrients
-class FoodNutrientConversionFactor(models.Model):
-    food = models.ForeignKey(Food, related_name="food_nutrient_converter",
-                             on_delete=models.CASCADE)
-
-
-class FoodFatConversionFactor(models.Model):
-    food_nutrient_cf = models.OneToOneField(FoodNutrientConversionFactor,
-                                            related_name="food_fat_converter",
-                                            on_delete=models.CASCADE)
-    value = models.FloatField()
-
-
-class FoodProteinConversionFactor(models.Model):
-    food_nutrient_cf = models.OneToOneField(FoodNutrientConversionFactor,
-                                            related_name="food_protein_converter",
-                                            on_delete=models.CASCADE)
-    value = models.FloatField()
-
-
-# This contains the multiplication factors that will be used
-# when calculating energy from macronutrients for a specific food
-class FoodCalorieConversionFactor(models.Model):
-    food_nutrient_cf = models.OneToOneField(FoodNutrientConversionFactor,
-                                            related_name="food_calorie_converter",
-                                            on_delete=models.CASCADE)
-    # The multiplication factors for each macronutrient
-    fat_value = models.FloatField(default=9)
-    protein_value = models.FloatField(default=4)
-    carbohydrate_value = models.FloatField(default=4)
-
-    # Returns a dictionary of calorie factors for fat, protein, and carbs
-    def calorie_factors(self):
-        factors = {"fats": self.fat_value, "protein": self.protein_value, "carbohydrates": self.carbohydrate_value}
-        return factors
-
-    # Returns a dictionary of default calorie factors
-    # (i.e. 1 gram of protein = 4 calories, 1 gram = 4 calories, 1 gram of fat = 9 calories)
-    # This is for food that does not have a nutrient converter
-    @staticmethod
-    def default_factors():
-        factors = {"fats": 9, "protein": 4, "carbohydrates": 4}
-        return factors
-
-
 # MeasureUnit will store all the names of all the units
 class MeasureUnit(models.Model):
     unit_name = models.CharField(max_length=32)
@@ -239,9 +178,9 @@ class DailyEntry(models.Model):
 
 # Food entry created by the user
 class UserFood(models.Model):
+    food = models.ForeignKey(Food, related_name="user_food", on_delete=models.CASCADE)
     # The daily entry this food belongs to
     daily_entry = models.ForeignKey(DailyEntry, related_name="user_food", on_delete=models.CASCADE)
-
     # Food amount in grams
     amount = models.FloatField(default=0)
 
