@@ -117,8 +117,6 @@ class Nutrient(models.Model):
 class FoodCategory(models.Model):
     # The name of the category
     description = models.CharField(max_length=64)
-    # Food group code
-    code = models.IntegerField()
 
 
 # Food class has data about the amount of calories, macronutrients, and nutrients.
@@ -127,7 +125,7 @@ class Food(models.Model):
     fdc_id = models.BigAutoField(primary_key=True)
     # Description of the food (i.e. its name)
     description = models.CharField(max_length=64)
-    food_category = models.ManyToManyField(FoodCategory)
+    food_category = models.ForeignKey(FoodCategory, null=True, on_delete=models.CASCADE)
     note = models.TextField()
 
     def __str__(self):
@@ -148,8 +146,8 @@ class Food(models.Model):
 # There are 3 types: fat, protein, carbohydrates
 # Nutrient converter converts micronutrients to macronutrients
 class FoodNutrientConversionFactor(models.Model):
-    food = models.OneToOneField(Food, related_name="food_nutrient_converter",
-                                on_delete=models.CASCADE)
+    food = models.ForeignKey(Food, related_name="food_nutrient_converter",
+                             on_delete=models.CASCADE)
 
 
 class FoodFatConversionFactor(models.Model):

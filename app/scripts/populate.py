@@ -31,9 +31,11 @@ FOOD_CATEGORY_PATH = FDC_DATA_PATH + "food_category.csv"
 def nutrient():
     with open(NUTRIENT_PATH) as f:
         reader = csv.reader(f)
+        objs = []
         for row in reader:
             if row[0] != "id":
-                _, created = Nutrient.objects.get_or_create(id=row[0], name=row[1], unit_name=row[2])
+                objs.append(Nutrient(id=row[0], name=row[1], unit_name=row[2]))
+        Nutrient.objects.bulk_create(objs)
 
     print("Nutrient Done!")
 
@@ -42,24 +44,27 @@ def nutrient():
 def food_category():
     with open(FOOD_CATEGORY_PATH) as f:
         reader = csv.reader(f)
+        objs = []
         for row in reader:
             if row[0] != "id":
-                _, created = FoodCategory.objects.get_or_create(id=row[0], code=row[1], description=row[2])
+                objs.append(FoodCategory(id=row[1], description=row[2]))
+        FoodCategory.objects.bulk_create(objs)
     print("FoodCategory Done!")
 
 
 def food():
     # Populate Food models
-    with open(FOOD_PATH) as f:
+    with open(FOOD_PATH, encoding="utf8") as f:
         reader = csv.reader(f)
+        objs = []
         for row in reader:
-            if row[0] != "fdc_id" and row[3].isnumeric():
+            if row[0] != "fdc_id":
                 try:
-                    food, created = Food.objects.get_or_create(fdc_id=row[0], description=row[2])
-                    food.food_category.add(FoodCategory.objects.get(id=row[3]))
+                    #TODO: Omit food category for now
+                    objs.append(Food(fdc_id=row[0], description=row[2]))
                 except FoodCategory.DoesNotExist:
                     pass
-
+        Food.objects.bulk_create(objs)
     print("Food Done!")
 
 
@@ -67,13 +72,14 @@ def food_nutrient_cf():
     # Populate FoodNutrientConversionFactor models
     with open(FOOD_NUTRIENT_CF_PATH) as f:
         reader = csv.reader(f)
+        objs = []
         for row in reader:
             if row[0] != "id":
                 try:
-                    food = Food.objects.get(fdc_id=row[1])
-                    food_nutrient_cf, created = FoodNutrientConversionFactor.objects.get_or_create(id=row[0], food=food)
+                    objs.append(FoodNutrientConversionFactor(id=row[0], food_id=row[1]))
                 except Food.DoesNotExist:
                     pass
+        FoodNutrientConversionFactor.objects.bulk_create(objs)
     print("FoodNutrientConversionFactor Done!")
 
 
@@ -82,6 +88,7 @@ def food_nutrient_cf():
 def food_fat_cf():
     with open(FOOD_FAT_CF_PATH) as f:
         reader = csv.reader(f)
+        objs = []
         for row in reader:
             if row[0] != "id":
                 pass
@@ -91,15 +98,15 @@ def food_fat_cf():
 def food_protein_cf():
     with open(FOOD_PROTEIN_CF_PATH) as f:
         reader = csv.reader(f)
+        objs = []
         for row in reader:
             if row[0] != "food_nutrient_conversion_factor_id":
                 try:
-                    food_nutrient_cf = FoodNutrientConversionFactor.objects.get(id=row[0])
-                    food_protein_cf, created = FoodProteinConversionFactor.objects.get_or_create(
-                        food_nutrient_cf=food_nutrient_cf, value=row[1])
+                    objs.append(FoodProteinConversionFactor(
+                        food_nutrient_cf_id=row[0], value=row[1]))
                 except FoodNutrientConversionFactor.DoesNotExist:
                     pass
-
+        FoodProteinConversionFactor.objects.bulk_create(objs)
     print("FoodProteinConversionFactor Done!")
 
 
@@ -107,17 +114,17 @@ def food_protein_cf():
 def food_calorie_cf():
     with open(FOOD_CALORIE_CF_PATH) as f:
         reader = csv.reader(f)
+        objs = []
         for row in reader:
             if row[0] != "food_nutrient_conversion_factor_id":
                 try:
-                    food_nutrient_cf = FoodNutrientConversionFactor.objects.get(id=row[0])
-                    food_calorie_cf, created = FoodCalorieConversionFactor.objects.get_or_create(
-                        food_nutrient_cf=food_nutrient_cf, protein_value=row[1],
+                    objs.append(FoodCalorieConversionFactor(
+                        food_nutrient_cf_id=row[0], protein_value=row[1],
                         fat_value=row[2],
-                        carbohydrate_value=row[3])
+                        carbohydrate_value=row[3]))
                 except FoodNutrientConversionFactor.DoesNotExist:
                     pass
-
+        FoodCalorieConversionFactor.objects.bulk_create(objs)
     print("FoodCalorieConversionFactor Done!")
 
 
@@ -125,10 +132,11 @@ def food_calorie_cf():
 def measure_unit():
     with open(MEASURE_UNIT_PATH) as f:
         reader = csv.reader(f)
+        objs = []
         for row in reader:
             if row[0] != "id":
-                _, created = MeasureUnit.objects.get_or_create(id=row[0], unit_name=row[1])
-
+                objs.append(MeasureUnit(id=row[0], unit_name=row[1]))
+        MeasureUnit.objects.bulk_create(objs)
     print("MeasureUnit Done!")
 
 
@@ -136,20 +144,19 @@ def measure_unit():
 def food_portion():
     with open(FOOD_PORTION_PATH) as f:
         reader = csv.reader(f)
+        objs = []
         for row in reader:
             if row[0] != "id":
                 try:
-                    food = Food.objects.get(fdc_id=row[1])
-                    measure_unit = MeasureUnit.objects.get(id=row[4])
-                    food_portion, created = FoodPortion.objects.get_or_create(id=row[0], food=food, amount=row[3],
-                                                                              measure_unit=measure_unit,
-                                                                              portion_description=row[5],
-                                                                              gram_weight=row[7])
+                    objs.append(FoodPortion(id=row[0], food_id=row[1], amount=row[3],
+                                            measure_unit_id=row[4],
+                                            portion_description=row[5],
+                                            gram_weight=row[7]))
                 except Food.DoesNotExist:
                     pass
                 except FoodPortion.DoesNotExist:
                     pass
-
+        FoodPortion.objects.bulk_create(objs)
     print("FoodPortion Done!")
 
 
@@ -157,17 +164,17 @@ def food_portion():
 def food_nutrient():
     with open(FOOD_NUTRIENT_PATH) as f:
         reader = csv.reader(f)
+        objs = []
         for row in reader:
             if row[0] != "id":
                 try:
-                    nutrient = Nutrient.objects.get(id=row[2])
-                    food = Food.objects.get(fdc_id=row[1])
-                    food_nutrient, created = FoodNutrient.objects.get_or_create(id=row[0], amount=row[3],
-                                                                                food=food, nutrient=nutrient)
+                    objs.append(FoodNutrient(id=row[0], amount=row[3],
+                                             food_id=row[1], nutrient_id=row[2]))
                 except Food.DoesNotExist:
                     pass
                 except Nutrient.DoesNotExist:
                     pass
+        FoodNutrient.objects.bulk_create(objs)
 
     print("FoodNutrient Done!")
 
