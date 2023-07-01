@@ -12,8 +12,8 @@ def index(request):
     if created:
         user.set_password("123")
         user.save()
-    daily_entry = DailyEntry.objects.create()
-    foods = Food.objects.all()[1000:2000]
+    daily_entry = DailyEntry.objects.create(user=user)
+    foods = Food.objects.all()
     x = 10
     for food in foods:
         UserFood.objects.create(food=food, daily_entry=daily_entry, amount=x)

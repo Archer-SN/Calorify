@@ -118,10 +118,19 @@ def food_calorie_cf():
         for row in reader:
             if row[0] != "food_nutrient_conversion_factor_id":
                 try:
+                    protein_value = 0
+                    fat_value = 0
+                    carb_value = 0
+                    if row[1].isnumeric():
+                        protein_value = row[1]
+                    if row[2].isnumeric():
+                        fat_value = row[2]
+                    if row[3].isnumeric():
+                        carb_value = row[3]
                     objs.append(FoodCalorieConversionFactor(
-                        food_nutrient_cf_id=row[0], protein_value=row[1],
-                        fat_value=row[2],
-                        carbohydrate_value=row[3]))
+                        food_nutrient_cf_id=row[0], protein_value=protein_value,
+                        fat_value=fat_value,
+                        carbohydrate_value=carb_value))
                 except FoodNutrientConversionFactor.DoesNotExist:
                     pass
         FoodCalorieConversionFactor.objects.bulk_create(objs)
@@ -148,7 +157,10 @@ def food_portion():
         for row in reader:
             if row[0] != "id":
                 try:
-                    objs.append(FoodPortion(id=row[0], food_id=row[1], amount=row[3],
+                    amount = 0
+                    if row[3].isnumeric():
+                        amount = row[3]
+                    objs.append(FoodPortion(id=row[0], food_id=row[1], amount=amount,
                                             measure_unit_id=row[4],
                                             portion_description=row[5],
                                             gram_weight=row[7]))
@@ -179,12 +191,12 @@ def food_nutrient():
     print("FoodNutrient Done!")
 
 
-nutrient()
-food_category()
-food()
-measure_unit()
-food_portion()
-food_nutrient_cf()
+# nutrient()
+# food_category()
+# food()
+# measure_unit()
+# food_portion()
+# food_nutrient_cf()
 food_calorie_cf()
 food_protein_cf()
 food_nutrient()

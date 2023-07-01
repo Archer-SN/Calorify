@@ -134,9 +134,12 @@ class Food(models.Model):
     def has_food_nutrient_converter(self):
         return hasattr(self, "food_nutrient_converter")
 
+    def has_food_calorie_converter(self):
+        return hasattr(self, "food_calorie_converter")
+
     # Returns a dictionary of calorie factors for fat, protein, and carbs
     def get_calorie_factors(self):
-        if self.has_food_nutrient_converter():
+        if self.has_food_nutrient_converter() and self.has_food_calorie_converter():
             calorie_factors = self.food_nutrient_converter.food_calorie_converter.calorie_factors()
             return calorie_factors
         return FoodCalorieConversionFactor.default_factors()
@@ -210,7 +213,7 @@ class FoodPortion(models.Model):
     measure_unit = models.ForeignKey(MeasureUnit, related_name="food_portion",
                                      on_delete=models.CASCADE)
     # Amount of the food
-    amount = models.FloatField()
+    amount = models.FloatField(default=0)
     portion_description = models.CharField(max_length=64)
     # Weight of the food portion in gram
     gram_weight = models.FloatField()
@@ -250,7 +253,7 @@ class UserFood(models.Model):
     # The daily entry this food belongs to
     daily_entry = models.ForeignKey(DailyEntry, related_name="user_food", on_delete=models.CASCADE)
     # Food amount in grams
-    amount = models.FloatField()
+    amount = models.FloatField(default=0)
 
     def get_nutrient(self, nutrient_id):
         # Returns the total amount of the nutrient with respect to the current amount of food
