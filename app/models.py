@@ -122,7 +122,7 @@ class FoodCategory(models.Model):
 # Food class has data about the amount of calories, macronutrients, and nutrients.
 class Food(models.Model):
     # An id of the food in EDAMAM database
-    food_id = models.CharField()
+    food_id = models.CharField(max_length=128)
     # Label of the food (i.e. its name)
     label = models.CharField(max_length=64)
     food_category = models.ForeignKey(FoodCategory, null=True, on_delete=models.CASCADE)
@@ -133,7 +133,7 @@ class Food(models.Model):
 
 # MeasureUnit will store all the names of all the units
 class MeasureUnit(models.Model):
-    uri = models.CharField()
+    uri = models.CharField(max_length=128)
     unit_name = models.CharField(max_length=32)
 
 
