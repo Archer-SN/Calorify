@@ -91,15 +91,16 @@ class User(AbstractUser):
         bmr = self.get_bmr()
         return bmr + (bmr * self.activity_level)
 
+
 # TODO:
 # Keep
 class WeightHistory:
     pass
 
+
 # TODO:
 class Challenge:
     pass
-
 
 
 # Nutrient is made as a model because there are hundreds of nutrients
@@ -147,36 +148,34 @@ class Food(models.Model):
 # There are 3 types: fat, protein, carbohydrates
 # Nutrient converter converts micronutrients to macronutrients
 class FoodNutrientConversionFactor(models.Model):
-    food = models.OneToOneField(Food, blank=True, null=True, related_name="food_nutrient_converter",
+    food = models.OneToOneField(Food, related_name="food_nutrient_converter",
                                 on_delete=models.CASCADE)
 
 
 class FoodFatConversionFactor(models.Model):
-    food_nutrient_cf = models.OneToOneField(FoodNutrientConversionFactor, blank=True, null=True,
+    food_nutrient_cf = models.OneToOneField(FoodNutrientConversionFactor,
                                             related_name="food_fat_converter",
                                             on_delete=models.CASCADE)
-    value = models.FloatField(null=True, )
+    value = models.FloatField()
 
 
 class FoodProteinConversionFactor(models.Model):
-    food_nutrient_cf = models.OneToOneField(FoodNutrientConversionFactor, blank=True, null=True,
+    food_nutrient_cf = models.OneToOneField(FoodNutrientConversionFactor,
                                             related_name="food_protein_converter",
                                             on_delete=models.CASCADE)
-    value = models.FloatField(null=True, )
+    value = models.FloatField()
 
 
 # This contains the multiplication factors that will be used
 # when calculating energy from macronutrients for a specific food
 class FoodCalorieConversionFactor(models.Model):
     food_nutrient_cf = models.OneToOneField(FoodNutrientConversionFactor,
-                                            blank=True,
-                                            null=True,
                                             related_name="food_calorie_converter",
                                             on_delete=models.CASCADE)
     # The multiplication factors for each macronutrient
-    fat_value = models.FloatField(null=True)
-    protein_value = models.FloatField(null=True)
-    carbohydrate_value = models.FloatField(null=True)
+    fat_value = models.FloatField(default=9)
+    protein_value = models.FloatField(default=4)
+    carbohydrate_value = models.FloatField(default=4)
 
     # Returns a dictionary of calorie factors for fat, protein, and carbs
     def calorie_factors(self):
@@ -199,7 +198,7 @@ class MeasureUnit(models.Model):
 
 # A nutrient value for each food
 class FoodNutrient(models.Model):
-    food = models.ForeignKey(Food, blank=True, related_name="food_nutrient", on_delete=models.CASCADE)
+    food = models.ForeignKey(Food, related_name="food_nutrient", on_delete=models.CASCADE)
     # The nutrient of which the food nutrient pertains
     nutrient = models.OneToOneField(Nutrient, related_name="food_nutrient", on_delete=models.CASCADE)
     # The amount of the nutrient in food per 100g
@@ -209,8 +208,8 @@ class FoodNutrient(models.Model):
 # This model store the default portion of each food
 class FoodPortion(models.Model):
     # The food that this portion relates to
-    food = models.ForeignKey(Food, blank=True, related_name="food_portion", on_delete=models.CASCADE)
-    measure_unit = models.ForeignKey(MeasureUnit, default=None, null=True, blank=True, related_name="food_portion",
+    food = models.ForeignKey(Food, related_name="food_portion", on_delete=models.CASCADE)
+    measure_unit = models.ForeignKey(MeasureUnit, related_name="food_portion",
                                      on_delete=models.CASCADE)
     # Amount of the food
     amount = models.FloatField()
@@ -228,7 +227,7 @@ class Recipe(models.Model):
 
 # DailyEntry contains information about your total calories intake for the day, exercised, etc.
 class DailyEntry(models.Model):
-    user = models.ForeignKey(User, null=True, default=None, related_name="user_food", on_delete=models.CASCADE)
+    user = models.ForeignKey(User, related_name="user_food", on_delete=models.CASCADE)
     date = models.DateField(default=datetime.now)
 
     def total_calories(self):

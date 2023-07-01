@@ -8,6 +8,8 @@ from app.models import *
 
 FDC_DATA_PATH = "../../../FDC_data/"
 
+# TODO: MAKE THIS SCRIPT FASTER!!!!!!!!!!!!!
+
 # CF stands for conversion factor
 
 NUTRIENT_PATH = FDC_DATA_PATH + "nutrient.csv"
