@@ -197,6 +197,6 @@ def food_nutrient():
 # measure_unit()
 # food_portion()
 # food_nutrient_cf()
-food_calorie_cf()
+# food_calorie_cf()
 food_protein_cf()
 food_nutrient()

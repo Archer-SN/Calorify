@@ -1,6 +1,8 @@
 
 from django.shortcuts import render
 from django.shortcuts import HttpResponse
+import requests
+import json
 
 from datetime import datetime
 from .models import *
@@ -13,13 +15,10 @@ def index(request):
         user.set_password("123")
         user.save()
     daily_entry = DailyEntry.objects.create(user=user)
-    foods = Food.objects.all()
-    x = 10
-    for food in foods:
-        UserFood.objects.create(food=food, daily_entry=daily_entry, amount=x)
-        x += 10
+    r = requests.get("https://api.edamam.com").json()
 
-    return HttpResponse(daily_entry.total_calories())
+
+    return HttpResponse(requests)
 
 # Renders the login page
 def login():
