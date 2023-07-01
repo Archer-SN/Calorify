@@ -129,7 +129,7 @@ class Food(models.Model):
     note = models.TextField()
 
     def __str__(self):
-        return self.description
+        return self.label
 
 # MeasureUnit will store all the names of all the units
 class MeasureUnit(models.Model):
@@ -139,9 +139,9 @@ class MeasureUnit(models.Model):
 
 # A nutrient value for each food
 class FoodNutrient(models.Model):
-    food = models.ForeignKey(Food, related_name="food_nutrient", on_delete=models.CASCADE)
+    food = models.ForeignKey(Food, related_name="food_nutrients", on_delete=models.CASCADE)
     # The nutrient of which the food nutrient pertains
-    nutrient = models.OneToOneField(Nutrient, related_name="food_nutrient", on_delete=models.CASCADE)
+    nutrient = models.ForeignKey(Nutrient, related_name="food_nutrients", on_delete=models.CASCADE)
     # The amount of the nutrient in food per 100g
     amount = models.FloatField()
 
@@ -149,8 +149,8 @@ class FoodNutrient(models.Model):
 # This model store the default portion of each food
 class FoodPortion(models.Model):
     # The food that this portion relates to
-    food = models.ForeignKey(Food, related_name="food_portion", on_delete=models.CASCADE)
-    measure_unit = models.ForeignKey(MeasureUnit, related_name="food_portion",
+    food = models.ForeignKey(Food, related_name="food_portions", on_delete=models.CASCADE)
+    measure_unit = models.ForeignKey(MeasureUnit, related_name="food_portions",
                                      on_delete=models.CASCADE)
     # Amount of the food
     amount = models.FloatField(default=0)
@@ -168,13 +168,14 @@ class Recipe(models.Model):
 
 # DailyEntry contains information about your total calories intake for the day, exercised, etc.
 class DailyEntry(models.Model):
-    user = models.ForeignKey(User, related_name="user_food", on_delete=models.CASCADE)
+    user = models.ForeignKey(User, related_name="daily_entries", on_delete=models.CASCADE)
     date = models.DateField(default=datetime.now)
 
     def total_calories(self):
         total = 0
-        for user_food in self.userfood_set.all():
+        for user_food in UserFood.objects.filter(daily_entry=self):
             total += user_food.get_nutrients()["ENERC_KCAL"]
+        return total
 
     def total_macro(self):
         pass
@@ -182,16 +183,19 @@ class DailyEntry(models.Model):
 
 # Food entry created by the user
 class UserFood(models.Model):
-    food = models.ForeignKey(Food, related_name="user_food", on_delete=models.CASCADE)
+    food = models.ForeignKey(Food, related_name="user_foods", on_delete=models.CASCADE)
     # The daily entry this food belongs to
-    daily_entry = models.ForeignKey(DailyEntry, related_name="user_food", on_delete=models.CASCADE)
+    daily_entry = models.ForeignKey(DailyEntry, related_name="user_foods", on_delete=models.CASCADE)
     # Food amount in grams
     amount = models.FloatField(default=0)
+
+    def __str__(self):
+        return self.food.label
 
     # Return the amount of each nutrient in the food
     def get_nutrients(self):
         nutrients_dict = {}
-        for food_nutrient in self.food.foodnutrient_set.all():
+        for food_nutrient in self.food.food_nutrients.all():
             nutrient_name = food_nutrient.nutrient.name
             nutrients_dict[nutrient_name] = (food_nutrient.amount / BASE_AMOUNT) * self.amount
         return nutrients_dict

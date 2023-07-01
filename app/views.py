@@ -24,10 +24,14 @@ def index(request):
     daily_entry = DailyEntry.objects.create(user=user)
     r = requests.get(
         "https://api.edamam.com/api/food-database/v2/parser?app_id={app_id}&app_key={app_key}&ingr={food_name}&nutrition-type=cooking".format(
-            app_id=EDAMAM_APP_ID, app_key=EDAMAM_KEY, food_name="banana"))
-    banana = r["parsed"][0]
+            app_id=EDAMAM_APP_ID, app_key=EDAMAM_KEY, food_name="banana")).json()
 
-    return HttpResponse(DailyEntry)
+    banana_data = r["parsed"][0]["food"]
+    energy, created = Nutrient.objects.get_or_create(name="ENERC_KCAL", unit_name="kcal")
+    banana, created = Food.objects.get_or_create(food_id=banana_data["foodId"], label=banana_data["label"])
+    food_nutrient, created = FoodNutrient.objects.get_or_create(food=banana, nutrient=energy, amount=89)
+    UserFood.objects.get_or_create(daily_entry=daily_entry, food=banana, amount=100)
+    return HttpResponse(daily_entry.total_calories())
 
 
 # Renders the login page
