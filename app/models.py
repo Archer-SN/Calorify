@@ -4,6 +4,7 @@ from django.contrib.auth.models import AbstractUser
 from math import floor
 from datetime import datetime
 from field_history.tracker import FieldHistoryTracker
+from collections import Counter
 
 from . import fields
 
@@ -218,14 +219,14 @@ class DailyEntry(models.Model):
     user = models.ForeignKey(User, related_name="daily_entries", on_delete=models.CASCADE)
     date = models.DateField(default=datetime.now, unique=True)
 
-    def total_calories(self):
-        total = 0
+    def total_nutrients(self):
+        total_nutrients_counter = Counter()
         for user_food in UserFood.objects.filter(daily_entry=self):
-            total += user_food.get_nutrients()["ENERC_KCAL"]
-        return total
+            total_nutrients_counter += user_food.get_nutrients()
+        return total_nutrients_counter
 
-    def total_macro(self):
-        pass
+    def total_calories(self):
+        return self.total_nutrients()["ENERC_KCAL"]
 
 
 # Food entry created by the user
@@ -241,8 +242,8 @@ class UserFood(models.Model):
 
     # Return the amount of each nutrient in the food
     def get_nutrients(self):
-        nutrients_dict = {}
+        nutrients_counter = Counter()
         for food_nutrient in self.food.food_nutrients.all():
             nutrient_name = food_nutrient.nutrient.name
-            nutrients_dict[nutrient_name] = (food_nutrient.amount / BASE_AMOUNT) * self.amount
-        return nutrients_dict
+            nutrients_counter[nutrient_name] = (food_nutrient.amount / BASE_AMOUNT) * self.amount
+        return nutrients_counter
