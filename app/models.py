@@ -24,10 +24,6 @@ unit_conversions = {
     ("m", "cm"): 100,
 }
 
-PROTEIN_ID = 1003
-TOTAL_LIPIDS_ID = 1004
-CARBS_ID = 1005
-
 # The calories, protein, carbs, fat, etc. intake will be based on this amount
 # This is like "per 100g"
 BASE_AMOUNT = 100
@@ -122,7 +118,7 @@ class FoodCategory(models.Model):
 # Food class has data about the amount of calories, macronutrients, and nutrients.
 class Food(models.Model):
     # An id of the food in EDAMAM database
-    food_id = models.CharField(max_length=128)
+    food_id = models.CharField(max_length=128, unique=True, primary_key=True)
     # Label of the food (i.e. its name)
     label = models.CharField(max_length=64)
     food_category = models.ForeignKey(FoodCategory, null=True, on_delete=models.CASCADE)
