@@ -5,7 +5,7 @@ from math import floor
 from datetime import datetime
 from field_history.tracker import FieldHistoryTracker
 
-import fields
+from . import fields
 
 # Calories here means kcal
 
