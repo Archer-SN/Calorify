@@ -6,6 +6,7 @@ from datetime import datetime
 from field_history.tracker import FieldHistoryTracker
 
 import fields
+
 # Calories here means kcal
 
 # A shorthand for each unit
@@ -32,7 +33,6 @@ BASE_AMOUNT = 100
 
 
 # Create your models here.
-
 
 
 # This model stores all the basic information of the user
@@ -94,16 +94,46 @@ class User(AbstractUser):
         return bmr + (bmr * self.activity_level)
 
 
+# This models handles the level system for the user
 class UserLevel(models.Model):
     user = models.OneToOneField(User, on_delete=models.PROTECT)
     level = fields.IntegerRangeField(default=1, min_value=1, max_value=99)
-    xp = models.PositiveIntegerField(default=0)
+    max_xp = models.PositiveIntegerField(default=0)
+    current_xp = models.PositiveIntegerField(default=0)
+
+    def calculate_xp(self):
+        x = 0.3
+        y = 2
+        return pow((self.level / x), y)
+
+    def level_up(self):
+        if self.current_xp >= self.max_xp:
+            # Level up
+            self.level += 1
+            # Deduct the current xp with the max xp
+            self.current_xp -= self.max_xp
+            # Calculate new max xp
+            self.max_xp = self.calculate_xp()
+
+    def gain_xp(self, xp_amount):
+        self.current_xp += xp_amount
+        # In case the current xp exceeds the max xp
+        self.level_up()
 
 
-# TODO
 class Challenge:
     user = models.ManyToManyField(User)
+    # An xp that the user will gain for completing th challenge
+    xp = models.PositiveIntegerField(default=0)
+    # The challenge's name
+    name = models.CharField(max_length=64)
+    # The description of the challenge
+    description = models.TextField()
+    is_completed = models.BooleanField(default=False)
 
+    def complete_challenge(self):
+        self.is_completed = True
+        self.user.gain_xp(self.xp)
 
 
 class Nutrient(models.Model):

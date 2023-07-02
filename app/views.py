@@ -1,3 +1,5 @@
+from django.db import IntegrityError
+
 from .scripts import credentials
 from .models import *
 
