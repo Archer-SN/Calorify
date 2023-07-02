@@ -33,7 +33,8 @@ AUTH_USER_MODEL = "app.User"
 # Application definition
 
 INSTALLED_APPS = [
-    "app",
+    'app',
+    'field_history',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',

@@ -3,7 +3,9 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 from math import floor
 from datetime import datetime
+from field_history.tracker import FieldHistoryTracker
 
+import fields
 # Calories here means kcal
 
 # A shorthand for each unit
@@ -31,7 +33,11 @@ BASE_AMOUNT = 100
 
 # Create your models here.
 
+
+
+# This model stores all the basic information of the user
 class User(AbstractUser):
+    # User's Basic info
     # This will be multiplied to BMR which will give Total Daily Energy Expenditure (TDEE)
     class ActivityLevel(models.TextChoices):
         NONE = 1, _("None")
@@ -52,7 +58,7 @@ class User(AbstractUser):
 
     activity_level = models.FloatField(choices=ActivityLevel.choices, default=ActivityLevel.SEDENTARY)
 
-    # TODO : Macronutrients target for protein, carbs, and fats.
+    field_history = FieldHistoryTracker(["weight", "body_fat"])
 
     def __str__(self):
         return self.username
@@ -88,18 +94,18 @@ class User(AbstractUser):
         return bmr + (bmr * self.activity_level)
 
 
-# TODO:
-# Keep
-class WeightHistory:
-    pass
+class UserLevel(models.Model):
+    user = models.OneToOneField(User, on_delete=models.PROTECT)
+    level = fields.IntegerRangeField(default=1, min_value=1, max_value=99)
+    xp = models.PositiveIntegerField(default=0)
 
 
-# TODO:
+# TODO
 class Challenge:
-    pass
+    user = models.ManyToManyField(User)
 
 
-# Nutrient is made as a model because there are hundreds of nutrients
+
 class Nutrient(models.Model):
     name = models.CharField(max_length=64)
     # The standard unit of measure for the nutrient (per 100g of food)
@@ -126,6 +132,7 @@ class Food(models.Model):
 
     def __str__(self):
         return self.label
+
 
 # MeasureUnit will store all the names of all the units
 class MeasureUnit(models.Model):
@@ -156,6 +163,7 @@ class FoodPortion(models.Model):
 
 
 # A collection of Food
+# TODO
 class Recipe(models.Model):
     name = models.CharField(max_length=64)
     foods = models.ManyToManyField(Food, blank=False)
