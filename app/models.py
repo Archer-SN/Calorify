@@ -37,7 +37,6 @@ BASE_AMOUNT = 100
 
 # This model stores all the basic information of the user
 class User(AbstractUser):
-    # User's Basic info
     # This will be multiplied to BMR which will give Total Daily Energy Expenditure (TDEE)
     class ActivityLevel(models.TextChoices):
         NONE = 1, _("None")
@@ -50,7 +49,7 @@ class User(AbstractUser):
     sex = models.CharField(max_length=1, choices=SEX_CHOICES)
 
     # Store weight in kg
-    weight = models.IntegerField(default=60)
+    weight = models.FloatField(default=60)
     # Store height in cm
     height = models.IntegerField(default=170)
     body_fat = models.FloatField(default=15)
@@ -94,7 +93,21 @@ class User(AbstractUser):
         return bmr + (bmr * self.activity_level)
 
 
-# This models handles the level system for the user
+# This model handles user's target for macronutrients, weight, etc.
+class UserTargets(models.Model):
+    user = models.OneToOneField(User, on_delete=models.PROTECT)
+    weight_goal = models.FloatField(default=0)
+
+    # The rate of surplus or deficit
+    weight_goal_rate = models.IntegerField(default=0)
+
+    # These are macro ratios
+    protein_target = models.FloatField(default=25)
+    carbs_target = models.FloatField(default=45)
+    fat_target = models.FloatField(default=30)
+
+
+# This model handles the level system for the user
 class UserLevel(models.Model):
     user = models.OneToOneField(User, on_delete=models.PROTECT)
     level = fields.IntegerRangeField(default=1, min_value=1, max_value=99)
