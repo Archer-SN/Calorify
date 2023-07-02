@@ -216,7 +216,7 @@ class Recipe(models.Model):
 # DailyEntry contains information about your total calories intake for the day, exercised, etc.
 class DailyEntry(models.Model):
     user = models.ForeignKey(User, related_name="daily_entries", on_delete=models.CASCADE)
-    date = models.DateField(default=datetime.now)
+    date = models.DateField(default=datetime.now, unique=True)
 
     def total_calories(self):
         total = 0
