@@ -53,7 +53,7 @@ def test(request):
     #     pass
     # UserFood.objects.create(daily_entry=daily_entry, food=banana, amount=100)
     # UserFood.objects.create(daily_entry=daily_entry, food=banana, amount=100)
-    daily_entry = DailyEntry.objects.get(user=user)
+    # daily_entry = DailyEntry.objects.get(user=user)
     return render(request, "login.html")
 
 
