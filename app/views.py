@@ -13,6 +13,7 @@ from datetime import datetime
 
 import requests
 import json
+import openai
 
 # Id and Keys for the food database api
 EDAMAM_FOOD_DB_ID = "35db61c2"
@@ -31,6 +32,8 @@ NUTRIENTS_AP = "https://api.edamam.com/api/food-database/v2/nutrients"
 # Id and keys for the recipe database api
 EDAMAM_RECIPE_DB_ID = "c03ec76f"
 EDAMAM_RECIPE_DB_KEY = credentials.EDAMAM_RECIPE_DB_KEY
+
+OPEN_AI_KEY = credentials.OPEN_AI_KEY
 
 
 # A page for testing functionalities
