@@ -36,34 +36,42 @@ EDAMAM_RECIPE_DB_KEY = credentials.EDAMAM_RECIPE_DB_KEY
 OPEN_AI_KEY = credentials.OPEN_AI_KEY
 
 
-# A page for testing functionalities
-def test(request):
-    user, created = User.objects.get_or_create(username="RAM", email="ram314@gmail.com", weight=78, height=176,
-                                               body_fat=20, year_born=datetime(2000, 1, 1))
-    if created:
-        user.set_password("123")
-        user.save()
-    # daily_entry = DailyEntry.objects.create(user=user)
-    # r = requests.get(
-    #     PARSER_AP + "&ingr={food_name}&nutrition-type=cooking".format(food_name="banana")).json()
-    #
-    # banana_data = r["parsed"][0]["food"]
-    # energy, created = Nutrient.objects.get_or_create(name="ENERC_KCAL", unit_name="kcal")
-    # banana, created = Food.objects.get_or_create(food_id=banana_data["foodId"], label=banana_data["label"])
-    # try:
-    #     food_nutrient, created = FoodNutrient.objects.get_or_create(food=banana, nutrient=energy, amount=89)
-    # except:
-    #     pass
-    # UserFood.objects.create(daily_entry=daily_entry, food=banana, amount=100)
-    # UserFood.objects.create(daily_entry=daily_entry, food=banana, amount=100)
-    # daily_entry = DailyEntry.objects.get(user=user)
-    return render(request, "login.html")
+# # A page for testing functionalities
+# def test(request):
+#     user, created = User.objects.get_or_create(username="RAM", email="ram314@gmail.com", weight=78, height=176,
+#                                                body_fat=20, year_born=datetime(2000, 1, 1))
+#     if created:
+#         user.set_password("123")
+#         user.save()
+#     # daily_entry = DailyEntry.objects.create(user=user)
+#     # r = requests.get(
+#     #     PARSER_AP + "&ingr={food_name}&nutrition-type=cooking".format(food_name="banana")).json()
+#     #
+#     # banana_data = r["parsed"][0]["food"]
+#     # energy, created = Nutrient.objects.get_or_create(name="ENERC_KCAL", unit_name="kcal")
+#     # banana, created = Food.objects.get_or_create(food_id=banana_data["foodId"], label=banana_data["label"])
+#     # try:
+#     #     food_nutrient, created = FoodNutrient.objects.get_or_create(food=banana, nutrient=energy, amount=89)
+#     # except:
+#     #     pass
+#     # UserFood.objects.create(daily_entry=daily_entry, food=banana, amount=100)
+#     # UserFood.objects.create(daily_entry=daily_entry, food=banana, amount=100)
+#     # daily_entry = DailyEntry.objects.get(user=user)
+#     return render(request, "login.html")
 
 
 # This function handles the index page
-# It just renders a html file
+# This page should show you weight history and stuffs
 @login_required
 def index():
+    pass
+
+
+# Renders the diary page
+def diary():
+    pass
+
+def settings():
     pass
 
 
@@ -121,9 +129,4 @@ def register_view(request):
 
 # Renders the error page
 def error():
-    pass
-
-
-# Renders the diary page
-def diary():
     pass

@@ -1,3 +1,5 @@
+from django.core.validators import MinValueValidator
+
 from django.utils.translation import gettext_lazy as _
 from django.db import models
 from django.contrib.auth.models import AbstractUser
@@ -58,7 +60,11 @@ class User(AbstractUser):
 
     activity_level = models.FloatField(choices=ActivityLevel.choices, default=ActivityLevel.SEDENTARY)
 
-    field_history = FieldHistoryTracker(["weight", "body_fat"])
+    # The interval between the AI meal plan and routine recommendation
+    # We store it in days
+    recommendation_frequency = models.IntegerField(default=30, validators=[MinValueValidator(30.0)])
+
+    field_history = FieldHistoryTracker(["weight", "body_fat", "activity_level"])
 
     def __str__(self):
         return self.username
