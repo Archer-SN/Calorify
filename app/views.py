@@ -2,6 +2,7 @@ from django.db import IntegrityError
 
 from .scripts import credentials
 from .models import *
+import api
 
 from django.http import HttpResponseRedirect
 from django.urls import reverse
@@ -14,28 +15,6 @@ from datetime import datetime
 import requests
 import json
 import openai
-
-# Id and Keys for the food database api
-EDAMAM_FOOD_DB_ID = "35db61c2"
-EDAMAM_FOOD_DB_KEY = credentials.EDAMAM_FOOD_DB_KEY
-
-# AP stands for Access Point
-# The parser access point handles text search for foods as well as filters for the foods like presence specific nutrient content or exclusion of allergens.
-PARSER_AP = "https://api.edamam.com/api/food-database/v2/parser?app_id={app_id}&app_key={app_key}".format(
-    app_id=EDAMAM_FOOD_DB_ID, app_key=EDAMAM_FOOD_DB_KEY)
-
-# In the response to your parser request you receive the a food ID for each database match.
-# Using the food ID and the measure URI, which parser provides, you can make a request to the nutrients access point.
-# The nutrients access points returns nutrition with diet and health labels for a given quantity of the food.
-NUTRIENTS_AP = "https://api.edamam.com/api/food-database/v2/nutrients"
-
-# Id and keys for the recipe database api
-EDAMAM_RECIPE_DB_ID = "c03ec76f"
-EDAMAM_RECIPE_DB_KEY = credentials.EDAMAM_RECIPE_DB_KEY
-
-# Id and keys for the nutrients analysis api
-EDAMAM_NUTRIENTS_ANALYSIS_ID = "8f60cfad"
-EDAMAM_NUTRIENTS_ANALYSIS_KEY = credentials.EDAMAM_NUTRIENTS_ANALYSIS_KEY
 
 
 # This function handles the index page

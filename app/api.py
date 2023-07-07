@@ -1,5 +1,5 @@
 """
-This file will handle the logic of communicating with API
+This file will handle the logic of communicating with API such as EDAMAM, ChatGPT, etc.
 """
 
 from scripts import credentials
@@ -70,13 +70,13 @@ def create_user_food(food_name):
         }}
         # Gets the nutrition data
         nutrition_request = requests.get(NUTRIENTS_AP, params=nutrition_params).json()
-        # TODO Find a way to add daily_entry
         # Adds each nutrient to the database
         for ntr_code, nutrient_data in nutrition_request["totalNutrients"].items():
             nutrient, nutrient_created = Nutrient.objects.get_or_create(ntr_code=ntr_code, label=nutrient_data["label"],
                                                                         unit_name=nutrient_data["unit"])
             food_nutrient = FoodNutrient.objects.create(food=food, nutrient=nutrient, amount=nutrient_data["quantity"])
     total_weight = data["quantity"] * data["measure"]["weight"]
+    # TODO Find a way to add daily_entry
     user_food = UserFood.objects.create(food=food, daily_entry=None, weight=total_weight)
     return user_food
 
@@ -85,8 +85,14 @@ def create_user_food(food_name):
 # foods is a list of strings of food that has the format "{amount} {unit} {food}"
 def import_meal_plan(foods):
     for food_name in foods:
-        add_food(food_name)
+        create_user_food(food_name)
 
 
 def import_routine_plan():
     pass
+
+
+# Call the ChatGPT api,
+def ask_meal_plan_gpt():
+    pass
+
