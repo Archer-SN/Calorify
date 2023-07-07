@@ -37,11 +37,16 @@ EDAMAM_RECIPE_DB_KEY = credentials.EDAMAM_RECIPE_DB_KEY
 EDAMAM_NUTRIENTS_ANALYSIS_ID = "8f60cfad"
 EDAMAM_NUTRIENTS_ANALYSIS_KEY = credentials.EDAMAM_NUTRIENTS_ANALYSIS_KEY
 
+STANDARD_MEASURE_UNIT = "g"
+STANDARD_MEASURE_URI = "http://www.edamam.com/ontologies/edamam.owl#Measure_gram"
+STANDARD_MEASURE_QUANTITY = 100
+
 
 # I'm not sure whether this should be put in views.py
 
 # Add the given food to the database
 # food_name is a string that has the format "{amount} {unit} {food}"
+# We'll call the database with the food weight of 100 grams (A standard weight for storing in the database)
 def add_food(food_name):
     parser_params = {"ingr": food_name}
     # Calls the database api to obtain list of foods
@@ -52,11 +57,12 @@ def add_food(food_name):
     category, category_created = FoodCategory.objects.get_or_create(description=food_data["category"])
     food, food_created = Food.objects.get_or_create(food_id=food_data["foodId"], label=food_data["label"],
                                                     category=category)
+    # We are going to use 100g as a standard quantity for storing food in the database
     nutrition_params = {"ingredients": {
         "ingredients": [
             {
-                "quantity": data["quantity"],
-                "measureURI": data["measure"]["uri"],
+                "quantity": STANDARD_MEASURE_QUANTITY,
+                "measureURI": STANDARD_MEASURE_URI,
                 "foodId": food_data["foodId"]
             }
         ]
@@ -67,7 +73,9 @@ def add_food(food_name):
     user_food = UserFood.objects.create(food=food, daily_entry=None, weight=nutrition_request["totalWeight"])
     # Adds each nutrient to the database
     for ntr_code, nutrient_data in nutrition_request["totalNutrients"].items():
-        nutrient, nutrient_created = Nutrient.objects.get_or_create(ntr_code=ntr_code, name=nutrient_data[""])
+        nutrient, nutrient_created = Nutrient.objects.get_or_create(ntr_code=ntr_code, label=nutrient_data["label"],
+                                                                    unit_name=nutrient_data["unit"])
+        food_nutrient = FoodNutrient.objects.create(food=food, nutrient=nutrient, amount=nutrient_data["quantity"])
 
 
 # Given a dictionary of food, analyze its nutrition by calling the food database
