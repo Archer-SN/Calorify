@@ -159,12 +159,13 @@ class Challenge:
 class Nutrient(models.Model):
     # The code that the food database uses for identifying the nutrient
     ntr_code = models.CharField(max_length=32)
-    name = models.CharField(max_length=64)
+    # The name of the nutrient
+    label = models.CharField(max_length=64)
     # The standard unit of measure for the nutrient (per 100g of food)
     unit_name = models.CharField(max_length=32)
 
     def __str__(self):
-        return self.name
+        return self.label
 
 
 # The category of food

@@ -64,10 +64,10 @@ def add_food(food_name):
     # Gets the nutrition data
     nutrition_request = requests.get(NUTRIENTS_AP, params=nutrition_params).json()
     # TODO Find a way to add daily_entry
-    user_food = UserFood.objects.create(food=food, daily_entry=None, amount=nutrition_request["totalWeight"])
+    user_food = UserFood.objects.create(food=food, daily_entry=None, weight=nutrition_request["totalWeight"])
     # Adds each nutrient to the database
-    for nutrient_name, amount in food_data["nutrients"].items():
-        pass
+    for ntr_code, nutrient_data in nutrition_request["totalNutrients"].items():
+        nutrient, nutrient_created = Nutrient.objects.get_or_create(ntr_code=ntr_code, name=nutrient_data[""])
 
 
 # Given a dictionary of food, analyze its nutrition by calling the food database
