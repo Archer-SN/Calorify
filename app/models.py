@@ -189,7 +189,7 @@ class Food(models.Model):
 # MeasureUnit will store all the names of all the units
 class MeasureUnit(models.Model):
     uri = models.CharField(max_length=128)
-    unit_name = models.CharField(max_length=32)
+    unit_name = models.CharField(max_length=32, unique=True)
 
 
 # A nutrient value for each food
@@ -242,8 +242,8 @@ class UserFood(models.Model):
     food = models.ForeignKey(Food, related_name="user_foods", on_delete=models.CASCADE)
     # The daily entry this food belongs to
     daily_entry = models.ForeignKey(DailyEntry, related_name="user_foods", on_delete=models.CASCADE)
-    # Food amount in grams
-    amount = models.FloatField(default=0)
+    # Food weight in grams
+    weight = models.FloatField(default=0)
 
     def __str__(self):
         return self.food.label

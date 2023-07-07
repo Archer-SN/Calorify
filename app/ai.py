@@ -26,7 +26,8 @@ PARSER_AP = "https://api.edamam.com/api/food-database/v2/parser?app_id={app_id}&
 # In the response to your parser request you receive the a food ID for each database match.
 # Using the food ID and the measure URI, which parser provides, you can make a request to the nutrients access point.
 # The nutrients access points returns nutrition with diet and health labels for a given quantity of the food.
-NUTRIENTS_AP = "https://api.edamam.com/api/food-database/v2/nutrients"
+NUTRIENTS_AP = "https://api.edamam.com/api/food-database/v2/nutrients?app_id={app_id}&app_key={app_key}".format(
+    app_id=EDAMAM_FOOD_DB_ID, app_key=EDAMAM_FOOD_DB_KEY)
 
 # Id and keys for the recipe database api
 EDAMAM_RECIPE_DB_ID = "c03ec76f"
@@ -39,6 +40,35 @@ EDAMAM_NUTRIENTS_ANALYSIS_KEY = credentials.EDAMAM_NUTRIENTS_ANALYSIS_KEY
 
 # I'm not sure whether this should be put in views.py
 
+# Add the given food to the database
+# food_name is a string that has the format "{amount} {unit} {food}"
+def add_food(food_name):
+    parser_params = {"ingr": food_name}
+    # Calls the database api to obtain list of foods
+    parser_request = requests.get(PARSER_AP, params=parser_params).json()
+    # Gets the first food that is returned from the API call
+    data = parser_request["parsed"][0]
+    food_data = data["food"]
+    category, category_created = FoodCategory.objects.get_or_create(description=food_data["category"])
+    food, food_created = Food.objects.get_or_create(food_id=food_data["foodId"], label=food_data["label"],
+                                                    category=category)
+    nutrition_params = {"ingredients": {
+        "ingredients": [
+            {
+                "quantity": data["quantity"],
+                "measureURI": data["measure"]["uri"],
+                "foodId": food_data["foodId"]
+            }
+        ]
+    }}
+    # Gets the nutrition data
+    nutrition_request = requests.get(NUTRIENTS_AP, params=nutrition_params).json()
+    # TODO Find a way to add daily_entry
+    user_food = UserFood.objects.create(food=food, daily_entry=None, amount=nutrition_request["totalWeight"])
+    # Adds each nutrient to the database
+    for nutrient_name, amount in food_data["nutrients"].items():
+        pass
+
 
 # Given a dictionary of food, analyze its nutrition by calling the food database
 def analyze_meal_plan(foods):
@@ -46,23 +76,10 @@ def analyze_meal_plan(foods):
 
 
 # Import the chat gpt generated meal plan into the database
-# foods is a dictionary that maps a food to its portion
+# foods is a list of strings of food that has the format "{amount} {unit} {food}"
 def import_meal_plan(foods):
-    for food_name, portion in foods.items():
-        parser_params = {"ingr": food_name}
-        # Calls the database api to obtain list of foods
-        parser_request = requests.get(PARSER_AP, params=parser_params).json()
-        # Gets the first food that is returned from the API call
-        food_data = parser_request["parsed"][0]["food"]
-        category, category_created = FoodCategory.objects.get_or_create(description=food_data["category"])
-        food, food_created = Food.objects.get_or_create(food_id=food_data["foodId"], label=food_data["label"],
-                                                        category=category)
-        # Adds each nutrient to the database
-        for nutrient_name, amount in food_data["nutrients"].items():
-            pass
-        # Gets the nutrition data
-        nutrition_params = {}
-        nutrition_request = requests.get(NUTRIENTS_AP, params=nutrition_params)
+    for food_name in foods:
+        add_food(food_name)
 
 
 def import_routine_plan():
