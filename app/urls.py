@@ -11,6 +11,10 @@ urlpatterns = [
     path("logout", views.logout_view, name="logout"),
     path("error", views.error, name="error"),
 
+
+    path("home", views.home, name="home"),
     path("diary", views.diary, name="diary"),
-    path("settings", views.settings, name="settings")
+    path("settings", views.settings, name="settings"),
+
+    path("ask_ai", views.ask_ai, name="ask_ai")
 ]

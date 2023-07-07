@@ -33,45 +33,47 @@ NUTRIENTS_AP = "https://api.edamam.com/api/food-database/v2/nutrients"
 EDAMAM_RECIPE_DB_ID = "c03ec76f"
 EDAMAM_RECIPE_DB_KEY = credentials.EDAMAM_RECIPE_DB_KEY
 
-OPEN_AI_KEY = credentials.OPEN_AI_KEY
-
-
-# # A page for testing functionalities
-# def test(request):
-#     user, created = User.objects.get_or_create(username="RAM", email="ram314@gmail.com", weight=78, height=176,
-#                                                body_fat=20, year_born=datetime(2000, 1, 1))
-#     if created:
-#         user.set_password("123")
-#         user.save()
-#     # daily_entry = DailyEntry.objects.create(user=user)
-#     # r = requests.get(
-#     #     PARSER_AP + "&ingr={food_name}&nutrition-type=cooking".format(food_name="banana")).json()
-#     #
-#     # banana_data = r["parsed"][0]["food"]
-#     # energy, created = Nutrient.objects.get_or_create(name="ENERC_KCAL", unit_name="kcal")
-#     # banana, created = Food.objects.get_or_create(food_id=banana_data["foodId"], label=banana_data["label"])
-#     # try:
-#     #     food_nutrient, created = FoodNutrient.objects.get_or_create(food=banana, nutrient=energy, amount=89)
-#     # except:
-#     #     pass
-#     # UserFood.objects.create(daily_entry=daily_entry, food=banana, amount=100)
-#     # UserFood.objects.create(daily_entry=daily_entry, food=banana, amount=100)
-#     # daily_entry = DailyEntry.objects.get(user=user)
-#     return render(request, "login.html")
+# Id and keys for the nutrients analysis api
+EDAMAM_NUTRIENTS_ANALYSIS_ID = "8f60cfad"
+EDAMAM_NUTRIENTS_ANALYSIS_KEY = credentials.EDAMAM_NUTRIENTS_ANALYSIS_KEY
 
 
 # This function handles the index page
+def index(request):
+    if not request.user.is_authenticated:
+        pass
+    else:
+        # Redirect to the home page
+        return HttpResponseRedirect(reverse("home"))
+
+
+# Handles the page where the user gets asked basic information and health information
+def survey(request):
+    if request.method == 'POST':
+        pass
+
+
+# This handles the home page
 # This page should show you weight history and stuffs
 @login_required
-def index():
+def home(request):
     pass
 
 
+@login_required
 # Renders the diary page
-def diary():
+def diary(request):
     pass
 
-def settings():
+
+# @login_required
+# Handles the page where you can talk to chatGPT
+def ask_ai(request):
+    return render()
+
+
+@login_required
+def settings(request):
     pass
 
 
@@ -128,5 +130,5 @@ def register_view(request):
 
 
 # Renders the error page
-def error():
+def error(request):
     pass
