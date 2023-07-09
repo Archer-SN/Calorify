@@ -2,7 +2,7 @@ from django.db import IntegrityError
 
 from .scripts import credentials
 from .models import *
-import api
+from .api import *
 
 from django.http import HttpResponseRedirect
 from django.urls import reverse
@@ -36,7 +36,7 @@ def survey(request):
 # This page should show you weight history and stuffs
 @login_required
 def home(request):
-    pass
+    return HttpResponse("Hello " + request.user.username)
 
 
 @login_required
@@ -45,10 +45,12 @@ def diary(request):
     pass
 
 
-# @login_required
 # Handles the page where you can talk to chatGPT
+@login_required
 def ask_ai(request):
-    return render()
+    daily_entry, created = DailyEntry.objects.get_or_create(user=request.user, date=datetime.now())
+    new_user_food = create_user_food("5 oz banana", daily_entry)
+    return HttpResponse(new_user_food.get_nutrients().items())
 
 
 @login_required
@@ -73,7 +75,7 @@ def login_view(request):
                 "message": "Invalid username and/or password."
             })
     else:
-        return render(request, "app/login.html")
+        return render(request, "login.html")
 
 
 def logout_view(request):
@@ -105,7 +107,7 @@ def register_view(request):
         login(request, user)
         return HttpResponseRedirect(reverse("index"))
     else:
-        return render(request, "app/register.html")
+        return render(request, "register.html")
 
 
 # Renders the error page

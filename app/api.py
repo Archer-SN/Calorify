@@ -2,8 +2,8 @@
 This file will handle the logic of communicating with API such as EDAMAM, ChatGPT, etc.
 """
 
-from scripts import credentials
-from models import *
+from .scripts import credentials
+from .models import *
 
 import openai
 import json
@@ -47,7 +47,7 @@ STANDARD_MEASURE_QUANTITY = 100
 # food_name is a string that has the format "{amount} {unit} {food}"
 # We'll call the database with the food weight of 100 grams (A standard weight for storing in the database)
 # Return the UserFood that is created
-def create_user_food(food_name):
+def create_user_food(food_name, daily_entry):
     parser_params = {"ingr": food_name}
     # Calls the database api to obtain list of foods
     parser_request = requests.get(PARSER_AP, params=parser_params).json()
@@ -56,10 +56,10 @@ def create_user_food(food_name):
     food_data = data["food"]
     category, category_created = FoodCategory.objects.get_or_create(description=food_data["category"])
     food, food_created = Food.objects.get_or_create(food_id=food_data["foodId"], label=food_data["label"],
-                                                    category=category)
+                                                    food_category=category)
     if not food_created:
         # We are going to use 100g as a standard quantity for storing food in the database
-        nutrition_params = {"ingredients": {
+        ingredients = {
             "ingredients": [
                 {
                     "quantity": STANDARD_MEASURE_QUANTITY,
@@ -67,25 +67,26 @@ def create_user_food(food_name):
                     "foodId": food_data["foodId"]
                 }
             ]
-        }}
+        }
         # Gets the nutrition data
-        nutrition_request = requests.get(NUTRIENTS_AP, params=nutrition_params).json()
+        nutrition_request = requests.post(NUTRIENTS_AP, json=ingredients).json()
         # Adds each nutrient to the database
         for ntr_code, nutrient_data in nutrition_request["totalNutrients"].items():
             nutrient, nutrient_created = Nutrient.objects.get_or_create(ntr_code=ntr_code, label=nutrient_data["label"],
                                                                         unit_name=nutrient_data["unit"])
             food_nutrient = FoodNutrient.objects.create(food=food, nutrient=nutrient, amount=nutrient_data["quantity"])
+    # The total food weight in grams
     total_weight = data["quantity"] * data["measure"]["weight"]
-    # TODO Find a way to add daily_entry
-    user_food = UserFood.objects.create(food=food, daily_entry=None, weight=total_weight)
+    # Actually create the UserFood object so that we can get the real total nutrients
+    user_food = UserFood.objects.create(food=food, daily_entry=daily_entry, weight=total_weight)
     return user_food
 
 
 # Import the chat gpt generated meal plan into the database
 # foods is a list of strings of food that has the format "{amount} {unit} {food}"
-def import_meal_plan(foods):
+def import_meal_plan(foods, daily_entry):
     for food_name in foods:
-        create_user_food(food_name)
+        create_user_food(food_name, daily_entry)
 
 
 def import_routine_plan():
@@ -95,4 +96,3 @@ def import_routine_plan():
 # Call the ChatGPT api,
 def ask_meal_plan_gpt():
     pass
-

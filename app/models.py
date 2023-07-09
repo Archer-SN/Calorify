@@ -253,6 +253,6 @@ class UserFood(models.Model):
     def get_nutrients(self):
         nutrients_counter = Counter()
         for food_nutrient in self.food.food_nutrients.all():
-            nutrient_name = food_nutrient.nutrient.name
-            nutrients_counter[nutrient_name] = (food_nutrient.amount / BASE_AMOUNT) * self.amount
+            nutrient_name = food_nutrient.nutrient.label
+            nutrients_counter[nutrient_name] = (food_nutrient.amount / BASE_AMOUNT) * self.weight
         return nutrients_counter
