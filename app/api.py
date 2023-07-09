@@ -11,7 +11,7 @@ import requests
 
 openai.api_key = credentials.OPEN_AI_KEY
 
-MODEL = "gpt-3.5-turbo"
+GPT_MODEL = "gpt-3.5-turbo"
 
 # Id and Keys for the food database api
 EDAMAM_FOOD_DB_ID = "35db61c2"
@@ -94,5 +94,20 @@ def import_routine_plan():
 
 
 # Call the ChatGPT api,
-def ask_meal_plan_gpt():
-    pass
+def ask_meal_plan_gpt(user):
+    messages = [{
+        "role": "system",
+        "content": "You are an expert in cooking and fitness. When I give you a list of ingredients and their quantities, you must create a meal plan based on those ingredients using no more than the given quantities. You can use any ingredient other than the given.\n\nIf no ingredients are given, use anything you want.\n\nYou don't need to specify the total calories.\nDon't list the instructions unless otherwise specificed."
+    },
+        {"role": "user",
+         "content": "Generate a healthy and tasty meal plan that has a total of {tdee} calories.".format(tdee=user.get_tdee())}]
+    response = openai.ChatCompletion.create(
+        model=GPT_MODEL,
+        messages=messages,
+        temperature=1,
+        max_tokens=512,
+        top_p=1,
+        frequency_penalty=0,
+        presence_penalty=0
+    )
+    return response.choices[0].message
