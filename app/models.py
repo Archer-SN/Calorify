@@ -186,6 +186,14 @@ class Food(models.Model):
     def __str__(self):
         return self.label
 
+    # Return the amount of each nutrient in the food based on the given food weight
+    def get_nutrients(self, weight):
+        nutrients_counter = Counter()
+        for food_nutrient in self.food_nutrients.all():
+            nutrient_name = food_nutrient.nutrient.label
+            nutrients_counter[nutrient_name] = (food_nutrient.amount / BASE_AMOUNT) * weight
+        return nutrients_counter
+
 
 # MeasureUnit will store all the names of all the units
 class MeasureUnit(models.Model):
