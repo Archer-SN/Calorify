@@ -36,7 +36,7 @@ def survey(request):
 # This page should show you weight history and stuffs
 @login_required
 def home(request):
-    return HttpResponse("Hello " + request.user.username)
+    return render(request, "layout.html")
 
 
 @login_required
