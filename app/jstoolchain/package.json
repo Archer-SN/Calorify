@@ -4,8 +4,9 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "tailwind-watch": "tailwindcss -i ../input.css -o ../static/css/output.css --watch",
-    "tailwind-build": "tailwindcss -i ../input.css -o ../static/css/output.css --minify"
+    "tailwind-watch": "tailwindcss -i ../input.css -o ../static/output.css --watch",
+    "tailwind-build": "tailwindcss -i ../input.css -o ../static/output.css --minify",
+    "dev": "nodemon --watch '../templates/**/*' -e html -x \"npm run build\""
   },
   "keywords": [],
   "author": "",
@@ -54,6 +55,7 @@
     "mz": "^2.7.0",
     "nanoid": "^3.3.6",
     "normalize-path": "^3.0.0",
+    "npm-run-all": "^4.1.5",
     "object-assign": "^4.1.1",
     "object-hash": "^3.0.0",
     "once": "^1.4.0",
