@@ -48,7 +48,9 @@ def diary(request):
 # Handles the page where you can talk to chatGPT
 @login_required
 def ask_ai(request):
-    return HttpResponse(ask_meal_plan_gpt(request.user).content)
+    daily_entry, created = DailyEntry.objects.get_or_create(user=request.user)
+    ask_meal_plan_gpt(request.user)
+    return HttpResponse(daily_entry.user_foods)
 
 
 @login_required
