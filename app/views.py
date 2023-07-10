@@ -50,7 +50,7 @@ def diary(request):
 def ask_ai(request):
     daily_entry, created = DailyEntry.objects.get_or_create(user=request.user)
     ask_meal_plan_gpt(request.user)
-    return HttpResponse(daily_entry.user_foods)
+    return HttpResponse(request.user.get_tdee())
 
 
 @login_required
