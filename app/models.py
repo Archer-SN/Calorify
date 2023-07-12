@@ -187,9 +187,9 @@ class Food(models.Model):
         return self.label
 
     # Return the amount of each nutrient in the food based on the given food weight
-    def get_nutrients(self, weight):
+    def get_nutrients(self, weight=BASE_AMOUNT):
         nutrients_counter = Counter()
-        for food_nutrient in FoodNutrient.objects.get(food=self):
+        for food_nutrient in FoodNutrient.objects.filter(food=self):
             nutrient_name = food_nutrient.nutrient.label
             nutrients_counter[nutrient_name] = (food_nutrient.amount / BASE_AMOUNT) * weight
         return nutrients_counter
@@ -240,7 +240,7 @@ class DailyEntry(models.Model):
         total_nutrients_counter = Counter()
         for user_food in UserFood.objects.filter(daily_entry=self):
             total_nutrients_counter += user_food.get_nutrients()
-        return total_nutrients_counter
+        return dict(total_nutrients_counter)
 
     def total_calories(self):
         return self.total_nutrients()["ENERC_KCAL"]
@@ -259,8 +259,4 @@ class UserFood(models.Model):
 
     # Return the amount of each nutrient in the food
     def get_nutrients(self):
-        nutrients_counter = Counter()
-        for food_nutrient in self.food.food_nutrients.all():
-            nutrient_name = food_nutrient.nutrient.label
-            nutrients_counter[nutrient_name] = (food_nutrient.amount / BASE_AMOUNT) * self.weight
-        return nutrients_counter
+        return self.food.get_nutrients()

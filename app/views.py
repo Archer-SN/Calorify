@@ -49,8 +49,8 @@ def diary(request):
 @login_required
 def ask_ai(request):
     daily_entry, created = DailyEntry.objects.get_or_create(user=request.user, date=datetime.now())
-    #food_list = ask_meal_plan_gpt(request.user)
-    return HttpResponse(UserFood.objects.all())
+    # food_list = ask_meal_plan_gpt(request.user)
+    return HttpResponse(json.dumps(daily_entry.total_nutrients()))
 
 
 @login_required
