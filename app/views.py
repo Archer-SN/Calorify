@@ -49,7 +49,7 @@ def diary(request):
 @login_required
 def ask_ai(request):
     daily_entry, created = DailyEntry.objects.get_or_create(user=request.user, date=datetime.now())
-    # food_list = ask_meal_plan_gpt(request.user)
+    food_list = ask_meal_plan_gpt(request.user)
     return HttpResponse(json.dumps(daily_entry.total_nutrients()))
 
 
@@ -71,7 +71,7 @@ def login_view(request):
             login(request, user)
             return HttpResponseRedirect(reverse("index"))
         else:
-            return render(request, "app/login.html", {
+            return render(request, "login.html", {
                 "message": "Invalid username and/or password."
             })
     else:
@@ -92,7 +92,7 @@ def register_view(request):
         password = request.POST["password"]
         confirmation = request.POST["confirmation"]
         if password != confirmation:
-            return render(request, "app/register.html", {
+            return render(request, "register.html", {
                 "message": "Passwords must match."
             })
 
@@ -101,7 +101,7 @@ def register_view(request):
             user = User.objects.create_user(username, email, password)
             user.save()
         except IntegrityError:
-            return render(request, "app/register.html", {
+            return render(request, "register.html", {
                 "message": "Username already taken."
             })
         login(request, user)

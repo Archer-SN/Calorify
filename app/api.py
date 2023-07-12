@@ -166,6 +166,7 @@ def ask_meal_plan_gpt(user):
         function_call={"name": "analyze_meal_plan"}
     )
     response_message = response["choices"][0]["message"]
+    print(response_message)
     # Check if GPT wanted to call a function
     if response_message.get("function_call"):
         # Call the function
@@ -178,40 +179,7 @@ def ask_meal_plan_gpt(user):
         function_to_call = available_functions[function_name]
         function_args = json.loads(response_message["function_call"]["arguments"])
         function_response = function_to_call(food_dict_list=function_args.get("food_dict_list"))
-        create_user_meal_plan(user, food_dict_list=function_args.get("food_dict_list"))
-
         return
 
     return
-
-
-# TODO
-def ask_gpt(user, messages, functions):
-    response = openai.ChatCompletion.create(
-        model=GPT_MODEL,
-        messages=messages,
-        functions=functions,
-        temperature=1,
-        max_tokens=512,
-        top_p=1,
-        frequency_penalty=0,
-        presence_penalty=0,
-        function_call={"name": "analyze_meal_plan"}
-    )
-    response_message = response["choices"][0]["message"]
-    # Check if GPT wanted to call a function
-    if response_message.get("function_call"):
-        # Call the function
-        # Note: the JSON response may not always be valid; be sure to handle errors
-        available_functions = {
-            "analyze_meal_plan": analyze_meal_plan,
-        }  # only one function in this example, but you can have multiple
-        function_name = response_message["function_call"]["name"]
-
-        function_to_call = available_functions[function_name]
-        function_args = json.loads(response_message["function_call"]["arguments"])
-        function_response = function_to_call(food_dict_list=function_args.get("food_dict_list"))
-        create_user_meal_plan(user, food_dict_list=function_args.get("food_dict_list"))
-
-        return
 

@@ -4,3 +4,5 @@ from app.models import *
 # Register your models here.
 admin.site.register(UserFood)
 admin.site.register(DailyEntry)
+admin.site.register(User)
+admin.site.register(Food)

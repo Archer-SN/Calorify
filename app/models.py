@@ -1,4 +1,5 @@
-from django.core.validators import MinValueValidator
+from django.core.validators import MinValueValidator, MaxValueValidator
+from model_utils import Choices
 
 from django.utils.translation import gettext_lazy as _
 from django.db import models
@@ -41,12 +42,12 @@ BASE_AMOUNT = 100
 # This model stores all the basic information of the user
 class User(AbstractUser):
     # This will be multiplied to BMR which will give Total Daily Energy Expenditure (TDEE)
-    class ActivityLevel(models.TextChoices):
-        NONE = 1, _("None")
-        SEDENTARY = 1.2, _("Sedentary")
-        LIGHT = 1.35, _("Lightly Active")
-        MODERATE = 1.5, _("Moderately Active")
-        VERY = 1.9, _("Very Active")
+    ACTIVITY_LEVEL = Choices(
+        (1, 'NONE', _("None")),
+        (1.2, "SED", _("Sedentary")),
+        (1.35, "LA", _("Lightly Active")),
+        (1.5, "MA", _("Moderately Active")),
+        (1.9, "VA", _("Very Active")))
 
     SEX_CHOICES = [("M", "Male"), ("F", "Female")]
     sex = models.CharField(max_length=1, choices=SEX_CHOICES)
@@ -58,7 +59,9 @@ class User(AbstractUser):
     body_fat = models.FloatField(default=15)
     year_born = models.DateField(default=datetime.now)
 
-    activity_level = models.FloatField(choices=ActivityLevel.choices, default=ActivityLevel.SEDENTARY)
+    activity_level = models.FloatField(choices=ACTIVITY_LEVEL, default=ACTIVITY_LEVEL.NONE)
+
+    meal_frequency = models.IntegerField(default=3, validators=[MaxValueValidator(10)])
 
     # The interval between the AI meal plan and routine recommendation
     # We store it in days

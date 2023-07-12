@@ -2,21 +2,17 @@
 
 {% block body %}
     <div class="d-flex flex-column align-items-center p-5">
-        <h2 class="mb-4">Login</h2>
+        <h2 class="">Login</h2>
 
         {% if message %}
-            <div class="alert alert-warning">{{ message }}</div>
+            <div class="">{{ message }}</div>
         {% endif %}
 
-        <form action="{% url 'login' %}" method="post" class="d-flex flex-column align-items-center">
+        <form action="{% url 'login' %}" method="post" class="form-control">
             {% csrf_token %}
-            <div class="mb-3">
-                <input autofocus autocomplete="off" class="form-control" type="text" name="username" placeholder="Username" class="form-control">
-            </div>
-            <div class="mb-3">
-                <input type="password" name="password" placeholder="Password" class="form-control">
-            </div>
-            <input type="submit" value="Login" class="btn btn-primary mb-3">
+            <input autofocus autocomplete="off" class="input input-bordered" type="text" name="username" placeholder="Username">
+            <input type="password" name="password" placeholder="Password" class="input input-bordered mb-6">
+            <input type="submit" value="Login" class="btn btn-outline btn-error">
         </form>
 
         Don't have an account? <a href="{% url 'register' %}">Register here.</a>
