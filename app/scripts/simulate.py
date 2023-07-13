@@ -1,28 +1,61 @@
-from app.models import *
-
 from datetime import datetime
 
 import openai
 import json
 import requests
+import os
+import django
+
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "calorify.settings")
+django.setup()
+
+from app.models import *
 
 # We are going to make a simulation of 30 days
+NUMBER_OF_DAYS = 30
 
-# Simulate User1 activities
-user1 = User.objects.get_or_create(username="User1", email="a@gmail.com", password="123", sex="M", activity_level="MA",
-                                   weight="75", height="173", year_born=datetime(2006, 6, 15), meal_frequency=3,
-                                   recommendation_frequency=30, first_name="Siwakorn", last_name="Sukchomthong")
 
-# Simulate User2 activities
-user2 = User.objects.get_or_create(username="User2", email="b@gmail.com", password="123", sex="M", activity_level="SED",
-                                   weight="120", height="170", year_born=datetime(1996, 7, 12), meal_frequency=5,
-                                   recommendation_frequency=30, first_name="John", last_name="Doe")
+# Create all the users
+def user_setup():
+    user1, _ = User.objects.get_or_create(username="User1", email="a@gmail.com", sex="M",
+                                          activity_level=User.ACTIVITY_LEVEL.MA,
+                                          weight="75", height="175", year_born=datetime(2006, 6, 15), meal_frequency=3,
+                                          recommendation_frequency=30, first_name="FakeSiwakorn",
+                                          last_name="NotSukchomthong")
+    user1.set_password("123")
 
-# Simulate User3 activities
-user3 = User.objects.get_or_create(username="User3", email="c@gmail.com", password="123", sex="F", activity_level="MA",
-                                   weight="45", height="155", year_born=datetime(1993, 7, 12), meal_frequency=2,
-                                   recommendation_frequency=30, first_name="Jane", last_name="Doe")
-# Simulate User4 activities
-user4 = User.objects.get_or_create(username="User4", email="d@gmail.com", password="123", sex="M", activity_level="VA",
-                                   weight="90", height="185", year_born=datetime(1975, 2, 17), meal_frequency=1,
-                                   recommendation_frequency=30, first_name="David", last_name="Goggins")
+    user2, _ = User.objects.get_or_create(username="User2", email="b@gmail.com", sex="M",
+                                          activity_level=User.ACTIVITY_LEVEL.SED,
+                                          weight="120", height="170", year_born=datetime(1996, 7, 12), meal_frequency=5,
+                                          recommendation_frequency=30, first_name="John", last_name="Doe")
+    user2.set_password("123")
+
+    user3, _ = User.objects.get_or_create(username="User3", email="c@gmail.com", sex="F",
+                                          activity_level=User.ACTIVITY_LEVEL.MA,
+                                          weight="45", height="155", year_born=datetime(1993, 7, 12), meal_frequency=2,
+                                          recommendation_frequency=30, first_name="Jane", last_name="Doe")
+    user3.set_password("123")
+
+    user4, _ = User.objects.get_or_create(username="User4", email="d@gmail.com", sex="M",
+                                          activity_level=User.ACTIVITY_LEVEL.VA,
+                                          weight="90", height="185", year_born=datetime(1975, 2, 17), meal_frequency=1,
+                                          recommendation_frequency=30, first_name="David", last_name="Goggins")
+    user4.set_password("123")
+
+
+def simulate_user1():
+    pass
+
+
+def simulate_user2():
+    pass
+
+
+def simulate_user3():
+    pass
+
+
+def simulate_user4():
+    pass
+
+# user_setup()
