@@ -50,7 +50,8 @@ def ask_ai(request):
     message = {"role": "user",
                "content": "Generate a healthy and tasty meal plan that has a total of {tdee} calories.".format(
                    tdee=request.user.get_tdee())}
-    food_list = ask_meal_plan_gpt(request.user, message)
+    unhealthy_message = {}
+    # food_list = ask_meal_plan_gpt(request.user, message)
     # import_user_meal_plan(request.user, food_list)
     return HttpResponse(json.dumps(daily_entry.total_nutrients()))
 

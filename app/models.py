@@ -102,6 +102,11 @@ class User(AbstractUser):
         bmr = self.get_bmr()
         return bmr + (bmr * self.activity_level)
 
+    # Calculate the change in weight since the specified date
+    # Positive (negative) means weight gain (loss)
+    def calculate_weight_change(self, date):
+        pass
+
 
 # This model handles user's target for macronutrients, weight, etc.
 class UserTargets(models.Model):
