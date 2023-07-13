@@ -16,6 +16,16 @@ from app.api import *
 NUMBER_OF_DAYS = 30
 
 
+def create_daily_challenge():
+    pass
+
+def create_weekly_challenge():
+    pass
+
+def create_monthly_challenge():
+    pass
+
+
 # Create all the users
 def user_setup():
     user1, _ = User.objects.get_or_create(username="User1", email="a@gmail.com", sex="M",
@@ -48,16 +58,21 @@ def simulate_user1():
     for i in range(1, NUMBER_OF_DAYS + 1):
         pass
 
+
 def simulate_user2():
-    pass
+    for i in range(1, NUMBER_OF_DAYS + 1):
+        pass
 
 
 def simulate_user3():
-    pass
+    for i in range(1, NUMBER_OF_DAYS + 1):
+        pass
 
 
 def simulate_user4():
-    pass
+    for i in range(1, NUMBER_OF_DAYS + 1):
+        pass
+
 
 def run():
     # user_setup()
@@ -65,5 +80,6 @@ def run():
     simulate_user2()
     simulate_user3()
     simulate_user4()
+
 
 run()
