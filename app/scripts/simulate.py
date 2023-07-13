@@ -10,6 +10,7 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "calorify.settings")
 django.setup()
 
 from app.models import *
+from app.api import *
 
 # We are going to make a simulation of 30 days
 NUMBER_OF_DAYS = 30
@@ -44,8 +45,8 @@ def user_setup():
 
 
 def simulate_user1():
-    pass
-
+    for i in range(1, NUMBER_OF_DAYS + 1):
+        pass
 
 def simulate_user2():
     pass
@@ -58,4 +59,11 @@ def simulate_user3():
 def simulate_user4():
     pass
 
-# user_setup()
+def run():
+    # user_setup()
+    simulate_user1()
+    simulate_user2()
+    simulate_user3()
+    simulate_user4()
+
+run()

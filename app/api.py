@@ -109,16 +109,6 @@ def analyze_meal_plan(food_dict_list):
 
 
 # Create the new user food entry in the database
-def create_user_food(user, food_dict, date=datetime.now()):
-    food = analyze_food(food_dict["food_name"])
-    daily_entry, created = DailyEntry.objects.get_or_create(user=user, date=date)
-    if food:
-        user_food = UserFood.objects.create(food=food, daily_entry=daily_entry, weight=food_dict["food_portion"])
-        return user_food
-    return
-
-
-# Create the new user food entry in the database
 # import means that we don't have to analyze the food
 def import_user_food(user, food_obj_dict, date=datetime.now()):
     food = food_obj_dict["food"]
@@ -127,19 +117,6 @@ def import_user_food(user, food_obj_dict, date=datetime.now()):
         user_food = UserFood.objects.create(food=food, daily_entry=daily_entry, weight=food_obj_dict["food_portion"])
         return user_food
     return
-
-
-# Given a list of foods and their portions, create Food and UserFood entries in the database
-def create_user_meal_plan(user, food_dict_list, date=datetime.now()):
-    user_food_list = []
-    daily_entry, created = DailyEntry.objects.get_or_create(user=user, date=date)
-    for food_dict in food_dict_list:
-        user_food = create_user_food(user, food_dict["food_name"])
-        if user_food:
-            user_food_list.append(user_food)
-        else:
-            print("Food doesn't exist!")
-    return user_food_list
 
 
 # Given a list of Food objects and their portions, use it to create UserFood objects
