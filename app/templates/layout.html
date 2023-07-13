@@ -11,25 +11,14 @@
     {% endblock %}
 </head>
 
-<body class="">
+<body class="flex flex-col">
 <div class="navbar bg-base-100">
     <div class="flex-1">
         <a class="btn btn-ghost normal-case text-xl">Calorify</a>
     </div>
     <div class="flex-none">
         <ul class="menu menu-horizontal px-1">
-            <li><a>Link</a></li>
-            <li>
-                <details>
-                    <summary>
-                        Parent
-                    </summary>
-                    <ul class="p-2 bg-base-100">
-                        <li><a>Link 6436431</a></li>
-                        <li><a>Link 2</a></li>
-                    </ul>
-                </details>
-            </li>
+            <li><a href="{% url 'logout' %}" class="hover:bg-teal-200">Logout</a></li>
         </ul>
     </div>
 </div>
@@ -37,7 +26,7 @@
 
 {% endblock %}
 
-<footer class="footer p-10 bg-neutral text-neutral-content">
+<footer class="place-self-end footer p-10 bg-neutral text-neutral-content">
     <div>
         <span class="footer-title">Services</span>
         <a class="link link-hover">Branding</a>

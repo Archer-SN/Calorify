@@ -6,7 +6,7 @@ from .api import *
 
 from django.http import HttpResponseRedirect
 from django.urls import reverse
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.shortcuts import HttpResponse
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
@@ -21,6 +21,7 @@ import openai
 def index(request):
     if request.user.is_authenticated:
         return HttpResponseRedirect(reverse("home"))
+    return HttpResponse("Hello login pls")
 
 
 # Handles the page where the user gets asked basic information and health information
@@ -50,7 +51,7 @@ def ask_ai(request):
                "content": "Generate a healthy and tasty meal plan that has a total of {tdee} calories.".format(
                    tdee=request.user.get_tdee())}
     food_list = ask_meal_plan_gpt(request.user, message)
-    import_user_meal_plan(request.user, food_list)
+    # import_user_meal_plan(request.user, food_list)
     return HttpResponse(json.dumps(daily_entry.total_nutrients()))
 
 
@@ -60,8 +61,11 @@ def settings(request):
 
 
 def login_view(request):
+    if request.user.is_authenticated:
+        return request(reverse("home"))
     if request.method == "POST":
 
+        print(request.POST)
         # Attempt to sign user in
         username = request.POST["username"]
         password = request.POST["password"]
@@ -69,9 +73,11 @@ def login_view(request):
 
         # Check if authentication successful
         if user is not None:
+            print("User does exist")
             login(request, user)
-            return HttpResponseRedirect(reverse("index"))
+            return redirect(reverse("home"))
         else:
+            print("Invalid User")
             return render(request, "login.html", {
                 "message": "Invalid username and/or password."
             })

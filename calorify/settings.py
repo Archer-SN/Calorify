@@ -61,6 +61,9 @@ GRAPH_MODELS = {
 
 ROOT_URLCONF = 'calorify.urls'
 
+LOGIN_URL = 'login'
+LOGIN_REDIRECT_URL = 'login'
+
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',

@@ -42,6 +42,11 @@ STANDARD_MEASURE_UNIT = "g"
 STANDARD_MEASURE_URI = "http://www.edamam.com/ontologies/edamam.owl#Measure_gram"
 STANDARD_MEASURE_QUANTITY = 100
 
+DEFAULT_SYSTEM_MESSAGE = {
+    "role": "system",
+    "content": "Assistant is an intelligent chatbot designed to help users answer health and fitness related questions."
+}
+
 
 # I'm not sure whether this should be put in views.py
 
@@ -157,10 +162,7 @@ def import_routine_plan():
 # Ask ChatGPT for a meal plan given the user's information
 # food_obj_list is returned
 def ask_meal_plan_gpt(user, message):
-    messages = [{
-        "role": "system",
-        "content": "Assistant is an intelligent chatbot designed to help users answer health and fitness related questions."
-    }, message]
+    messages = [DEFAULT_SYSTEM_MESSAGE, message]
     functions = [{
         "name": "analyze_meal_plan",
         "description": "Call the food database to obtain food nutrients",
