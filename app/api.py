@@ -80,7 +80,8 @@ def analyze_food(food_name):
             nutrition_request = requests.post(NUTRIENTS_AP, json=ingredients).json()
             # Adds each nutrient to the database
             for ntr_code, nutrient_data in nutrition_request["totalNutrients"].items():
-                nutrient, nutrient_created = Nutrient.objects.get_or_create(ntr_code=ntr_code, label=nutrient_data["label"],
+                nutrient, nutrient_created = Nutrient.objects.get_or_create(ntr_code=ntr_code,
+                                                                            label=nutrient_data["label"],
                                                                             unit_name=nutrient_data["unit"])
                 food_nutrient = FoodNutrient.objects.create(food=food_obj, nutrient=nutrient,
                                                             amount=nutrient_data["quantity"])
@@ -94,44 +95,72 @@ def analyze_food(food_name):
 # foods is a list of food dictionary
 # Each dictionary is of the format {"food_name" : "", "food_portion": 200}
 def analyze_meal_plan(food_dict_list):
-    food_list = []
+    food_obj_dict_list = []
     for food_dict in food_dict_list:
         food = analyze_food(food_dict["food_name"])
-        food_list.append(analyze_food)
-        print(food_dict["food_name"])
-    return food_list
+        food_obj_dict = {"food": food, "food_portion": food_dict["food_portion"]}
+        food_obj_dict_list.append(food_obj_dict)
+    return food_obj_dict_list
 
 
-# Import
+# Create the new user food entry in the database
 def create_user_food(user, food_dict, date=datetime.now()):
     food = analyze_food(food_dict["food_name"])
     daily_entry, created = DailyEntry.objects.get_or_create(user=user, date=date)
-    user_food = UserFood.objects.create(food=food, daily_entry=daily_entry, weight=food_dict["food_portion"])
+    if food:
+        user_food = UserFood.objects.create(food=food, daily_entry=daily_entry, weight=food_dict["food_portion"])
+        return user_food
+    return
 
 
+# Create the new user food entry in the database
+# import means that we don't have to analyze the food
+def import_user_food(user, food_obj_dict, date=datetime.now()):
+    food = food_obj_dict["food"]
+    daily_entry, created = DailyEntry.objects.get_or_create(user=user, date=date)
+    if food:
+        user_food = UserFood.objects.create(food=food, daily_entry=daily_entry, weight=food_obj_dict["food_portion"])
+        return user_food
+    return
+
+
+# Given a list of foods and their portions, create Food and UserFood entries in the database
 def create_user_meal_plan(user, food_dict_list, date=datetime.now()):
+    user_food_list = []
     daily_entry, created = DailyEntry.objects.get_or_create(user=user, date=date)
     for food_dict in food_dict_list:
-        food = analyze_food(food_dict["food_name"])
-        if food:
-            user_food = UserFood.objects.create(food=food, daily_entry=daily_entry, weight=food_dict["food_portion"])
+        user_food = create_user_food(user, food_dict["food_name"])
+        if user_food:
+            user_food_list.append(user_food)
         else:
             print("Food doesn't exist!")
+    return user_food_list
+
+
+# Given a list of Food objects and their portions, use it to create UserFood objects
+def import_user_meal_plan(user, food_obj_dict_list, date=datetime.now()):
+    user_food_list = []
+    daily_entry, created = DailyEntry.objects.get_or_create(user=user, date=date)
+    for food_obj_dict in food_obj_dict_list:
+        user_food = import_user_food(user, food_obj_dict)
+        if user_food:
+            user_food_list.append(user_food)
+        else:
+            print("Food doesn't exist!")
+    return user_food_list
+
 
 def import_routine_plan():
     pass
 
 
 # Ask ChatGPT for a meal plan given the user's information
-def ask_meal_plan_gpt(user):
-    messages = [
-        {
-            "role": "system",
-            "content": "Assistant is an intelligent chatbot designed to help users answer health and fitness related questions."
-        },
-        {"role": "user",
-         "content": "Generate a healthy and tasty meal plan that has a total of {tdee} calories.".format(
-             tdee=user.get_tdee())}]
+# food_obj_list is returned
+def ask_meal_plan_gpt(user, message):
+    messages = [{
+        "role": "system",
+        "content": "Assistant is an intelligent chatbot designed to help users answer health and fitness related questions."
+    }, message]
     functions = [{
         "name": "analyze_meal_plan",
         "description": "Call the food database to obtain food nutrients",
@@ -166,20 +195,13 @@ def ask_meal_plan_gpt(user):
         function_call={"name": "analyze_meal_plan"}
     )
     response_message = response["choices"][0]["message"]
-    print(response_message)
+
     # Check if GPT wanted to call a function
     if response_message.get("function_call"):
-        # Call the function
-        # Note: the JSON response may not always be valid; be sure to handle errors
-        available_functions = {
-            "analyze_meal_plan": analyze_meal_plan,
-        }  # only one function in this example, but you can have multiple
         function_name = response_message["function_call"]["name"]
-
-        function_to_call = available_functions[function_name]
-        function_args = json.loads(response_message["function_call"]["arguments"])
-        function_response = function_to_call(food_dict_list=function_args.get("food_dict_list"))
-        return
+        if function_name == "analyze_meal_plan":
+            function_args = json.loads(response_message["function_call"]["arguments"])
+            function_response = analyze_meal_plan(food_dict_list=function_args.get("food_dict_list"))
+            return function_response
 
     return
-

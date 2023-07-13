@@ -19,10 +19,7 @@ import openai
 
 # This function handles the index page
 def index(request):
-    if not request.user.is_authenticated:
-        pass
-    else:
-        # Redirect to the home page
+    if request.user.is_authenticated:
         return HttpResponseRedirect(reverse("home"))
 
 
@@ -49,7 +46,11 @@ def diary(request):
 @login_required
 def ask_ai(request):
     daily_entry, created = DailyEntry.objects.get_or_create(user=request.user, date=datetime.now())
-    food_list = ask_meal_plan_gpt(request.user)
+    message = {"role": "user",
+               "content": "Generate a healthy and tasty meal plan that has a total of {tdee} calories.".format(
+                   tdee=request.user.get_tdee())}
+    food_list = ask_meal_plan_gpt(request.user, message)
+    import_user_meal_plan(request.user, food_list)
     return HttpResponse(json.dumps(daily_entry.total_nutrients()))
 
 
@@ -105,7 +106,7 @@ def register_view(request):
                 "message": "Username already taken."
             })
         login(request, user)
-        return HttpResponseRedirect(reverse("index"))
+        return HttpResponseRedirect(reverse("home"))
     else:
         return render(request, "register.html")
 
