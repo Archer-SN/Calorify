@@ -116,9 +116,9 @@ class User(AbstractUser):
     # Calculate basal metabolic rate
     def get_bmr(self):
         if self.sex == "M":
-            return (10 * float(self.weight) + float(6.25 * self.height) - 5 * float(self.age()) + 5)
+            return (10 * (self.weight) + (6.25 * self.height) - 5 * int(self.age()) + 5)
         else:
-            return (10 * float(self.weight) + float(6.25 * self.height) - 5 * float(self.age()) - 161)
+            return (10 * (self.weight) + (6.25 * self.height) - 5 * float(self.age()) - 161)
 
     # Return TDEE as a float
     def get_tdee(self):
@@ -198,7 +198,7 @@ class Difficulty(models.Model):
 
 class Challenge(models.Model):
     user_rpg = models.ManyToManyField(UserRPG)
-    difficulty = models.ManyToManyField(Difficulty)
+    difficulty = models.ForeignKey(Difficulty, on_delete=models.CASCADE)
     # The challenge's name
     name = models.CharField(max_length=64)
     # The description of the challenge
@@ -310,7 +310,7 @@ class DailyEntry(models.Model):
             food_intake.append(user_food.info())
         for exercise in UserExercise.objects.filter(daily_entry=self):
             exercises.append(exercise.info())
-        return {"date": self.date.date(), "food_intake": food_intake, "exercises": exercises}
+        return {"d": self.date, "i": food_intake, "e": exercises}
 
     def total_nutrients(self):
         total_nutrients_counter = Counter()
@@ -333,7 +333,7 @@ class UserFood(models.Model):
     weight = models.FloatField(default=0)
 
     def info(self):
-        return {"food_name": self.food.label, "portion": self.weight}
+        return {"f": self.food.label, "a": self.weight}
 
     # Return the amount of each nutrient in the food
     def get_nutrients(self):
@@ -351,4 +351,4 @@ class UserExercise(models.Model):
     duration = models.IntegerField(default=0)
 
     def info(self):
-        return {"name": self.exercise.name, "duration": self.duration}
+        return {"n": self.exercise.name, "t": self.duration}

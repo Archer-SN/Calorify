@@ -194,7 +194,7 @@ def ask_meal_plan_gpt(user, message):
     # Check if GPT wanted to call a function
     if response_message.get("function_call"):
         function_name = response_message["function_call"]["name"]
-        if function_name == "analyze_meal_plan":
+        if function_name == "analyze_meal_plan" and response_message["function_call"]["arguments"]:
             function_args = json.loads(
                 response_message["function_call"]["arguments"])
             function_response = analyze_meal_plan(
@@ -209,12 +209,12 @@ def ask_meal_plan_gpt(user, message):
 # This is pricey. Don't run it often!
 def ai_analyze_history(user, number_of_days):
     messages = [DEFAULT_SYSTEM_MESSAGE, {"role": "system",
-                                         "content": "When I give you a history of food intake and exercises in the following python format (portion is in grams) (duration is in minutes):\n\n'''\n[\n{'date': '', 'food_intake': ['food_name': '', 'portion': 100}] 'exercises': [{'name': '', 'duration': 60}]}\n]\n'''\n\nI want you to customly create an advice for me and tell me whether I hit my calories target and what are my errors. Give advice on days that you think are the most critical."}]
+                                         "content": "When I give you a history of food intake and exercises in the following python format (portion is in grams) (duration is in minutes):\n'''\n[\n{'d': '', 'f': [{'n': '', 'p': 100}] 'e': [{'l': '', 't', 60}]}\n]\n'''\nd stands for date\ni stands for food intake\nf stands for food name\na stands for amount in grams\ne stands for exercise\nn stands for exercise name\nt stands for exercise duration\nI want you to customly create an advice for me and tell me whether I hit my calories target and what are my errors. Give advice on days that you think are the most critical.\n"}]
     history = []
-    for daily_entry in DailyEntry.objects.filter(user=user, date__gte=(datetime.now() - timedelta(number_of_days))):
+    for daily_entry in DailyEntry.objects.filter(user=user, date__gt=(datetime.now() - timedelta(number_of_days))):
         print(daily_entry)
         history.append(daily_entry.summary())
-    print(len(str(history)))
+    print(str(history))
     messages.append({"role": "user", "content": ""})
     # response = openai.ChatCompletion.create(
     #     model=GPT_MODEL,
