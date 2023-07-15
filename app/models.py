@@ -116,9 +116,9 @@ class User(AbstractUser):
     # Calculate basal metabolic rate
     def get_bmr(self):
         if self.sex == "M":
-            return 10 * float(self.weight) + float(6.25 * self.height) - 5 * self.age() + 5
+            return (10 * float(self.weight) + float(6.25 * self.height) - 5 * float(self.age()) + 5)
         else:
-            return 10 * float(self.weight) + float(6.25 * self.height) - 5 * self.age() - 161
+            return (10 * float(self.weight) + float(6.25 * self.height) - 5 * float(self.age()) - 161)
 
     # Return TDEE as a float
     def get_tdee(self):
@@ -303,6 +303,15 @@ class DailyEntry(models.Model):
         User, related_name="daily_entries", on_delete=models.CASCADE)
     date = models.DateField(default=datetime.now)
 
+    def summary(self):
+        food_intake = []
+        exercises = []
+        for user_food in UserFood.objects.filter(daily_entry=self):
+            food_intake.append(user_food.info())
+        for exercise in UserExercise.objects.filter(daily_entry=self):
+            exercises.append(exercise.info())
+        return {"date": self.date.date(), "food_intake": food_intake, "exercises": exercises}
+
     def total_nutrients(self):
         total_nutrients_counter = Counter()
         for user_food in UserFood.objects.filter(daily_entry=self):
@@ -323,8 +332,8 @@ class UserFood(models.Model):
     # Food weight in grams
     weight = models.FloatField(default=0)
 
-    def __str__(self):
-        return self.food.label
+    def info(self):
+        return {"food_name": self.food.label, "portion": self.weight}
 
     # Return the amount of each nutrient in the food
     def get_nutrients(self):
@@ -337,5 +346,9 @@ class Exercise(models.Model):
 
 
 class UserExercise(models.Model):
+    exercise = models.ForeignKey(Exercise, related_name="user_exercises", on_delete=models.CASCADE)
     daily_entry = models.ForeignKey(DailyEntry, related_name="user_exercises", on_delete=models.CASCADE)
     duration = models.IntegerField(default=0)
+
+    def info(self):
+        return {"name": self.exercise.name, "duration": self.duration}

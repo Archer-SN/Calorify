@@ -105,13 +105,13 @@ def simulate_user4():
 
 
 def run():
-    # user_setup()
-    # simulate_user1_consistent()
-    # simulate_user1_inconsistent()
-    # simulate_user2()
-    # simulate_user3()
-    # simulate_user4()
-    print()
+    user_setup()
+    simulate_user1_consistent()
+    simulate_user1_inconsistent()
+    simulate_user2()
+    simulate_user3()
+    simulate_user4()
+    ai_analyze_history(user1_consistent, NUMBER_OF_DAYS)
 
 
 run()

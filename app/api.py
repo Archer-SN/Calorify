@@ -2,8 +2,7 @@
 This file will handle the logic of communicating with API such as EDAMAM, ChatGPT, etc.
 """
 
-
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import openai
 import json
@@ -51,13 +50,11 @@ STANDARD_MEASURE_UNIT = "g"
 STANDARD_MEASURE_URI = "http://www.edamam.com/ontologies/edamam.owl#Measure_gram"
 STANDARD_MEASURE_QUANTITY = 100
 
-DEFAULT_SYSTEM_MESSAGES = [{
+DEFAULT_SYSTEM_MESSAGE = {
     "role": "system",
     "content": "Assistant is an intelligent chatbot designed to help users answer health and fitness related questions. Given each user's data, your advice should be customly made for them. Be concise with your advice. Make sure the food that you give exists in the EDAMAM database."
-},
-    {"role": "system",
-     "content": "When I give you a history of food intake and exercises in the following python format (portion is in grams) (duration is in minutes):\n\n'''\n[\n{'date': '', 'food_intake': ['food_name': '', 'portion': 100}] 'exercises': [{'name': '', 'duration': 60}]}\n]\n'''\n\nI want you to customly create an advice for me and tell me whether I hit my calories target and what are my errors. Give advice on days that you think are the most critical."}
-]
+}
+
 
 # I'm not sure whether this should be put in views.py
 
@@ -158,7 +155,7 @@ def import_routine_plan():
 # Ask ChatGPT for a meal plan given the user's information
 # food_obj_list is returned
 def ask_meal_plan_gpt(user, message):
-    messages = DEFAULT_SYSTEM_MESSAGES.copy().append(message)
+    messages = [DEFAULT_SYSTEM_MESSAGE, message]
     functions = [{
         "name": "analyze_meal_plan",
         "description": "Call the food database to obtain food nutrients",
@@ -208,38 +205,22 @@ def ask_meal_plan_gpt(user, message):
 
 
 # Ask the ai to analyze the user's history and create a plan based on it
+# The history is analyzed from the specified number of days in the past until the present.
+# This is pricey. Don't run it often!
 def ai_analyze_history(user, number_of_days):
-    messages = DEFAULT_SYSTEM_MESSAGES.copy().append(message)
-    functions = [{
-        "name": "analyze_meal_plan",
-        "description": "Call the food database to obtain food nutrients",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "food_dict_list": {
-                    "type": "array",
-                    "items": {
-                        "type": "object",
-                        "properties": {
-                            "food_name": {"type": "string"},
-                            "food_portion": {"type": "number",
-                                             "description": "unit in grams"}
-                        }
-                    },
-                    "description": "A list of foods.",
-                }
-            },
-            "required": ["food_dict_list"],
-        },
-    }]
-    response = openai.ChatCompletion.create(
-        model=GPT_MODEL,
-        messages=messages,
-        functions=functions,
-        temperature=1,
-        max_tokens=512,
-        top_p=1,
-        frequency_penalty=0,
-        presence_penalty=0,
-        function_call={"name": "analyze_meal_plan"}
-    )
+    messages = [DEFAULT_SYSTEM_MESSAGE, {"role": "system",
+                                         "content": "When I give you a history of food intake and exercises in the following python format (portion is in grams) (duration is in minutes):\n\n'''\n[\n{'date': '', 'food_intake': ['food_name': '', 'portion': 100}] 'exercises': [{'name': '', 'duration': 60}]}\n]\n'''\n\nI want you to customly create an advice for me and tell me whether I hit my calories target and what are my errors. Give advice on days that you think are the most critical."}]
+    history = []
+    for daily_entry in DailyEntry.objects.filter(user=user, date__gte=(datetime.now() - timedelta(number_of_days))):
+        print(daily_entry)
+        history.append(daily_entry.summary())
+    print(len(str(history)))
+    messages.append({"role": "user", "content": ""})
+    # response = openai.ChatCompletion.create(
+    #     model=GPT_MODEL,
+    #     messages=messages,
+    #     temperature=1,
+    #     top_p=1,
+    #     frequency_penalty=0,
+    #     presence_penalty=0,
+    # )
