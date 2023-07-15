@@ -44,7 +44,7 @@ STANDARD_MEASURE_QUANTITY = 100
 
 DEFAULT_SYSTEM_MESSAGE = {
     "role": "system",
-    "content": "Assistant is an intelligent chatbot designed to help users answer health and fitness related questions."
+    "content": "Assistant is an intelligent chatbot designed to help users answer health and fitness related questions. Given each user's data, your advice should be customly made for them. Be concise with you advise."
 }
 
 
@@ -64,9 +64,11 @@ def analyze_food(food_name):
         # Gets the first food that is returned from the API call
         data = parser_response["parsed"][0]
         food_data = data["food"]
-        category, category_created = FoodCategory.objects.get_or_create(description=food_data["category"])
+        category, category_created = FoodCategory.objects.get_or_create(
+            description=food_data["category"])
         # Create the food object if it does not yet exist
-        food_obj, food_obj_created = Food.objects.get_or_create(food_id=food_data["foodId"])
+        food_obj, food_obj_created = Food.objects.get_or_create(
+            food_id=food_data["foodId"])
         food_obj.label = food_data["label"]
         food_obj.category = category
 
@@ -82,7 +84,8 @@ def analyze_food(food_name):
                 ]
             }
             # Gets the nutrition data
-            nutrition_request = requests.post(NUTRIENTS_AP, json=ingredients).json()
+            nutrition_request = requests.post(
+                NUTRIENTS_AP, json=ingredients).json()
             # Adds each nutrient to the database
             for ntr_code, nutrient_data in nutrition_request["totalNutrients"].items():
                 nutrient, nutrient_created = Nutrient.objects.get_or_create(ntr_code=ntr_code,
@@ -103,7 +106,8 @@ def analyze_meal_plan(food_dict_list):
     food_obj_dict_list = []
     for food_dict in food_dict_list:
         food = analyze_food(food_dict["food_name"])
-        food_obj_dict = {"food": food, "food_portion": food_dict["food_portion"]}
+        food_obj_dict = {"food": food,
+                         "food_portion": food_dict["food_portion"]}
         food_obj_dict_list.append(food_obj_dict)
     return food_obj_dict_list
 
@@ -112,9 +116,11 @@ def analyze_meal_plan(food_dict_list):
 # import means that we don't have to analyze the food
 def import_user_food(user, food_obj_dict, date=datetime.now()):
     food = food_obj_dict["food"]
-    daily_entry, created = DailyEntry.objects.get_or_create(user=user, date=date)
+    daily_entry, created = DailyEntry.objects.get_or_create(
+        user=user, date=date)
     if food:
-        user_food = UserFood.objects.create(food=food, daily_entry=daily_entry, weight=food_obj_dict["food_portion"])
+        user_food = UserFood.objects.create(
+            food=food, daily_entry=daily_entry, weight=food_obj_dict["food_portion"])
         return user_food
     return
 
@@ -122,7 +128,8 @@ def import_user_food(user, food_obj_dict, date=datetime.now()):
 # Given a list of Food objects and their portions, use it to create UserFood objects
 def import_user_meal_plan(user, food_obj_dict_list, date=datetime.now()):
     user_food_list = []
-    daily_entry, created = DailyEntry.objects.get_or_create(user=user, date=date)
+    daily_entry, created = DailyEntry.objects.get_or_create(
+        user=user, date=date)
     for food_obj_dict in food_obj_dict_list:
         user_food = import_user_food(user, food_obj_dict)
         if user_food:
@@ -179,8 +186,10 @@ def ask_meal_plan_gpt(user, message):
     if response_message.get("function_call"):
         function_name = response_message["function_call"]["name"]
         if function_name == "analyze_meal_plan":
-            function_args = json.loads(response_message["function_call"]["arguments"])
-            function_response = analyze_meal_plan(food_dict_list=function_args.get("food_dict_list"))
+            function_args = json.loads(
+                response_message["function_call"]["arguments"])
+            function_response = analyze_meal_plan(
+                food_dict_list=function_args.get("food_dict_list"))
             return function_response
 
     return

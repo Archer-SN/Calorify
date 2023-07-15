@@ -14,7 +14,8 @@ from . import fields
 # Calories here means kcal
 
 # A shorthand for each unit
-UNIT_CHOICES = (("cm", "centimeters"), ("kg", "kilograms"), ("in", "inches"), ("ft", "feet"), ("lbs", "pounds"))
+UNIT_CHOICES = (("cm", "centimeters"), ("kg", "kilograms"),
+                ("in", "inches"), ("ft", "feet"), ("lbs", "pounds"))
 
 # This is a collection of unit conversion factors
 # We convert from A -> B
@@ -59,18 +60,28 @@ class User(AbstractUser):
     body_fat = models.FloatField(default=15)
     year_born = models.DateField(default=datetime.now)
 
-    activity_level = models.FloatField(choices=ACTIVITY_LEVEL, default=ACTIVITY_LEVEL.NONE)
+    activity_level = models.FloatField(
+        choices=ACTIVITY_LEVEL, default=ACTIVITY_LEVEL.NONE)
 
-    meal_frequency = models.IntegerField(default=3, validators=[MaxValueValidator(10)])
+    meal_frequency = models.IntegerField(
+        default=3, validators=[MaxValueValidator(10)])
 
     # The interval between the AI meal plan and routine recommendation
     # We store it in days
-    recommendation_frequency = models.IntegerField(default=30, validators=[MinValueValidator(30.0)])
+    recommendation_frequency = models.IntegerField(
+        default=30, validators=[MinValueValidator(30.0)])
 
-    field_history = FieldHistoryTracker(["weight", "body_fat", "activity_level"])
+    field_history = FieldHistoryTracker(
+        ["weight", "body_fat", "activity_level"])
 
     def __str__(self):
         return self.username
+
+    def save(self, *args, **kwargs):
+        created = not self.pk
+        super().save(*args, **kwargs)
+        if created:
+            UserRPG.objects.create(user=self)
 
     def age(self):
         return datetime.now().year - self.year_born.year
@@ -102,10 +113,17 @@ class User(AbstractUser):
         bmr = self.get_bmr()
         return bmr + (bmr * self.activity_level)
 
+    # Total Dail Energy Goal (TDEE + weight goal rate [in calories])
+    def get_tdeg(self):
+        return self.get_tdee() + UserTargets.objects.get(user=self).weight_goal_rate
+
     # Calculate the change in weight since the specified date
     # Positive (negative) means weight gain (loss)
     def calculate_weight_change(self, date):
         pass
+
+    def info(self):
+        return "Sex: {sex}, Height: {height}, Age: {age}, Activity Level: {activity_level}, Meal Frequency: {meal_frequency}, Total Calories Goal: {tdeg}".format(sex=self.sex, height=self.height, age=self.age(), activity_level=self.activity_level, meal_frequency=self.meal_frequency, tdeg=self.get_tdeg())
 
 
 # This model handles user's target for macronutrients, weight, etc.
@@ -122,12 +140,13 @@ class UserTargets(models.Model):
     fat_target = models.FloatField(default=30)
 
 
-# This model handles the level system for the user
-class UserLevel(models.Model):
+# This model handles the RPG system for the user
+class UserRPG(models.Model):
     user = models.OneToOneField(User, on_delete=models.PROTECT)
     level = fields.IntegerRangeField(default=1, min_value=1, max_value=99)
     max_xp = models.PositiveIntegerField(default=0)
     current_xp = models.PositiveIntegerField(default=0)
+    gems = models.PositiveIntegerField(default=0)
 
     def calculate_xp(self):
         x = 0.3
@@ -148,20 +167,41 @@ class UserLevel(models.Model):
         # In case the current xp exceeds the max xp
         self.level_up()
 
+    def gain_gems(self, gems_amount):
+        self.gems += gems_amount
 
-class Challenge:
-    user = models.ManyToManyField(User)
-    # An xp that the user will gain for completing th challenge
-    xp = models.PositiveIntegerField(default=0)
+
+class Difficulty(models.Model):
+    # Name of the difficulty
+    name = models.CharField(max_length=64)
+    # Description of the difficulty
+    description = models.TextField()
+    # How much xp will be gained upon completion
+    xp = models.PositiveIntegerField()
+    # How many gems will be rewarded
+    gems = models.PositiveIntegerField()
+
+
+class Challenge(models.Model):
+    user_rpg = models.ManyToManyField(UserRPG)
+    difficulty = models.ManyToManyField(Difficulty)
     # The challenge's name
     name = models.CharField(max_length=64)
     # The description of the challenge
     description = models.TextField()
     is_completed = models.BooleanField(default=False)
+    date_created = models.DateField(default=datetime.now)
+    expire_date = models.DateField(default=datetime.now)
 
     def complete_challenge(self):
         self.is_completed = True
-        self.user.gain_xp(self.xp)
+        self.user_rpg.gain_xp(self.difficulty.xp)
+        self.user_rpg.gain_gems(self.difficulty.gems)
+
+    def is_expired(self):
+        if datetime.now() > self.expire_date:
+            return True
+        return False
 
 
 class Nutrient(models.Model):
@@ -188,7 +228,8 @@ class Food(models.Model):
     food_id = models.CharField(max_length=128, unique=True, primary_key=True)
     # Label of the food (i.e. its name)
     label = models.CharField(max_length=64)
-    food_category = models.ForeignKey(FoodCategory, null=True, on_delete=models.CASCADE)
+    food_category = models.ForeignKey(
+        FoodCategory, null=True, on_delete=models.CASCADE)
     note = models.TextField()
 
     def __str__(self):
@@ -199,7 +240,8 @@ class Food(models.Model):
         nutrients_counter = Counter()
         for food_nutrient in FoodNutrient.objects.filter(food=self):
             nutrient_name = food_nutrient.nutrient.label
-            nutrients_counter[nutrient_name] = (food_nutrient.amount / BASE_AMOUNT) * weight
+            nutrients_counter[nutrient_name] = (
+                food_nutrient.amount / BASE_AMOUNT) * weight
         return nutrients_counter
 
 
@@ -211,9 +253,11 @@ class MeasureUnit(models.Model):
 
 # A nutrient value for each food
 class FoodNutrient(models.Model):
-    food = models.ForeignKey(Food, related_name="food_nutrients", on_delete=models.CASCADE)
+    food = models.ForeignKey(
+        Food, related_name="food_nutrients", on_delete=models.CASCADE)
     # The nutrient of which the food nutrient pertains
-    nutrient = models.ForeignKey(Nutrient, related_name="food_nutrients", on_delete=models.CASCADE)
+    nutrient = models.ForeignKey(
+        Nutrient, related_name="food_nutrients", on_delete=models.CASCADE)
     # The amount of the nutrient in food per 100g
     amount = models.FloatField()
 
@@ -221,7 +265,8 @@ class FoodNutrient(models.Model):
 # This model store the default portion of each food
 class FoodPortion(models.Model):
     # The food that this portion relates to
-    food = models.ForeignKey(Food, related_name="food_portions", on_delete=models.CASCADE)
+    food = models.ForeignKey(
+        Food, related_name="food_portions", on_delete=models.CASCADE)
     measure_unit = models.ForeignKey(MeasureUnit, related_name="food_portions",
                                      on_delete=models.CASCADE)
     # Amount of the food
@@ -241,7 +286,8 @@ class Recipe(models.Model):
 
 # DailyEntry contains information about your total calories intake for the day, exercised, etc.
 class DailyEntry(models.Model):
-    user = models.ForeignKey(User, related_name="daily_entries", on_delete=models.CASCADE)
+    user = models.ForeignKey(
+        User, related_name="daily_entries", on_delete=models.CASCADE)
     date = models.DateField(default=datetime.now, unique=True)
 
     def total_nutrients(self):
@@ -256,9 +302,11 @@ class DailyEntry(models.Model):
 
 # Food entry created by the user
 class UserFood(models.Model):
-    food = models.ForeignKey(Food, related_name="user_foods", on_delete=models.CASCADE)
+    food = models.ForeignKey(
+        Food, related_name="user_foods", on_delete=models.CASCADE)
     # The daily entry this food belongs to
-    daily_entry = models.ForeignKey(DailyEntry, related_name="user_foods", on_delete=models.CASCADE)
+    daily_entry = models.ForeignKey(
+        DailyEntry, related_name="user_foods", on_delete=models.CASCADE)
     # Food weight in grams
     weight = models.FloatField(default=0)
 

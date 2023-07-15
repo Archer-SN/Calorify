@@ -1,3 +1,5 @@
+from app.api import *
+from app.models import *
 from datetime import datetime
 
 import openai
@@ -9,18 +11,22 @@ import django
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "calorify.settings")
 django.setup()
 
-from app.models import *
-from app.api import *
 
 # We are going to make a simulation of 30 days
 NUMBER_OF_DAYS = 30
+
+HEALTHY_MEAL_PLAN_MESSAGE = "Recommend me a healthy meal plan based on the following information: {info}"
+
+user1_inconsisent, user1_consistent, user2, user3, user4 = None
 
 
 def create_daily_challenge():
     pass
 
+
 def create_weekly_challenge():
     pass
+
 
 def create_monthly_challenge():
     pass
@@ -28,12 +34,20 @@ def create_monthly_challenge():
 
 # Create all the users
 def user_setup():
-    user1, _ = User.objects.get_or_create(username="User1", email="a@gmail.com", sex="M",
-                                          activity_level=User.ACTIVITY_LEVEL.MA,
-                                          weight="75", height="175", year_born=datetime(2006, 6, 15), meal_frequency=3,
-                                          recommendation_frequency=30, first_name="FakeSiwakorn",
-                                          last_name="NotSukchomthong")
-    user1.set_password("123")
+    global user1_consistent, user1_inconsistent, user2, user3, user4
+    user1_inconsistent, _ = User.objects.get_or_create(username="User1_in", email="a@gmail.com", sex="M",
+                                                       activity_level=User.ACTIVITY_LEVEL.MA,
+                                                       weight="75", height="175", year_born=datetime(2006, 6, 15), meal_frequency=3,
+                                                       recommendation_frequency=30, first_name="Inconsistent",
+                                                       last_name="Person")
+    user1_inconsistent.set_password("123")
+
+    user1_consistent, _ = User.objects.get_or_create(username="User1_con", email="ab@gmail.com", sex="M",
+                                                     activity_level=User.ACTIVITY_LEVEL.MA,
+                                                     weight="75", height="175", year_born=datetime(2006, 6, 15), meal_frequency=3,
+                                                     recommendation_frequency=30, first_name="Consistent",
+                                                     last_name="Person")
+    user1_consistent.set_password("123")
 
     user2, _ = User.objects.get_or_create(username="User2", email="b@gmail.com", sex="M",
                                           activity_level=User.ACTIVITY_LEVEL.SED,
@@ -54,7 +68,16 @@ def user_setup():
     user4.set_password("123")
 
 
-def simulate_user1():
+def simulate_user1_inconsistent():
+    for i in range(1, NUMBER_OF_DAYS + 1):
+        if (i % 2 == 0):
+            continue
+        else:
+            meal_plan = ask_meal_plan_gpt(user1_inconsisent, HEALTHY_MEAL_PLAN_MESSAGE.format(
+                info=user1_inconsisent.info()))
+
+
+def simulate_user1_consistent():
     for i in range(1, NUMBER_OF_DAYS + 1):
         pass
 
@@ -76,7 +99,8 @@ def simulate_user4():
 
 def run():
     # user_setup()
-    simulate_user1()
+    simulate_user1_consistent()
+    simulate_user1_inconsistent()
     simulate_user2()
     simulate_user3()
     simulate_user4()
