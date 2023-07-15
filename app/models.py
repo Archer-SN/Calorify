@@ -306,11 +306,14 @@ class DailyEntry(models.Model):
     def summary(self):
         food_intake = []
         exercises = []
+        nutrients = self.total_nutrients()
+        total_fats = nutrients["FAMS"] + nutrients["FAPU"] + nutrients["FASAT"] + nutrients["FATRN"]
         for user_food in UserFood.objects.filter(daily_entry=self):
             food_intake.append(user_food.info())
         for exercise in UserExercise.objects.filter(daily_entry=self):
             exercises.append(exercise.info())
-        return {"d": self.date, "i": food_intake, "e": exercises}
+
+        return {"d": self.date, "i": food_intake, "e": exercises, "k": nutrients["ENERC_KCAL"], "m": {"p": nutrients["PROCNT"], "c": nutrients["CHOCDF.net"], "f": total_fats}}
 
     def total_nutrients(self):
         total_nutrients_counter = Counter()
@@ -333,9 +336,7 @@ class UserFood(models.Model):
     weight = models.FloatField(default=0)
 
     def info(self):
-        nutrients = self.get_nutrients()
-        total_fats = nutrients["FAMS"] + nutrients["FAPU"] + nutrients["FASAT"] + nutrients["FATRN"]
-        return {"l": self.food.label, "a": self.weight, "k": nutrients["ENERC_KCAL"], "m": {"p": nutrients["PROCNT"], "c": nutrients["CHOCDF.net"], "f": total_fats}}
+        return {"l": self.food.label}
 
     # Return the amount of each nutrient in the food
     def get_nutrients(self):
