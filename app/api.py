@@ -2,8 +2,6 @@
 This file will handle the logic of communicating with API such as EDAMAM, ChatGPT, etc.
 """
 
-from .scripts import credentials
-from .models import *
 
 from datetime import datetime
 
@@ -11,13 +9,24 @@ import openai
 import json
 import requests
 
-openai.api_key = credentials.OPEN_AI_KEY
+import os
+import django
+
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "calorify.settings")
+django.setup()
+
+from .scripts.credentials import *
+from .models import *
+
+openai.api_key = OPEN_AI_KEY
 
 GPT_MODEL = "gpt-3.5-turbo"
+# Similar to the above model but can accept more text input
+GPT_MODEL_16K = "gpt-3.5-turbo-16k"
 
 # Id and Keys for the food database api
 EDAMAM_FOOD_DB_ID = "35db61c2"
-EDAMAM_FOOD_DB_KEY = credentials.EDAMAM_FOOD_DB_KEY
+EDAMAM_FOOD_DB_KEY = EDAMAM_FOOD_DB_KEY
 
 # AP stands for Access Point
 # The parser access point handles text search for foods as well as filters for the foods like presence specific nutrient content or exclusion of allergens.
@@ -32,21 +41,23 @@ NUTRIENTS_AP = "https://api.edamam.com/api/food-database/v2/nutrients?app_id={ap
 
 # Id and keys for the recipe database api
 EDAMAM_RECIPE_DB_ID = "c03ec76f"
-EDAMAM_RECIPE_DB_KEY = credentials.EDAMAM_RECIPE_DB_KEY
+EDAMAM_RECIPE_DB_KEY = EDAMAM_RECIPE_DB_KEY
 
 # Id and keys for the nutrients analysis api
 EDAMAM_NUTRIENTS_ANALYSIS_ID = "8f60cfad"
-EDAMAM_NUTRIENTS_ANALYSIS_KEY = credentials.EDAMAM_NUTRIENTS_ANALYSIS_KEY
+EDAMAM_NUTRIENTS_ANALYSIS_KEY = EDAMAM_NUTRIENTS_ANALYSIS_KEY
 
 STANDARD_MEASURE_UNIT = "g"
 STANDARD_MEASURE_URI = "http://www.edamam.com/ontologies/edamam.owl#Measure_gram"
 STANDARD_MEASURE_QUANTITY = 100
 
-DEFAULT_SYSTEM_MESSAGE = {
+DEFAULT_SYSTEM_MESSAGES = [{
     "role": "system",
-    "content": "Assistant is an intelligent chatbot designed to help users answer health and fitness related questions. Given each user's data, your advice should be customly made for them. Be concise with you advise."
-}
-
+    "content": "Assistant is an intelligent chatbot designed to help users answer health and fitness related questions. Given each user's data, your advice should be customly made for them. Be concise with your advice. Make sure the food that you give exists in the EDAMAM database."
+},
+    {"role": "system",
+     "content": "When I give you a history of food intake and exercises in the following python format (portion is in grams) (duration is in minutes):\n\n'''\n[\n{'date': '', 'food_intake': ['food_name': '', 'portion': 100}] 'exercises': [{'name': '', 'duration': 60}]}\n]\n'''\n\nI want you to customly create an advice for me and tell me whether I hit my calories target and what are my errors. Give advice on days that you think are the most critical."}
+]
 
 # I'm not sure whether this should be put in views.py
 
@@ -96,6 +107,7 @@ def analyze_food(food_name):
 
         return food_obj
     else:
+        print(food_name)
         return None
 
 
@@ -135,7 +147,7 @@ def import_user_meal_plan(user, food_obj_dict_list, date=datetime.now()):
         if user_food:
             user_food_list.append(user_food)
         else:
-            print("Food doesn't exist!")
+            print("{0} doesn't exist!".format(food_obj_dict["food"]))
     return user_food_list
 
 
@@ -146,7 +158,7 @@ def import_routine_plan():
 # Ask ChatGPT for a meal plan given the user's information
 # food_obj_list is returned
 def ask_meal_plan_gpt(user, message):
-    messages = [DEFAULT_SYSTEM_MESSAGE, message]
+    messages = DEFAULT_SYSTEM_MESSAGES.copy().append(message)
     functions = [{
         "name": "analyze_meal_plan",
         "description": "Call the food database to obtain food nutrients",
@@ -193,3 +205,41 @@ def ask_meal_plan_gpt(user, message):
             return function_response
 
     return
+
+
+# Ask the ai to analyze the user's history and create a plan based on it
+def ai_analyze_history(user, number_of_days):
+    messages = DEFAULT_SYSTEM_MESSAGES.copy().append(message)
+    functions = [{
+        "name": "analyze_meal_plan",
+        "description": "Call the food database to obtain food nutrients",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "food_dict_list": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "food_name": {"type": "string"},
+                            "food_portion": {"type": "number",
+                                             "description": "unit in grams"}
+                        }
+                    },
+                    "description": "A list of foods.",
+                }
+            },
+            "required": ["food_dict_list"],
+        },
+    }]
+    response = openai.ChatCompletion.create(
+        model=GPT_MODEL,
+        messages=messages,
+        functions=functions,
+        temperature=1,
+        max_tokens=512,
+        top_p=1,
+        frequency_penalty=0,
+        presence_penalty=0,
+        function_call={"name": "analyze_meal_plan"}
+    )

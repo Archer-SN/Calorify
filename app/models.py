@@ -36,6 +36,14 @@ unit_conversions = {
 # This is like "per 100g"
 BASE_AMOUNT = 100
 
+ACTIVITY_LEVEL_MULTIPLIER = {
+    "NONE": 1,
+    "SED": 1.2,
+    "LA": 1.35,
+    "MA": 1.5,
+    "VA": 1.9,
+}
+
 
 # Create your models here.
 
@@ -44,11 +52,11 @@ BASE_AMOUNT = 100
 class User(AbstractUser):
     # This will be multiplied to BMR which will give Total Daily Energy Expenditure (TDEE)
     ACTIVITY_LEVEL = Choices(
-        (1, 'NONE', _("None")),
-        (1.2, "SED", _("Sedentary")),
-        (1.35, "LA", _("Lightly Active")),
-        (1.5, "MA", _("Moderately Active")),
-        (1.9, "VA", _("Very Active")))
+        ('NONE', _("None")),
+        ("SED", _("Sedentary")),
+        ("LA", _("Lightly Active")),
+        ("MA", _("Moderately Active")),
+        ("VA", _("Very Active")))
 
     SEX_CHOICES = [("M", "Male"), ("F", "Female")]
     sex = models.CharField(max_length=1, choices=SEX_CHOICES)
@@ -58,10 +66,10 @@ class User(AbstractUser):
     # Store height in cm
     height = models.IntegerField(default=170)
     body_fat = models.FloatField(default=15)
-    year_born = models.DateField(default=datetime.now)
+    date_born = models.DateField(default=datetime.now)
 
-    activity_level = models.FloatField(
-        choices=ACTIVITY_LEVEL, default=ACTIVITY_LEVEL.NONE)
+    activity_level = models.CharField(max_length=4,
+                                      choices=ACTIVITY_LEVEL, default=ACTIVITY_LEVEL.NONE)
 
     meal_frequency = models.IntegerField(
         default=3, validators=[MaxValueValidator(10)])
@@ -82,9 +90,13 @@ class User(AbstractUser):
         super().save(*args, **kwargs)
         if created:
             UserRPG.objects.create(user=self)
+            UserTargets.objects.create(user=self)
 
     def age(self):
-        return datetime.now().year - self.year_born.year
+        return int(datetime.now().year - self.date_born.year)
+
+    def get_activity_level_multiplier(self):
+        return ACTIVITY_LEVEL_MULTIPLIER[self.activity_level]
 
     def to_lbs(self):
         return round(self.weight * unit_conversions[("kg", "lbs")])
@@ -104,14 +116,14 @@ class User(AbstractUser):
     # Calculate basal metabolic rate
     def get_bmr(self):
         if self.sex == "M":
-            return (10 * self.weight) + (6.25 * self.height) - (5 * self.age()) + 5
+            return 10 * float(self.weight) + float(6.25 * self.height) - 5 * self.age() + 5
         else:
-            return (10 * self.weight) + (6.25 * self.height) - (5 * self.age()) - 161
+            return 10 * float(self.weight) + float(6.25 * self.height) - 5 * self.age() - 161
 
     # Return TDEE as a float
     def get_tdee(self):
         bmr = self.get_bmr()
-        return bmr + (bmr * self.activity_level)
+        return bmr + (bmr * self.get_activity_level_multiplier())
 
     # Total Dail Energy Goal (TDEE + weight goal rate [in calories])
     def get_tdeg(self):
@@ -123,7 +135,9 @@ class User(AbstractUser):
         pass
 
     def info(self):
-        return "Sex: {sex}, Height: {height}, Age: {age}, Activity Level: {activity_level}, Meal Frequency: {meal_frequency}, Total Calories Goal: {tdeg}".format(sex=self.sex, height=self.height, age=self.age(), activity_level=self.activity_level, meal_frequency=self.meal_frequency, tdeg=self.get_tdeg())
+        return "Sex: {sex}, Height: {height}, Age: {age}, Activity Level: {activity_level}, Meal Frequency: {meal_frequency}, Total Calories Goal: {tdeg}".format(
+            sex=self.sex, height=self.height, age=self.age(), activity_level=self.activity_level,
+            meal_frequency=self.meal_frequency, tdeg=self.get_tdeg())
 
 
 # This model handles user's target for macronutrients, weight, etc.
@@ -240,8 +254,7 @@ class Food(models.Model):
         nutrients_counter = Counter()
         for food_nutrient in FoodNutrient.objects.filter(food=self):
             nutrient_name = food_nutrient.nutrient.label
-            nutrients_counter[nutrient_name] = (
-                food_nutrient.amount / BASE_AMOUNT) * weight
+            nutrients_counter[nutrient_name] = (food_nutrient.amount / BASE_AMOUNT) * weight
         return nutrients_counter
 
 
@@ -288,7 +301,7 @@ class Recipe(models.Model):
 class DailyEntry(models.Model):
     user = models.ForeignKey(
         User, related_name="daily_entries", on_delete=models.CASCADE)
-    date = models.DateField(default=datetime.now, unique=True)
+    date = models.DateField(default=datetime.now)
 
     def total_nutrients(self):
         total_nutrients_counter = Counter()
@@ -316,3 +329,13 @@ class UserFood(models.Model):
     # Return the amount of each nutrient in the food
     def get_nutrients(self):
         return self.food.get_nutrients()
+
+
+class Exercise(models.Model):
+    name = models.CharField(max_length=64)
+    description = models.TextField()
+
+
+class UserExercise(models.Model):
+    daily_entry = models.ForeignKey(DailyEntry, related_name="user_exercises", on_delete=models.CASCADE)
+    duration = models.IntegerField(default=0)
