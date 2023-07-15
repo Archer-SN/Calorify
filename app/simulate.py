@@ -71,8 +71,8 @@ def simulate_user1_inconsistent():
     for i in range(NUMBER_OF_DAYS, 0, -1):
         meal_plan = ask_meal_plan_gpt(user1_inconsistent, message)
         print("inconsistent " + str(i))
-        import_user_meal_plan(
-            user1_inconsistent, meal_plan, date=datetime.now() - timedelta(i))
+        print(import_user_meal_plan(
+            user1_inconsistent, meal_plan, date=datetime.now() - timedelta(i)))
     print("User1 Inconsistent Done!")
 
 
@@ -81,8 +81,8 @@ def simulate_user1_consistent():
     for i in range(NUMBER_OF_DAYS, 0, -1):
         meal_plan = ask_meal_plan_gpt(user1_consistent, message)
         print("consistent" + str(i))
-        import_user_meal_plan(user1_consistent, meal_plan,
-                              date=datetime.now() - timedelta(i))
+        print(import_user_meal_plan(user1_consistent, meal_plan,
+                                    date=datetime.now() - timedelta(i)))
     print("User1 Consistent Done!")
 
 
@@ -102,12 +102,14 @@ def simulate_user4():
 
 
 def run():
-    simulate_user1_inconsistent()
-    simulate_user1_consistent()
+    # simulate_user1_inconsistent()
+    # simulate_user1_consistent()
     # simulate_user2()
     # simulate_user3()
     # simulate_user4()
+    ai_analyze_history(user1_inconsistent, NUMBER_OF_DAYS)
     ai_analyze_history(user1_consistent, NUMBER_OF_DAYS)
+
 
 
 run()

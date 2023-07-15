@@ -116,9 +116,9 @@ class User(AbstractUser):
     # Calculate basal metabolic rate
     def get_bmr(self):
         if self.sex == "M":
-            return (10 * (self.weight) + (6.25 * self.height) - 5 * int(self.age()) + 5)
+            return (10 * (self.weight) + (6.25 * self.height) - 5 * (self.age()) + 5)
         else:
-            return (10 * (self.weight) + (6.25 * self.height) - 5 * float(self.age()) - 161)
+            return (10 * (self.weight) + (6.25 * self.height) - 5 * (self.age()) - 161)
 
     # Return TDEE as a float
     def get_tdee(self):
@@ -333,11 +333,13 @@ class UserFood(models.Model):
     weight = models.FloatField(default=0)
 
     def info(self):
-        return {"f": self.food.label, "a": self.weight}
+        nutrients = self.get_nutrients()
+        total_fats = nutrients["FAMS"] + nutrients["FAPU"] + nutrients["FASAT"] + nutrients["FATRN"]
+        return {"l": self.food.label, "a": self.weight, "k": nutrients["ENERC_KCAL"], "m": {"p": nutrients["PROCNT"], "c": nutrients["CHOCDF.net"], "f": total_fats}}
 
     # Return the amount of each nutrient in the food
     def get_nutrients(self):
-        return self.food.get_nutrients()
+        return self.food.get_nutrients(self.weight)
 
 
 class Exercise(models.Model):

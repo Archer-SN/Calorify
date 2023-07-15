@@ -10,6 +10,7 @@ import requests
 
 import os
 import django
+from tenacity import retry, wait_random_exponential, stop_after_attempt
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "calorify.settings")
 django.setup()
@@ -79,7 +80,7 @@ def analyze_food(food_name):
             food_id=food_data["foodId"])
         food_obj.label = food_data["label"]
         food_obj.category = category
-
+        food_obj.save()
         if not food_obj_created:
             # We are going to use 100g as a standard quantity for storing food in the database
             ingredients = {
@@ -137,10 +138,8 @@ def import_user_food(user, food_obj_dict, date=datetime.now()):
 # Given a list of Food objects and their portions, use it to create UserFood objects
 def import_user_meal_plan(user, food_obj_dict_list, date=datetime.now()):
     user_food_list = []
-    daily_entry, created = DailyEntry.objects.get_or_create(
-        user=user, date=date)
     for food_obj_dict in food_obj_dict_list:
-        user_food = import_user_food(user, food_obj_dict)
+        user_food = import_user_food(user, food_obj_dict, date)
         if user_food:
             user_food_list.append(user_food)
         else:
@@ -154,11 +153,12 @@ def import_routine_plan():
 
 # Ask ChatGPT for a meal plan given the user's information
 # food_obj_list is returned
+@retry(wait=wait_random_exponential(min=1, max=40), stop=stop_after_attempt(3))
 def ask_meal_plan_gpt(user, message):
     messages = [DEFAULT_SYSTEM_MESSAGE, message]
     functions = [{
         "name": "analyze_meal_plan",
-        "description": "Call the food database to obtain food nutrients",
+        "description": "Call the food database to obtain food nutrients for each food",
         "parameters": {
             "type": "object",
             "properties": {
@@ -169,7 +169,7 @@ def ask_meal_plan_gpt(user, message):
                         "properties": {
                             "food_name": {"type": "string"},
                             "food_portion": {"type": "number",
-                                             "description": "unit in grams"}
+                                             "description": "amount of food in grams"}
                         }
                     },
                     "description": "A list of foods.",
@@ -194,7 +194,7 @@ def ask_meal_plan_gpt(user, message):
     # Check if GPT wanted to call a function
     if response_message.get("function_call"):
         function_name = response_message["function_call"]["name"]
-        if function_name == "analyze_meal_plan" and response_message["function_call"]["arguments"]:
+        if function_name == "analyze_meal_plan" and response_message["function_call"]["arguments"] is not None:
             function_args = json.loads(
                 response_message["function_call"]["arguments"])
             function_response = analyze_meal_plan(
@@ -209,18 +209,19 @@ def ask_meal_plan_gpt(user, message):
 # This is pricey. Don't run it often!
 def ai_analyze_history(user, number_of_days):
     messages = [DEFAULT_SYSTEM_MESSAGE, {"role": "system",
-                                         "content": "When I give you a history of food intake and exercises in the following python format (portion is in grams) (duration is in minutes):\n'''\n[\n{'d': '', 'f': [{'n': '', 'p': 100}] 'e': [{'l': '', 't', 60}]}\n]\n'''\nd stands for date\ni stands for food intake\nf stands for food name\na stands for amount in grams\ne stands for exercise\nn stands for exercise name\nt stands for exercise duration\nI want you to customly create an advice for me and tell me whether I hit my calories target and what are my errors. Give advice on days that you think are the most critical.\n"}]
+                                         "content": "When I give you a history of food intake and exercises in the following python format (portion is in grams) (duration is in minutes):\n'''\n[\n{'d': '', 'f': [{'n': '', 'p': 100}] 'e': [{'l': '', 't', 60}]}\n]\n'''\nd stands for date\ni stands for food intake\nl stands for food name\na stands for amount in grams\ne stands for exercise\nn stands for exercise name\nt stands for exercise duration\nk stands for total calories intake\nm stands for macronutrients\np stands for protein\nc stands for carbohydrates\nf stands for total fats\nI want you to customly create an advice for me and tell me whether I hit my calories target and what are my errors. Give advice on days that you think are the most critical.\n"}]
     history = []
     for daily_entry in DailyEntry.objects.filter(user=user, date__gt=(datetime.now() - timedelta(number_of_days))):
-        print(daily_entry)
         history.append(daily_entry.summary())
-    print(str(history))
-    messages.append({"role": "user", "content": ""})
-    # response = openai.ChatCompletion.create(
-    #     model=GPT_MODEL,
-    #     messages=messages,
-    #     temperature=1,
-    #     top_p=1,
-    #     frequency_penalty=0,
-    #     presence_penalty=0,
-    # )
+    messages.append({"role": "user", "content": str(history)})
+    response = openai.ChatCompletion.create(
+        model=GPT_MODEL,
+        messages=messages,
+        temperature=1,
+        top_p=1,
+        frequency_penalty=0,
+        presence_penalty=0,
+    )
+    response_message = response["choices"][0]["message"]
+    print(response_message)
+    return response_message
