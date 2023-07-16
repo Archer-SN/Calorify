@@ -215,14 +215,14 @@ def ai_analyze_history(user, number_of_days):
         history.append(daily_entry.summary())
     messages.append({"role": "user", "content": str(history)})
     print(history)
-    response = openai.ChatCompletion.create(
-        model=GPT_MODEL_16K,
-        messages=messages,
-        temperature=1,
-        top_p=1,
-        frequency_penalty=0,
-        presence_penalty=0,
-    )
-    response_message = response["choices"][0]["message"]
-    print(response_message)
-    return response_message
+    # response = openai.ChatCompletion.create(
+    #     model=GPT_MODEL_16K,
+    #     messages=messages,
+    #     temperature=1,
+    #     top_p=1,
+    #     frequency_penalty=0,
+    #     presence_penalty=0,
+    # )
+    # response_message = response["choices"][0]["message"]
+    # print(response_message)
+    # return response_message

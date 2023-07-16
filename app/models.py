@@ -253,8 +253,8 @@ class Food(models.Model):
     def get_nutrients(self, weight=BASE_AMOUNT):
         nutrients_counter = Counter()
         for food_nutrient in FoodNutrient.objects.filter(food=self):
-            nutrient_name = food_nutrient.nutrient.label
-            nutrients_counter[nutrient_name] = (food_nutrient.amount / BASE_AMOUNT) * weight
+            ntr_code = food_nutrient.nutrient.ntr_code
+            nutrients_counter[ntr_code] = (food_nutrient.amount / BASE_AMOUNT) * weight
         return nutrients_counter
 
 
@@ -307,6 +307,7 @@ class DailyEntry(models.Model):
         food_intake = []
         exercises = []
         nutrients = self.total_nutrients()
+        print(nutrients)
         total_fats = nutrients["FAMS"] + nutrients["FAPU"] + nutrients["FASAT"] + nutrients["FATRN"]
         for user_food in UserFood.objects.filter(daily_entry=self):
             food_intake.append(user_food.info())

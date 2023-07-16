@@ -107,7 +107,7 @@ def run():
     # simulate_user2()
     # simulate_user3()
     # simulate_user4()
-    ai_analyze_history(user1_inconsistent, NUMBER_OF_DAYS)
+    # ai_analyze_history(user1_inconsistent, NUMBER_OF_DAYS)
     ai_analyze_history(user1_consistent, NUMBER_OF_DAYS)
 
 
