@@ -137,14 +137,13 @@ def import_user_food(user, food_obj_dict, date=datetime.now()):
 
 # Given a list of Food objects and their portions, use it to create UserFood objects
 def import_user_meal_plan(user, food_obj_dict_list, date=datetime.now()):
-    user_food_list = []
+    if not food_obj_dict_list:
+        return
     for food_obj_dict in food_obj_dict_list:
         user_food = import_user_food(user, food_obj_dict, date)
-        if user_food:
-            user_food_list.append(user_food)
-        else:
+        if not user_food:
             print("{0} doesn't exist!".format(food_obj_dict["food"]))
-    return user_food_list
+    return DailyEntry.objects.get(user=user, date=date).total_nutrients()
 
 
 def import_routine_plan():
@@ -208,21 +207,25 @@ def ask_meal_plan_gpt(user, message):
 # The history is analyzed from the specified number of days in the past until the present.
 # This is pricey. Don't run it often!
 def ai_analyze_history(user, number_of_days):
+    health_message = "Here is my fitness information: {info}".format(info=user.info())
     messages = [DEFAULT_SYSTEM_MESSAGE, {"role": "system",
-                                         "content": "When I give you a history of food intake and exercises in the following python format (portion is in grams) (duration is in minutes):\n'''\n[\n{'d': '', 'i': [{'l': ''}], 'k':0, 'm': {'p':0, 'c': 0, 'f': 0}, 'e': [{'n': '', 't': 0}]}\n]\n'''\nd stands for date\ni stands for food intake\nl stands for food name\ne stands for exercise\nn stands for exercise name\nt stands for exercise duration\nk stands for total calories intake\nm stands for macronutrients\np stands for protein\nc stands for carbohydrates\nf stands for total fats\nI want you to customly create an advice for me and tell me whether I hit my calories target and what are my errors. Give advice on days that you think are the most critical.\n"}]
+                                         "content": "When I give you a history of food intake and exercises in the following python format (portion is in grams) (duration is in minutes):\n'''\n[\n{'d': '', 'i': [{'l': ''}], 'k':0, 'm': {'p':0, 'c': 0, 'f': 0}, 'e': [{'n': '', 't': 0}]}\n]\n'''\nd stands for date\ni stands for food intake\nl stands for food name\ne stands for exercise\nn stands for exercise name\nt stands for exercise duration\nk stands for total calories intake\nm stands for macronutrients\np stands for protein\nc stands for carbohydrates\nf stands for total fats\nI want you to customly create an advice for me and tell me whether I hit my calories target and what are my errors. Give advice on days that you think are the most critical.\n"},
+                {"role": "system",
+                 "content": "I will also give you my health information. Make sure to base your advice on that too."},
+                {"role": "user", "content": health_message}]
     history = []
     for daily_entry in DailyEntry.objects.filter(user=user, date__gt=(datetime.now() - timedelta(number_of_days))):
         history.append(daily_entry.summary())
     messages.append({"role": "user", "content": str(history)})
     print(history)
-    # response = openai.ChatCompletion.create(
-    #     model=GPT_MODEL_16K,
-    #     messages=messages,
-    #     temperature=1,
-    #     top_p=1,
-    #     frequency_penalty=0,
-    #     presence_penalty=0,
-    # )
-    # response_message = response["choices"][0]["message"]
-    # print(response_message)
-    # return response_message
+    response = openai.ChatCompletion.create(
+        model=GPT_MODEL_16K,
+        messages=messages,
+        temperature=1,
+        top_p=1,
+        frequency_penalty=0,
+        presence_penalty=0,
+    )
+    response_message = response["choices"][0]["message"]
+    print(response_message)
+    return response_message

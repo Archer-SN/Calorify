@@ -116,14 +116,14 @@ class User(AbstractUser):
     # Calculate basal metabolic rate
     def get_bmr(self):
         if self.sex == "M":
-            return (10 * (self.weight) + (6.25 * self.height) - 5 * (self.age()) + 5)
+            return float(10 * (self.weight) + (6.25 * self.height) - 5 * (self.age()) + 5)
         else:
             return (10 * (self.weight) + (6.25 * self.height) - 5 * (self.age()) - 161)
 
     # Return TDEE as a float
     def get_tdee(self):
         bmr = self.get_bmr()
-        return bmr + (bmr * self.get_activity_level_multiplier())
+        return bmr * self.get_activity_level_multiplier()
 
     # Total Dail Energy Goal (TDEE + weight goal rate [in calories])
     def get_tdeg(self):
@@ -135,9 +135,10 @@ class User(AbstractUser):
         pass
 
     def info(self):
-        return "Sex: {sex}, Height: {height}, Age: {age}, Activity Level: {activity_level}, Meal Frequency: {meal_frequency}, Total Calories Goal: {tdeg}".format(
+        goal = UserTargets.objects.get(user=self).goal()
+        return "Sex: {sex}, Height: {height}, Age: {age}, Activity Level: {activity_level}, Meal Frequency: {meal_frequency}, Total Calories Goal: {tdeg}, Goal: {goal}".format(
             sex=self.sex, height=self.height, age=self.age(), activity_level=self.activity_level,
-            meal_frequency=self.meal_frequency, tdeg=self.get_tdeg())
+            meal_frequency=self.meal_frequency, tdeg=self.get_tdeg(), goal=goal)
 
 
 # This model handles user's target for macronutrients, weight, etc.
@@ -152,6 +153,18 @@ class UserTargets(models.Model):
     protein_target = models.FloatField(default=25)
     carbs_target = models.FloatField(default=45)
     fat_target = models.FloatField(default=30)
+
+    def goal(self):
+        weight_difference = self.weight_goal - self.user.weight
+        user_goal = ""
+        if weight_difference > 0:
+            user_goal = "Gain weight"
+        elif weight_difference < 0:
+            user_goal = "Lose weight"
+        else:
+            user_goal = "Maintain weight"
+        return user_goal
+
 
 
 # This model handles the RPG system for the user
@@ -307,8 +320,11 @@ class DailyEntry(models.Model):
         food_intake = []
         exercises = []
         nutrients = self.total_nutrients()
-        print(nutrients)
-        total_fats = nutrients["FAMS"] + nutrients["FAPU"] + nutrients["FASAT"] + nutrients["FATRN"]
+        total_fats = 0
+        required_fats = ["FAMS", "FAPU", "FASAT", "FATRN"]
+        for fat in required_fats:
+            if fat in nutrients:
+                total_fats += nutrients[fat]
         for user_food in UserFood.objects.filter(daily_entry=self):
             food_intake.append(user_food.info())
         for exercise in UserExercise.objects.filter(daily_entry=self):

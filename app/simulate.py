@@ -17,7 +17,7 @@ from app.models import *
 NUMBER_OF_DAYS = 30
 
 HEALTHY_MEAL_PLAN_MESSAGE = "Recommend me a healthy meal plan based on the following information: {info}"
-RANDOM_MEAL_PLAN_MESSAGE = "Recommend me a meal plan that is unhealthy based on the following information: {info}"
+RANDOM_MEAL_PLAN_MESSAGE = "Recommend me a meal plan that is composed of fast foods and is my calorie goal based on the following information: {info}"
 
 user1_inconsistent, _ = User.objects.get_or_create(username="User1_in", email="a@gmail.com", sex="M",
                                                    activity_level=User.ACTIVITY_LEVEL.MA,
@@ -66,13 +66,17 @@ def create_monthly_challenge():
     pass
 
 
+def clear_daily_entry(user):
+    DailyEntry.objects.filter(user=user).delete()
+
 def simulate_user1_inconsistent():
     message = {"role": "user", "content": RANDOM_MEAL_PLAN_MESSAGE.format(info=user1_inconsistent.info())}
-    for i in range(NUMBER_OF_DAYS, 0, -1):
-        meal_plan = ask_meal_plan_gpt(user1_inconsistent, message)
-        print("inconsistent " + str(i))
-        print(import_user_meal_plan(
-            user1_inconsistent, meal_plan, date=datetime.now() - timedelta(i)))
+    unhealthy_foods = [{"food_name": "pizza", "food_portion": 500}, {"food_name": "Extra Crispy Chicken- Thigh", "food_portion": 500}, {"food_name": "Pancake", "food_portion": 300}, {"food_name": "Coke", "food_portion": 722}]
+    for i in range(NUMBER_OF_DAYS + 1, 1, -1):
+        meal_plan = analyze_meal_plan(unhealthy_foods)
+
+        print(import_user_meal_plan(user1_inconsistent, meal_plan, datetime.now() - timedelta(i)))
+
     print("User1 Inconsistent Done!")
 
 
@@ -102,14 +106,12 @@ def simulate_user4():
 
 
 def run():
-    # simulate_user1_inconsistent()
-    # simulate_user1_consistent()
+    simulate_user1_inconsistent()
+    simulate_user1_consistent()
     # simulate_user2()
     # simulate_user3()
     # simulate_user4()
-    # ai_analyze_history(user1_inconsistent, NUMBER_OF_DAYS)
+    ai_analyze_history(user1_inconsistent, NUMBER_OF_DAYS)
     ai_analyze_history(user1_consistent, NUMBER_OF_DAYS)
-
-
 
 run()
