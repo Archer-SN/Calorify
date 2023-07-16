@@ -44,6 +44,13 @@ ACTIVITY_LEVEL_MULTIPLIER = {
     "VA": 1.9,
 }
 
+READABLE_ACTIVITY_LEVEL = {'NONE': "None",
+                           "SED": "Sedentary",
+                           "LA": "Lightly Active",
+                           "MA": "Moderately Active",
+                           "VA": "Very Active"}
+
+READABLE_SEX = {"M": "Male", "F": "Female"}
 
 # Create your models here.
 
@@ -136,8 +143,8 @@ class User(AbstractUser):
 
     def info(self):
         goal = UserTargets.objects.get(user=self).goal()
-        return "Sex: {sex}, Height: {height}, Age: {age}, Activity Level: {activity_level}, Meal Frequency: {meal_frequency}, Total Calories Goal: {tdeg}, Goal: {goal}".format(
-            sex=self.sex, height=self.height, age=self.age(), activity_level=self.activity_level,
+        return "Sex: {sex}, Height: {height} cm, Age: {age}, Weight: {weight} kg,Activity Level: {activity_level}, Meal Frequency: {meal_frequency}, Total Calories Goal: {tdeg}, Goal: {goal}".format(
+            sex=READABLE_SEX[self.sex], height=self.height, weight=self.weight, age=self.age(), activity_level=READABLE_ACTIVITY_LEVEL[self.activity_level],
             meal_frequency=self.meal_frequency, tdeg=self.get_tdeg(), goal=goal)
 
 
@@ -164,7 +171,6 @@ class UserTargets(models.Model):
         else:
             user_goal = "Maintain weight"
         return user_goal
-
 
 
 # This model handles the RPG system for the user
@@ -330,7 +336,8 @@ class DailyEntry(models.Model):
         for exercise in UserExercise.objects.filter(daily_entry=self):
             exercises.append(exercise.info())
 
-        return {"d": self.date, "i": food_intake, "e": exercises, "k": nutrients["ENERC_KCAL"], "m": {"p": nutrients["PROCNT"], "c": nutrients["CHOCDF.net"], "f": total_fats}}
+        return {"d": self.date, "i": food_intake, "e": exercises, "k": nutrients["ENERC_KCAL"],
+                "m": {"p": nutrients["PROCNT"], "c": nutrients["CHOCDF.net"], "f": total_fats}}
 
     def total_nutrients(self):
         total_nutrients_counter = Counter()
