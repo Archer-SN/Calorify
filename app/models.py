@@ -302,6 +302,9 @@ class Food(models.Model):
         amount = (food_nutrient.amount / BASE_AMOUNT) * weight
         return amount
 
+    def html_table_format(self):
+        return "<>"
+
 
 # MeasureUnit will store all the names of all the units
 class MeasureUnit(models.Model):

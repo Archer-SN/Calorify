@@ -41,6 +41,11 @@ NUTRIENTS_AP = "https://api.edamam.com/api/food-database/v2/nutrients?app_id={ap
     app_id=EDAMAM_FOOD_DB_ID, app_key=EDAMAM_FOOD_DB_KEY
 )
 
+# Given a string of text, returns all possible food
+AUTOCOMPLETE_AP = "https://api.edamam.com/auto-complete?app_id={app_id}&app_key={app_key}".format(
+    app_id=EDAMAM_FOOD_DB_ID, app_key=EDAMAM_FOOD_DB_KEY
+)
+
 # Id and keys for the recipe database api
 EDAMAM_RECIPE_DB_ID = "c03ec76f"
 EDAMAM_RECIPE_DB_KEY = EDAMAM_RECIPE_DB_KEY
@@ -73,44 +78,46 @@ def analyze_food(food_name):
     if parser_request.status_code == 200:
         if len(parser_response["parsed"]) == 0:
             return None
-        # Gets the first food that is returned from the API call
-        data = parser_response["parsed"][0]
-        food_data = data["food"]
-        category, category_created = FoodCategory.objects.get_or_create(
-            description=food_data["category"]
-        )
-        # Create the food object if it does not yet exist
-        food_obj, food_obj_created = Food.objects.get_or_create(
-            food_id=food_data["foodId"]
-        )
-        food_obj.label = food_data["label"]
-        food_obj.category = category
-        food_obj.save()
-        if not food_obj_created:
-            # We are going to use 100g as a standard quantity for storing food in the database
-            ingredients = {
-                "ingredients": [
-                    {
-                        "quantity": STANDARD_MEASURE_QUANTITY,
-                        "measureURI": STANDARD_MEASURE_URI,
-                        "foodId": food_data["foodId"],
-                    }
-                ]
-            }
-            # Gets the nutrition data
-            nutrition_request = requests.post(NUTRIENTS_AP, json=ingredients).json()
-            # Adds each nutrient to the database
-            for ntr_code, nutrient_data in nutrition_request["totalNutrients"].items():
-                nutrient, nutrient_created = Nutrient.objects.get_or_create(
-                    ntr_code=ntr_code,
-                    label=nutrient_data["label"],
-                    unit_name=nutrient_data["unit"],
-                )
-                food_nutrient = FoodNutrient.objects.create(
-                    food=food_obj, nutrient=nutrient, amount=nutrient_data["quantity"]
-                )
+        food_objs = []
+        # Loop through all the data that is returned from the API call
+        for data in parser_response["parsed"]:
+            food_data = data["food"]
+            category, category_created = FoodCategory.objects.get_or_create(
+                description=food_data["category"]
+            )
+            # Create the food object if it does not yet exist
+            food_obj, food_obj_created = Food.objects.get_or_create(
+                food_id=food_data["foodId"]
+            )
+            food_obj.label = food_data["label"]
+            food_obj.category = category
+            food_obj.save()
+            if not food_obj_created:
+                # We are going to use 100g as a standard quantity for storing food in the database
+                ingredients = {
+                    "ingredients": [
+                        {
+                            "quantity": STANDARD_MEASURE_QUANTITY,
+                            "measureURI": STANDARD_MEASURE_URI,
+                            "foodId": food_data["foodId"],
+                        }
+                    ]
+                }
+                # Gets the nutrition data
+                nutrition_request = requests.post(NUTRIENTS_AP, json=ingredients).json()
+                # Adds each nutrient to the database
+                for ntr_code, nutrient_data in nutrition_request["totalNutrients"].items():
+                    nutrient, nutrient_created = Nutrient.objects.get_or_create(
+                        ntr_code=ntr_code,
+                        label=nutrient_data["label"],
+                        unit_name=nutrient_data["unit"],
+                    )
+                    food_nutrient = FoodNutrient.objects.create(
+                        food=food_obj, nutrient=nutrient, amount=nutrient_data["quantity"]
+                    )
+            food_objs.append(food_obj)
 
-        return food_obj
+        return food_objs
     else:
         print(food_name)
         return None
@@ -122,7 +129,8 @@ def analyze_food(food_name):
 def analyze_meal_plan(food_dict_list):
     food_obj_dict_list = []
     for food_dict in food_dict_list:
-        food = analyze_food(food_dict["food_name"])
+        # Gets the first food that is returned by the database
+        food = analyze_food(food_dict["food_name"])[0]
         food_obj_dict = {"food": food, "food_portion": food_dict["food_portion"]}
         food_obj_dict_list.append(food_obj_dict)
     return food_obj_dict_list
@@ -154,6 +162,15 @@ def import_user_meal_plan(user, food_obj_dict_list, date=datetime.now()):
 
 def import_routine_plan():
     pass
+
+
+# Edamam provides a convenient autocomplete functionality
+# which can be implemented for use when searching for ingredients.
+def autocomplete_search(search):
+    # Maximum food names to be returned
+    limit = 5
+    params = {"q": search, "limit": limit}
+    return requests.get(AUTOCOMPLETE_AP, params=params).json()
 
 
 # Ask ChatGPT for a meal plan given the user's information

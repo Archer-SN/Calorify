@@ -2,10 +2,12 @@
 
 {% block body %}
     <div x-data="{ open : false }">
-        <div id="food_modal" class="modal flex flex-col" x-show="open" >
+        <div id="food_modal" class="modal flex flex-col w-full" x-show="open" >
+            <!--This is used for searching food in the database-->
+            <span class="htmx-indicator loading loading-infinity loading-xs"></span> 
             <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2 hover:bg-red-500" @click="open = false">✕</button>              
             <h1 class="text-lg font-bold">Add Food to Diary</h1>
-            <input type="text" name="search" placeholder="Search food here" class="input input-bordered w-full max-w-xs" 
+            <input type="search" name="search" placeholder="Search food here" class="input input-bordered w-full max-w-xs" 
                 hx-get="{% url 'food' %}" 
                 hx-trigger="keyup changed delay:500ms, search" 
                 hx-target="#search-results" 

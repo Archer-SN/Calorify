@@ -52,7 +52,10 @@ def diary(request):
 def food(request):
     if request.method == "GET":
         search = request.GET.get("search", "")
-        return HttpResponse(Food.objects.filter(label__icontains=search)[0:20])
+        search_results = autocomplete_search(search)
+        for food_name in search_results:
+            analyze_food(food_name)
+        return HttpResponse(Food.objects.filter(label__icontains=search)[0:40])
     if request.method == "POST":
         pass
 
