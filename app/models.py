@@ -287,7 +287,9 @@ class Food(models.Model):
     # Return the amount of each nutrient in the food based on the given food weight
     def get_nutrients(self, weight=BASE_AMOUNT):
         nutrients_counter = Counter()
-        for food_nutrient in FoodNutrient.objects.filter(food=self):
+        for food_nutrient in FoodNutrient.objects.filter(food=self).select_related(
+            "nutrient"
+        ):
             ntr_code = food_nutrient.nutrient.ntr_code
             nutrients_counter[ntr_code] = (food_nutrient.amount / BASE_AMOUNT) * weight
         return nutrients_counter
@@ -373,9 +375,9 @@ class DailyEntry(models.Model):
         exercises = []
         nutrients = self.total_nutrients()
         for user_food in UserFood.objects.filter(daily_entry=self):
-            food_intake.append(user_food.info())
+            food_intake.append(user_food.data())
         for exercise in UserExercise.objects.filter(daily_entry=self):
-            exercises.append(exercise.info())
+            exercises.append(exercise.data())
 
         return {
             "date": self.date,
@@ -383,47 +385,47 @@ class DailyEntry(models.Model):
             "exercises": exercises,
             "nutrients": {
                 "general": {
-                    "energy": nutrients["ENERC_KCAL"],
-                    "water": nutrients["WATER"],
+                    "energy": nutrients.get("ENERC_KCAL", 0),
+                    "water": nutrients.get("WATER", 0),
                 },
                 "carbohydrates": {
-                    "carbs": nutrients["CHOCDF.net"],
-                    "sugar": nutrients["SUGAR"],
-                    "fiber": nutrients["FIBTG"],
+                    "carbs": nutrients.get("CHOCDF.net", 0),
+                    "sugar": nutrients.get("SUGAR", 0),
+                    "fiber": nutrients.get("FIBTG", 0),
                 },
                 "lipids": {
-                    "fat": nutrients["FAT"],
-                    "monosaturated": nutrients["FAMS"],
-                    "polyunsaturated": nutrients["FAPU"],
-                    "saturated": nutrients["FASAT"],
-                    "trans-fats": nutrients["FATRN"],
-                    "cholesterol": nutrients["CHOLE"],
+                    "fat": nutrients.get("FAT", 0),
+                    "monosaturated": nutrients.get("FAMS", 0),
+                    "polyunsaturated": nutrients.get("FAPU", 0),
+                    "saturated": nutrients.get("FASAT", 0),
+                    "trans-fats": nutrients.get("FATRN", 0),
+                    "cholesterol": nutrients.get("CHOLE", 0),
                 },
                 "protien": {
-                    "protein": nutrients["PROCNT"],
+                    "protein": nutrients.get("PROCNT", 0),
                 },
                 "vitamins": {
-                    "b1": nutrients["THIA"],
-                    "b2": nutrients["RIBF"],
-                    "b3": nutrients["NIA"],
-                    "b6": nutrients["VITB6A"],
-                    "b12": nutrients["VITB12"],
-                    "folate": nutrients["FOLFD"],
-                    "vitamin a": nutrients["VITA_RAE"],
-                    "vitamin c": nutrients["VITC"],
-                    "vitamin d": nutrients["VITD"],
-                    "vitamin e": nutrients["TOCPHA"],
-                    "vitamin k": nutrients["VITK1"],
-                    },
+                    "b1": nutrients.get("THIA", 0),
+                    "b2": nutrients.get("RIBF", 0),
+                    "b3": nutrients.get("NIA", 0),
+                    "b6": nutrients.get("VITB6A", 0),
+                    "b12": nutrients.get("VITB12", 0),
+                    "folate": nutrients.get("FOLFD", 0),
+                    "vitamin a": nutrients.get("VITA_RAE", 0),
+                    "vitamin c": nutrients.get("VITC", 0),
+                    "vitamin d": nutrients.get("VITD", 0),
+                    "vitamin e": nutrients.get("TOCPHA", 0),
+                    "vitamin k": nutrients.get("VITK1", 0),
+                },
                 "minerals": {
-                    "calcium": nutrients["CA"],
-                    "iron": nutrients["FE"],
-                    "magnesium": nutrients["MG"],
-                    "phosphorus": nutrients["P"],
-                    "potassium": nutrients["K"],
-                    "sodium": nutrients["NA"],
-                    "zinc": nutrients["ZN"],
-                    },
+                    "calcium": nutrients.get("CA", 0),
+                    "iron": nutrients.get("FE", 0),
+                    "magnesium": nutrients.get("MG", 0),
+                    "phosphorus": nutrients.get("P", 0),
+                    "potassium": nutrients.get("K", 0),
+                    "sodium": nutrients.get("NA", 0),
+                    "zinc": nutrients.get("ZN", 0),
+                },
             },
         }
 
@@ -449,8 +451,18 @@ class UserFood(models.Model):
     # Food weight in grams
     weight = models.FloatField(default=0)
 
+    # Returns basic information of the user food. In this case, the name.
     def info(self):
         return {"l": self.food.label}
+
+    # Returns detailed information of the user food.
+    # It is used in html
+    def data(self):
+        return {
+            "id": self.id,
+            "name": self.food.label,
+            "weight": self.weight,
+        }
 
     # Return the amount of each nutrient in the food
     def get_nutrients(self):
@@ -473,5 +485,15 @@ class UserExercise(models.Model):
     )
     duration = models.IntegerField(default=0)
 
+    # Returns basic information of the exercise.
     def info(self):
         return {"n": self.exercise.name, "t": self.duration}
+
+    # Returns detailed information of the user exercise.
+    # It is used in html
+    def data(self):
+        return {
+            "id": self.id,
+            "name": self.exercise.name,
+            "duration": self.duration,
+        }

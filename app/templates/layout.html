@@ -21,7 +21,14 @@
     </div>
     <div class="flex-none">
         <ul class="menu menu-horizontal px-1">
-            <li><a href="{% url 'logout' %}" class="hover:bg-teal-200">Logout</a></li>
+            {% block navigation %}
+                <li><a href="{% url 'home' %}" class="hover:bg-teal-200">Home</a></li>
+                <li><a href="{% url 'askai' %}" class="hover:bg-teal-200">Ask AI</a></li>
+                <li><a href="{% url 'diary' %}" class="hover:bg-teal-200">Diary</a></li>
+            {% endblock %}
+            {% if request.user.is_authenticated %}
+                <li><a href="{% url 'logout' %}" class="hover:bg-red-500">Logout</a></li>
+            {% endif %}
         </ul>
     </div>
 </div>
@@ -29,7 +36,7 @@
 
 {% endblock %}
 
-<footer class="place-self-end footer p-10 bg-neutral text-neutral-content">
+<footer class="justify-self-end footer p-10 bg-neutral text-neutral-content">
     <div>
         <span class="footer-title">Services</span>
         <a class="link link-hover">Branding</a>

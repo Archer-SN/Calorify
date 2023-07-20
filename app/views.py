@@ -41,10 +41,10 @@ def home(request):
 # Renders the diary page
 def diary(request):
     if request.method == "GET":
-        daily_entry = DailyEntry.objects.get(user=request.user, date=datetime.now())
-        return render(
-            request, "diary.html", {"daily_entry": daily_entry.ai_summarize()}
+        daily_entry, _ = DailyEntry.objects.get_or_create(
+            user=request.user, date=datetime.now()
         )
+        return render(request, "diary.html", {"daily_entry": daily_entry.summarize()})
 
 
 # Handles the page where you can talk to chatGPT
@@ -62,7 +62,7 @@ def ask_ai(request):
     unhealthy_message = {}
     # food_list = ask_meal_plan_gpt(request.user, message)
     # import_user_meal_plan(request.user, food_list)
-    return HttpResponse(json.dumps(daily_entry.total_nutrients()))
+    return render(request, "askai.html")
 
 
 @login_required

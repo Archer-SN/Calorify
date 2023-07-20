@@ -4,10 +4,17 @@
     <div id="log">
         <div>
             <!--Contains buttons for adding entries-->
+            <button class="btn btn-outline">Add Food</button>
+            <button class="btn btn-outline">Add Exercise</button>
         </div>
         <div>
             <!--Food and exercise entries are shown here-->
-            {}
+            {% for food in daily_entry.food_intake %}
+                <div>{{ food.name }}</div>
+            {% endfor %}
+            {% for exercise in daily_entry.exercises %}
+                <div>{{ exercise.name }}</div>
+            {% endfor %}
         </div>
     </div>
     <div id="date">

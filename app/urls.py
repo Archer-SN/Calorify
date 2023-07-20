@@ -16,5 +16,5 @@ urlpatterns = [
     path("diary", views.diary, name="diary"),
     path("settings", views.settings, name="settings"),
 
-    path("ask_ai", views.ask_ai, name="ask_ai")
+    path("askai", views.ask_ai, name="askai")
 ]
