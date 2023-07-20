@@ -21,12 +21,12 @@ import openai
 def index(request):
     if request.user.is_authenticated:
         return HttpResponseRedirect(reverse("home"))
-    return HttpResponse("Hello login pls")
+    return HttpResponseRedirect(reverse("login"))
 
 
 # Handles the page where the user gets asked basic information and health information
 def survey(request):
-    if request.method == 'POST':
+    if request.method == "POST":
         pass
 
 
@@ -40,16 +40,22 @@ def home(request):
 @login_required
 # Renders the diary page
 def diary(request):
-    pass
+    if request.method == "GET":
+        return render(request, "diary.html")
 
 
 # Handles the page where you can talk to chatGPT
 @login_required
 def ask_ai(request):
-    daily_entry, created = DailyEntry.objects.get_or_create(user=request.user, date=datetime.now())
-    message = {"role": "user",
-               "content": "Generate a healthy and tasty meal plan that has a total of {tdee} calories.".format(
-                   tdee=request.user.get_tdee())}
+    daily_entry, created = DailyEntry.objects.get_or_create(
+        user=request.user, date=datetime.now()
+    )
+    message = {
+        "role": "user",
+        "content": "Generate a healthy and tasty meal plan that has a total of {tdee} calories.".format(
+            tdee=request.user.get_tdee()
+        ),
+    }
     unhealthy_message = {}
     # food_list = ask_meal_plan_gpt(request.user, message)
     # import_user_meal_plan(request.user, food_list)
@@ -65,7 +71,6 @@ def login_view(request):
     if request.user.is_authenticated:
         return request(reverse("home"))
     if request.method == "POST":
-
         print(request.POST)
         # Attempt to sign user in
         username = request.POST["username"]
@@ -79,9 +84,9 @@ def login_view(request):
             return redirect(reverse("home"))
         else:
             print("Invalid User")
-            return render(request, "login.html", {
-                "message": "Invalid username and/or password."
-            })
+            return render(
+                request, "login.html", {"message": "Invalid username and/or password."}
+            )
     else:
         return render(request, "login.html")
 
@@ -100,18 +105,18 @@ def register_view(request):
         password = request.POST["password"]
         confirmation = request.POST["confirmation"]
         if password != confirmation:
-            return render(request, "register.html", {
-                "message": "Passwords must match."
-            })
+            return render(
+                request, "register.html", {"message": "Passwords must match."}
+            )
 
         # Attempt to create new user
         try:
             user = User.objects.create_user(username, email, password)
             user.save()
         except IntegrityError:
-            return render(request, "register.html", {
-                "message": "Username already taken."
-            })
+            return render(
+                request, "register.html", {"message": "Username already taken."}
+            )
         login(request, user)
         return HttpResponseRedirect(reverse("home"))
     else:
