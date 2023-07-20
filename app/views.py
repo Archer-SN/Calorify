@@ -41,7 +41,10 @@ def home(request):
 # Renders the diary page
 def diary(request):
     if request.method == "GET":
-        return render(request, "diary.html")
+        daily_entry = DailyEntry.objects.get(user=request.user, date=datetime.now())
+        return render(
+            request, "diary.html", {"daily_entry": daily_entry.ai_summarize()}
+        )
 
 
 # Handles the page where you can talk to chatGPT

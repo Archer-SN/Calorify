@@ -14,8 +14,13 @@ from . import fields
 # Calories here means kcal
 
 # A shorthand for each unit
-UNIT_CHOICES = (("cm", "centimeters"), ("kg", "kilograms"),
-                ("in", "inches"), ("ft", "feet"), ("lbs", "pounds"))
+UNIT_CHOICES = (
+    ("cm", "centimeters"),
+    ("kg", "kilograms"),
+    ("in", "inches"),
+    ("ft", "feet"),
+    ("lbs", "pounds"),
+)
 
 # This is a collection of unit conversion factors
 # We convert from A -> B
@@ -44,11 +49,13 @@ ACTIVITY_LEVEL_MULTIPLIER = {
     "VA": 1.9,
 }
 
-READABLE_ACTIVITY_LEVEL = {'NONE': "None",
-                           "SED": "Sedentary",
-                           "LA": "Lightly Active",
-                           "MA": "Moderately Active",
-                           "VA": "Very Active"}
+READABLE_ACTIVITY_LEVEL = {
+    "NONE": "None",
+    "SED": "Sedentary",
+    "LA": "Lightly Active",
+    "MA": "Moderately Active",
+    "VA": "Very Active",
+}
 
 READABLE_SEX = {"M": "Male", "F": "Female"}
 
@@ -59,11 +66,12 @@ READABLE_SEX = {"M": "Male", "F": "Female"}
 class User(AbstractUser):
     # This will be multiplied to BMR which will give Total Daily Energy Expenditure (TDEE)
     ACTIVITY_LEVEL = Choices(
-        ('NONE', _("None")),
+        ("NONE", _("None")),
         ("SED", _("Sedentary")),
         ("LA", _("Lightly Active")),
         ("MA", _("Moderately Active")),
-        ("VA", _("Very Active")))
+        ("VA", _("Very Active")),
+    )
 
     SEX_CHOICES = [("M", "Male"), ("F", "Female")]
     sex = models.CharField(max_length=1, choices=SEX_CHOICES)
@@ -75,19 +83,19 @@ class User(AbstractUser):
     body_fat = models.FloatField(default=15)
     date_born = models.DateField(default=datetime.now)
 
-    activity_level = models.CharField(max_length=4,
-                                      choices=ACTIVITY_LEVEL, default=ACTIVITY_LEVEL.NONE)
+    activity_level = models.CharField(
+        max_length=4, choices=ACTIVITY_LEVEL, default=ACTIVITY_LEVEL.NONE
+    )
 
-    meal_frequency = models.IntegerField(
-        default=3, validators=[MaxValueValidator(10)])
+    meal_frequency = models.IntegerField(default=3, validators=[MaxValueValidator(10)])
 
     # The interval between the AI meal plan and routine recommendation
     # We store it in days
     recommendation_frequency = models.IntegerField(
-        default=30, validators=[MinValueValidator(30.0)])
+        default=30, validators=[MinValueValidator(30.0)]
+    )
 
-    field_history = FieldHistoryTracker(
-        ["weight", "body_fat", "activity_level"])
+    field_history = FieldHistoryTracker(["weight", "body_fat", "activity_level"])
 
     def __str__(self):
         return self.username
@@ -123,9 +131,11 @@ class User(AbstractUser):
     # Calculate basal metabolic rate
     def get_bmr(self):
         if self.sex == "M":
-            return float(10 * (self.weight) + (6.25 * self.height) - 5 * (self.age()) + 5)
+            return float(
+                10 * (self.weight) + (6.25 * self.height) - 5 * (self.age()) + 5
+            )
         else:
-            return (10 * (self.weight) + (6.25 * self.height) - 5 * (self.age()) - 161)
+            return 10 * (self.weight) + (6.25 * self.height) - 5 * (self.age()) - 161
 
     # Return TDEE as a float
     def get_tdee(self):
@@ -144,8 +154,15 @@ class User(AbstractUser):
     def info(self):
         goal = UserTargets.objects.get(user=self).goal()
         return "Sex: {sex}, Height: {height} cm, Age: {age}, Weight: {weight} kg,Activity Level: {activity_level}, Meal Frequency: {meal_frequency}, Total Calories Goal: {tdeg}, Goal: {goal}".format(
-            sex=READABLE_SEX[self.sex], height=self.height, weight=self.weight, age=self.age(), activity_level=READABLE_ACTIVITY_LEVEL[self.activity_level],
-            meal_frequency=self.meal_frequency, tdeg=self.get_tdeg(), goal=goal)
+            sex=READABLE_SEX[self.sex],
+            height=self.height,
+            weight=self.weight,
+            age=self.age(),
+            activity_level=READABLE_ACTIVITY_LEVEL[self.activity_level],
+            meal_frequency=self.meal_frequency,
+            tdeg=self.get_tdeg(),
+            goal=goal,
+        )
 
 
 # This model handles user's target for macronutrients, weight, etc.
@@ -261,8 +278,7 @@ class Food(models.Model):
     food_id = models.CharField(max_length=128, unique=True, primary_key=True)
     # Label of the food (i.e. its name)
     label = models.CharField(max_length=64)
-    food_category = models.ForeignKey(
-        FoodCategory, null=True, on_delete=models.CASCADE)
+    food_category = models.ForeignKey(FoodCategory, null=True, on_delete=models.CASCADE)
     note = models.TextField()
 
     def __str__(self):
@@ -286,10 +302,12 @@ class MeasureUnit(models.Model):
 # A nutrient value for each food
 class FoodNutrient(models.Model):
     food = models.ForeignKey(
-        Food, related_name="food_nutrients", on_delete=models.CASCADE)
+        Food, related_name="food_nutrients", on_delete=models.CASCADE
+    )
     # The nutrient of which the food nutrient pertains
     nutrient = models.ForeignKey(
-        Nutrient, related_name="food_nutrients", on_delete=models.CASCADE)
+        Nutrient, related_name="food_nutrients", on_delete=models.CASCADE
+    )
     # The amount of the nutrient in food per 100g
     amount = models.FloatField()
 
@@ -298,9 +316,11 @@ class FoodNutrient(models.Model):
 class FoodPortion(models.Model):
     # The food that this portion relates to
     food = models.ForeignKey(
-        Food, related_name="food_portions", on_delete=models.CASCADE)
-    measure_unit = models.ForeignKey(MeasureUnit, related_name="food_portions",
-                                     on_delete=models.CASCADE)
+        Food, related_name="food_portions", on_delete=models.CASCADE
+    )
+    measure_unit = models.ForeignKey(
+        MeasureUnit, related_name="food_portions", on_delete=models.CASCADE
+    )
     # Amount of the food
     amount = models.FloatField(default=0)
     portion_description = models.CharField(max_length=64)
@@ -319,43 +339,113 @@ class Recipe(models.Model):
 # DailyEntry contains information about your total calories intake for the day, exercised, etc.
 class DailyEntry(models.Model):
     user = models.ForeignKey(
-        User, related_name="daily_entries", on_delete=models.CASCADE)
+        User, related_name="daily_entries", on_delete=models.CASCADE
+    )
     date = models.DateField(default=datetime.now)
 
-    def summary(self):
+    # This summary will be used by AI
+    # A shortened version of summary to reduce API usage cost
+    def ai_summarize(self):
         food_intake = []
         exercises = []
         nutrients = self.total_nutrients()
-        total_fats = 0
-        required_fats = ["FAMS", "FAPU", "FASAT", "FATRN"]
-        for fat in required_fats:
-            if fat in nutrients:
-                total_fats += nutrients[fat]
         for user_food in UserFood.objects.filter(daily_entry=self):
             food_intake.append(user_food.info())
         for exercise in UserExercise.objects.filter(daily_entry=self):
             exercises.append(exercise.info())
 
-        return {"d": self.date, "i": food_intake, "e": exercises, "k": nutrients["ENERC_KCAL"],
-                "m": {"p": nutrients["PROCNT"], "c": nutrients["CHOCDF.net"], "f": total_fats}}
+        return {
+            "d": self.date,
+            "i": food_intake,
+            "e": exercises,
+            "k": nutrients["ENERC_KCAL"],
+            "m": {
+                "p": nutrients["PROCNT"],
+                "c": nutrients["CHOCDF.net"],
+                "f": nutrients["FAT"],
+            },
+        }
 
+    # A more detailed version of Daily Entry summary
+    # It is used in html templates
+    def summarize(self):
+        food_intake = []
+        exercises = []
+        nutrients = self.total_nutrients()
+        for user_food in UserFood.objects.filter(daily_entry=self):
+            food_intake.append(user_food.info())
+        for exercise in UserExercise.objects.filter(daily_entry=self):
+            exercises.append(exercise.info())
+
+        return {
+            "date": self.date,
+            "food_intake": food_intake,
+            "exercises": exercises,
+            "nutrients": {
+                "general": {
+                    "energy": nutrients["ENERC_KCAL"],
+                    "water": nutrients["WATER"],
+                },
+                "carbohydrates": {
+                    "carbs": nutrients["CHOCDF.net"],
+                    "sugar": nutrients["SUGAR"],
+                    "fiber": nutrients["FIBTG"],
+                },
+                "lipids": {
+                    "fat": nutrients["FAT"],
+                    "monosaturated": nutrients["FAMS"],
+                    "polyunsaturated": nutrients["FAPU"],
+                    "saturated": nutrients["FASAT"],
+                    "trans-fats": nutrients["FATRN"],
+                    "cholesterol": nutrients["CHOLE"],
+                },
+                "protien": {
+                    "protein": nutrients["PROCNT"],
+                },
+                "vitamins": {
+                    "b1": nutrients["THIA"],
+                    "b2": nutrients["RIBF"],
+                    "b3": nutrients["NIA"],
+                    "b6": nutrients["VITB6A"],
+                    "b12": nutrients["VITB12"],
+                    "folate": nutrients["FOLFD"],
+                    "vitamin a": nutrients["VITA_RAE"],
+                    "vitamin c": nutrients["VITC"],
+                    "vitamin d": nutrients["VITD"],
+                    "vitamin e": nutrients["TOCPHA"],
+                    "vitamin k": nutrients["VITK1"],
+                    },
+                "minerals": {
+                    "calcium": nutrients["CA"],
+                    "iron": nutrients["FE"],
+                    "magnesium": nutrients["MG"],
+                    "phosphorus": nutrients["P"],
+                    "potassium": nutrients["K"],
+                    "sodium": nutrients["NA"],
+                    "zinc": nutrients["ZN"],
+                    },
+            },
+        }
+
+    # Returns the total nutrients consumed for the day
     def total_nutrients(self):
         total_nutrients_counter = Counter()
         for user_food in UserFood.objects.filter(daily_entry=self):
             total_nutrients_counter += user_food.get_nutrients()
         return dict(total_nutrients_counter)
 
+    # Returns the total calories consumed for the day
     def total_calories(self):
         return self.total_nutrients()["ENERC_KCAL"]
 
 
 # Food entry created by the user
 class UserFood(models.Model):
-    food = models.ForeignKey(
-        Food, related_name="user_foods", on_delete=models.CASCADE)
+    food = models.ForeignKey(Food, related_name="user_foods", on_delete=models.CASCADE)
     # The daily entry this food belongs to
     daily_entry = models.ForeignKey(
-        DailyEntry, related_name="user_foods", on_delete=models.CASCADE)
+        DailyEntry, related_name="user_foods", on_delete=models.CASCADE
+    )
     # Food weight in grams
     weight = models.FloatField(default=0)
 
@@ -367,14 +457,20 @@ class UserFood(models.Model):
         return self.food.get_nutrients(self.weight)
 
 
+# Stores the name and description of each exercise.
 class Exercise(models.Model):
     name = models.CharField(max_length=64)
     description = models.TextField()
 
 
+# Exercise entry created by the user
 class UserExercise(models.Model):
-    exercise = models.ForeignKey(Exercise, related_name="user_exercises", on_delete=models.CASCADE)
-    daily_entry = models.ForeignKey(DailyEntry, related_name="user_exercises", on_delete=models.CASCADE)
+    exercise = models.ForeignKey(
+        Exercise, related_name="user_exercises", on_delete=models.CASCADE
+    )
+    daily_entry = models.ForeignKey(
+        DailyEntry, related_name="user_exercises", on_delete=models.CASCADE
+    )
     duration = models.IntegerField(default=0)
 
     def info(self):

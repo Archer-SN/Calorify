@@ -31,13 +31,15 @@ EDAMAM_FOOD_DB_KEY = EDAMAM_FOOD_DB_KEY
 # AP stands for Access Point
 # The parser access point handles text search for foods as well as filters for the foods like presence specific nutrient content or exclusion of allergens.
 PARSER_AP = "https://api.edamam.com/api/food-database/v2/parser?app_id={app_id}&app_key={app_key}".format(
-    app_id=EDAMAM_FOOD_DB_ID, app_key=EDAMAM_FOOD_DB_KEY)
+    app_id=EDAMAM_FOOD_DB_ID, app_key=EDAMAM_FOOD_DB_KEY
+)
 
 # In the response to your parser request you receive the a food ID for each database match.
 # Using the food ID and the measure URI, which parser provides, you can make a request to the nutrients access point.
 # The nutrients access points returns nutrition with diet and health labels for a given quantity of the food.
 NUTRIENTS_AP = "https://api.edamam.com/api/food-database/v2/nutrients?app_id={app_id}&app_key={app_key}".format(
-    app_id=EDAMAM_FOOD_DB_ID, app_key=EDAMAM_FOOD_DB_KEY)
+    app_id=EDAMAM_FOOD_DB_ID, app_key=EDAMAM_FOOD_DB_KEY
+)
 
 # Id and keys for the recipe database api
 EDAMAM_RECIPE_DB_ID = "c03ec76f"
@@ -53,11 +55,12 @@ STANDARD_MEASURE_QUANTITY = 100
 
 DEFAULT_SYSTEM_MESSAGE = {
     "role": "system",
-    "content": "Assistant is an intelligent chatbot designed to help users answer health and fitness related questions. Given each user's data, your advice should be customly made for them. Be concise with your advice. Make sure the food that you give exists in the EDAMAM database."
+    "content": "Assistant is an intelligent chatbot designed to help users answer health and fitness related questions. Given each user's data, your advice should be customly made for them. Be concise with your advice. Make sure the food that you give exists in the EDAMAM database.",
 }
 
 
 # I'm not sure whether this should be put in views.py
+
 
 # Add the given food to the database if it does not yet exist
 # We'll call the database with the food weight of 100 grams (A standard weight for storing in the database)
@@ -74,10 +77,12 @@ def analyze_food(food_name):
         data = parser_response["parsed"][0]
         food_data = data["food"]
         category, category_created = FoodCategory.objects.get_or_create(
-            description=food_data["category"])
+            description=food_data["category"]
+        )
         # Create the food object if it does not yet exist
         food_obj, food_obj_created = Food.objects.get_or_create(
-            food_id=food_data["foodId"])
+            food_id=food_data["foodId"]
+        )
         food_obj.label = food_data["label"]
         food_obj.category = category
         food_obj.save()
@@ -88,20 +93,22 @@ def analyze_food(food_name):
                     {
                         "quantity": STANDARD_MEASURE_QUANTITY,
                         "measureURI": STANDARD_MEASURE_URI,
-                        "foodId": food_data["foodId"]
+                        "foodId": food_data["foodId"],
                     }
                 ]
             }
             # Gets the nutrition data
-            nutrition_request = requests.post(
-                NUTRIENTS_AP, json=ingredients).json()
+            nutrition_request = requests.post(NUTRIENTS_AP, json=ingredients).json()
             # Adds each nutrient to the database
             for ntr_code, nutrient_data in nutrition_request["totalNutrients"].items():
-                nutrient, nutrient_created = Nutrient.objects.get_or_create(ntr_code=ntr_code,
-                                                                            label=nutrient_data["label"],
-                                                                            unit_name=nutrient_data["unit"])
-                food_nutrient = FoodNutrient.objects.create(food=food_obj, nutrient=nutrient,
-                                                            amount=nutrient_data["quantity"])
+                nutrient, nutrient_created = Nutrient.objects.get_or_create(
+                    ntr_code=ntr_code,
+                    label=nutrient_data["label"],
+                    unit_name=nutrient_data["unit"],
+                )
+                food_nutrient = FoodNutrient.objects.create(
+                    food=food_obj, nutrient=nutrient, amount=nutrient_data["quantity"]
+                )
 
         return food_obj
     else:
@@ -116,8 +123,7 @@ def analyze_meal_plan(food_dict_list):
     food_obj_dict_list = []
     for food_dict in food_dict_list:
         food = analyze_food(food_dict["food_name"])
-        food_obj_dict = {"food": food,
-                         "food_portion": food_dict["food_portion"]}
+        food_obj_dict = {"food": food, "food_portion": food_dict["food_portion"]}
         food_obj_dict_list.append(food_obj_dict)
     return food_obj_dict_list
 
@@ -126,11 +132,11 @@ def analyze_meal_plan(food_dict_list):
 # import means that we don't have to analyze the food
 def import_user_food(user, food_obj_dict, date=datetime.now()):
     food = food_obj_dict["food"]
-    daily_entry, created = DailyEntry.objects.get_or_create(
-        user=user, date=date)
+    daily_entry, created = DailyEntry.objects.get_or_create(user=user, date=date)
     if food:
         user_food = UserFood.objects.create(
-            food=food, daily_entry=daily_entry, weight=food_obj_dict["food_portion"])
+            food=food, daily_entry=daily_entry, weight=food_obj_dict["food_portion"]
+        )
         return user_food
     return
 
@@ -155,28 +161,32 @@ def import_routine_plan():
 @retry(wait=wait_random_exponential(min=1, max=40), stop=stop_after_attempt(3))
 def ask_meal_plan_gpt(user, message):
     messages = [DEFAULT_SYSTEM_MESSAGE, message]
-    functions = [{
-        "name": "analyze_meal_plan",
-        "description": "Call the food database to obtain food nutrients for each food",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "food_dict_list": {
-                    "type": "array",
-                    "items": {
-                        "type": "object",
-                        "properties": {
-                            "food_name": {"type": "string"},
-                            "food_portion": {"type": "number",
-                                             "description": "amount of food in grams"}
-                        }
-                    },
-                    "description": "A list of foods.",
-                }
+    functions = [
+        {
+            "name": "analyze_meal_plan",
+            "description": "Call the food database to obtain food nutrients for each food",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "food_dict_list": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "food_name": {"type": "string"},
+                                "food_portion": {
+                                    "type": "number",
+                                    "description": "amount of food in grams",
+                                },
+                            },
+                        },
+                        "description": "A list of foods.",
+                    }
+                },
+                "required": ["food_dict_list"],
             },
-            "required": ["food_dict_list"],
-        },
-    }]
+        }
+    ]
     response = openai.ChatCompletion.create(
         model=GPT_MODEL,
         messages=messages,
@@ -186,18 +196,21 @@ def ask_meal_plan_gpt(user, message):
         top_p=1,
         frequency_penalty=0,
         presence_penalty=0,
-        function_call={"name": "analyze_meal_plan"}
+        function_call={"name": "analyze_meal_plan"},
     )
     response_message = response["choices"][0]["message"]
 
     # Check if GPT wanted to call a function
     if response_message.get("function_call"):
         function_name = response_message["function_call"]["name"]
-        if function_name == "analyze_meal_plan" and response_message["function_call"]["arguments"] is not None:
-            function_args = json.loads(
-                response_message["function_call"]["arguments"])
+        if (
+            function_name == "analyze_meal_plan"
+            and response_message["function_call"]["arguments"] is not None
+        ):
+            function_args = json.loads(response_message["function_call"]["arguments"])
             function_response = analyze_meal_plan(
-                food_dict_list=function_args.get("food_dict_list"))
+                food_dict_list=function_args.get("food_dict_list")
+            )
             return function_response
 
     return
@@ -208,14 +221,23 @@ def ask_meal_plan_gpt(user, message):
 # This is pricey. Don't run it often!
 def ai_analyze_history(user, number_of_days):
     health_message = "Here is my fitness information: {info}".format(info=user.info())
-    messages = [DEFAULT_SYSTEM_MESSAGE, {"role": "system",
-                                         "content": "When I give you a history of food intake and exercises in the following python format (portion is in grams) (duration is in minutes):\n'''\n[\n{'d': '', 'i': [{'l': ''}], 'k':0, 'm': {'p':0, 'c': 0, 'f': 0}, 'e': [{'n': '', 't': 0}]}\n]\n'''\nd stands for date\ni stands for food intake\nl stands for food name\ne stands for exercise\nn stands for exercise name\nt stands for exercise duration\nk stands for total calories intake\nm stands for macronutrients\np stands for protein\nc stands for carbohydrates\nf stands for total fats\nI want you to customly create an advice for me and tell me whether I hit my calories target and what are my errors. Make an overall summary. Don't list day by day.\n"},
-                {"role": "system",
-                 "content": "I will also give you my health information. Make sure to base your advice on that too."},
-                {"role": "user", "content": health_message}]
+    messages = [
+        DEFAULT_SYSTEM_MESSAGE,
+        {
+            "role": "system",
+            "content": "When I give you a history of food intake and exercises in the following python format (portion is in grams) (duration is in minutes):\n'''\n[\n{'d': '', 'i': [{'l': ''}], 'k':0, 'm': {'p':0, 'c': 0, 'f': 0}, 'e': [{'n': '', 't': 0}]}\n]\n'''\nd stands for date\ni stands for food intake\nl stands for food name\ne stands for exercise\nn stands for exercise name\nt stands for exercise duration\nk stands for total calories intake\nm stands for macronutrients\np stands for protein\nc stands for carbohydrates\nf stands for total fats\nI want you to customly create an advice for me and tell me whether I hit my calories target and what are my errors. Make an overall summary. Don't list day by day.\n",
+        },
+        {
+            "role": "system",
+            "content": "I will also give you my health information. Make sure to base your advice on that too.",
+        },
+        {"role": "user", "content": health_message},
+    ]
     history = []
-    for daily_entry in DailyEntry.objects.filter(user=user, date__gt=(datetime.now() - timedelta(number_of_days))):
-        history.append(daily_entry.summary())
+    for daily_entry in DailyEntry.objects.filter(
+        user=user, date__gt=(datetime.now() - timedelta(number_of_days))
+    ):
+        history.append(daily_entry.ai_summarize())
     messages.append({"role": "user", "content": str(history)})
     print(history)
     response = openai.ChatCompletion.create(
