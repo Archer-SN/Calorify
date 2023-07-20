@@ -4,7 +4,7 @@ from .scripts import credentials
 from .models import *
 from .api import *
 
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, JsonResponse
 from django.urls import reverse
 from django.shortcuts import render, redirect
 from django.shortcuts import HttpResponse
@@ -45,6 +45,15 @@ def diary(request):
             user=request.user, date=datetime.now()
         )
         return render(request, "diary.html", {"daily_entry": daily_entry.summarize()})
+
+
+@login_required
+# Handles food databse queries and add new entries to the database
+def food(request):
+    if request.method == "GET":
+        return HttpResponse(Food.objects.all()[0:20])
+    if request.method == "POST":
+        pass
 
 
 # Handles the page where you can talk to chatGPT

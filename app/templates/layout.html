@@ -9,6 +9,8 @@
     <!--Scripts for Alpine.js and HTMX-->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.12.3/dist/cdn.min.js"></script>
     <script src="https://unpkg.com/htmx.org@1.9.3" integrity="sha384-lVb3Rd/Ca0AxaoZg5sACe8FJKF0tnUgR2Kd7ehUOG5GCcROv5uBIZsOqovBAcWua" crossorigin="anonymous"></script>
+    <!--this extension allows you to use it as the swapping mechanism in htmx which is necessary to retain Alpine state when you have entire Alpine components swapped by htmx.-->
+    <script src="https://unpkg.com/htmx.org/dist/ext/alpine-morph.js"></script>
 
     {% block script %}
     {% endblock %}

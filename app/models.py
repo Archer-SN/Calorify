@@ -285,7 +285,7 @@ class Food(models.Model):
         return self.label
 
     # Return the amount of each nutrient in the food based on the given food weight
-    def get_nutrients(self, weight=BASE_AMOUNT):
+    def get_all_nutrients(self, weight=BASE_AMOUNT):
         nutrients_counter = Counter()
         for food_nutrient in FoodNutrient.objects.filter(food=self).select_related(
             "nutrient"
@@ -293,6 +293,14 @@ class Food(models.Model):
             ntr_code = food_nutrient.nutrient.ntr_code
             nutrients_counter[ntr_code] = (food_nutrient.amount / BASE_AMOUNT) * weight
         return nutrients_counter
+
+    # Return the amount of the nutrient in the food based on the given food weight
+    def get_nutrient(self, nutrient_code, weight=BASE_AMOUNT):
+        nutrient = Nutrient.objects.get(ntr_code=nutrient_code)
+        # TODO: Fix this
+        food_nutrient = FoodNutrient.objects.filter(food=self, nutrient=nutrient)[0]
+        amount = (food_nutrient.amount / BASE_AMOUNT) * weight
+        return amount
 
 
 # MeasureUnit will store all the names of all the units
@@ -433,12 +441,8 @@ class DailyEntry(models.Model):
     def total_nutrients(self):
         total_nutrients_counter = Counter()
         for user_food in UserFood.objects.filter(daily_entry=self):
-            total_nutrients_counter += user_food.get_nutrients()
+            total_nutrients_counter += user_food.get_all_nutrients()
         return dict(total_nutrients_counter)
-
-    # Returns the total calories consumed for the day
-    def total_calories(self):
-        return self.total_nutrients()["ENERC_KCAL"]
 
 
 # Food entry created by the user
@@ -462,11 +466,15 @@ class UserFood(models.Model):
             "id": self.id,
             "name": self.food.label,
             "weight": self.weight,
+            "energy": self.get_nutrient("ENERC_KCAL"),
         }
 
     # Return the amount of each nutrient in the food
-    def get_nutrients(self):
-        return self.food.get_nutrients(self.weight)
+    def get_all_nutrients(self):
+        return self.food.get_all_nutrients(self.weight)
+
+    def get_nutrient(self, nutrient_code):
+        return self.food.get_nutrient(nutrient_code, self.weight)
 
 
 # Stores the name and description of each exercise.

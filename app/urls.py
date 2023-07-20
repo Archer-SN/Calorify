@@ -16,5 +16,7 @@ urlpatterns = [
     path("diary", views.diary, name="diary"),
     path("settings", views.settings, name="settings"),
 
-    path("askai", views.ask_ai, name="askai")
+    path("askai", views.ask_ai, name="askai"),
+    
+    path("food", views.food, name="food"),    
 ]

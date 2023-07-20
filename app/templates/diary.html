@@ -1,50 +1,66 @@
 {% extends "layout.html" %}
 
 {% block body %}
-    <div id="log">
-        <div>
-            <!--Contains buttons for adding entries-->
-            <button class="btn btn-outline">Add Food</button>
-            <button class="btn btn-outline">Add Exercise</button>
+    <div x-data="{ open: false }">
+        <div >
+            <!--Will only show up when you to add food or exercise-->
+        
         </div>
-        <div>
-            <!--Food and exercise entries are shown here-->
-            {% for food in daily_entry.food_intake %}
-                <div>{{ food.name }}</div>
-            {% endfor %}
-            {% for exercise in daily_entry.exercises %}
-                <div>{{ exercise.name }}</div>
-            {% endfor %}
+        <div id="log">
+            <div>
+                <!--Contains buttons for adding entries-->
+                <button hx-get="{% url 'food' %}" @click="open = !open" class="btn btn-outline">Add Food</button>
+                <button class="btn btn-outline">Add Exercise</button>
+            </div>
+            <div>
+                <!--Food and exercise entries are shown here-->
+                {% for food in daily_entry.food_intake %}
+                    <div class="flex flex-row">
+                        <p>{{ food.name }}</p>
+                        <p>{{ food.weight }}</p>
+                        <p>{{ food.energy }}</p>
+                    </div>
+                {% endfor %}
+                {% for exercise in daily_entry.exercises %}
+                    <div>{{ exercise.name }}</div>
+                {% endfor %}
+            </div>
         </div>
-    </div>
-    <div id="date">
-
-    </div>
-    <div id="summary">
-        <!--Summarize Energy and Macronutrients-->
-    </div>
-    <div id="nutrients">
-        <!--Summarize each nutrients-->
-        <div id="general">
-
+        <div id="date">
+        
         </div>
-        <div id="carbohydrates">
-
+        <div id="summary">
+            <!--Summarize Energy and Macronutrients-->
+            <div>
+                <h2 class="text-xl font-bold">Energy Summary</h2>
+            </div>
+            <div>
+                <h2 class="text-xl font-bold">Macronutrients Target</h2>
+            </div>
         </div>
-        <div id="lipids">
-
-        </div>
-        <div id="general">
-
-        </div>
-        <div id="general">
-
-        </div>
-        <div id="vitamins">
-
-        </div>
-        <div id="minerals">
-
+        <div id="nutrients">
+            <!--Summarize each nutrients-->
+            <div id="general">
+        
+            </div>
+            <div id="carbohydrates">
+        
+            </div>
+            <div id="lipids">
+        
+            </div>
+            <div id="general">
+        
+            </div>
+            <div id="general">
+        
+            </div>
+            <div id="vitamins">
+        
+            </div>
+            <div id="minerals">
+        
+            </div>
         </div>
     </div>
 {% endblock %}
