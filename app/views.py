@@ -51,7 +51,8 @@ def diary(request):
 # Handles food databse queries and add new entries to the database
 def food(request):
     if request.method == "GET":
-        return HttpResponse(Food.objects.all()[0:20])
+        search = request.GET.get("search", "")
+        return HttpResponse(Food.objects.filter(label__icontains=search)[0:20])
     if request.method == "POST":
         pass
 

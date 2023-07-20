@@ -1,15 +1,31 @@
 {% extends "layout.html" %}
 
 {% block body %}
-    <div x-data="{ open: false }">
-        <div >
-            <!--Will only show up when you to add food or exercise-->
-        
-        </div>
+    <div x-data="{ open : false }">
+        <div id="food_modal" class="modal flex flex-col" x-show="open" >
+            <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2 hover:bg-red-500" @click="open = false">✕</button>              
+            <h1 class="text-lg font-bold">Add Food to Diary</h1>
+            <input type="text" name="search" placeholder="Search food here" class="input input-bordered w-full max-w-xs" 
+                hx-get="{% url 'food' %}" 
+                hx-trigger="keyup changed delay:500ms, search" 
+                hx-target="#search-results" 
+                hx-indicator=".htmx-indicator"/>
+
+            <table class="table">
+                <thead>
+                <tr>
+                  <th>Description</th>
+                  <th>Source</th>
+                </tr>
+                </thead>
+                <tbody id="search-results">
+                </tbody>
+            </table>
+          </div>
         <div id="log">
             <div>
                 <!--Contains buttons for adding entries-->
-                <button hx-get="{% url 'food' %}" @click="open = !open" class="btn btn-outline">Add Food</button>
+                <button class="btn btn-outline" hx-get="{% url 'food' %}" hx-target="#food-modal" hx-swap="beforeend" @click="open = true" >Add Food</button>
                 <button class="btn btn-outline">Add Exercise</button>
             </div>
             <div>
