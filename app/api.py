@@ -42,8 +42,10 @@ NUTRIENTS_AP = "https://api.edamam.com/api/food-database/v2/nutrients?app_id={ap
 )
 
 # Given a string of text, returns all possible food
-AUTOCOMPLETE_AP = "https://api.edamam.com/auto-complete?app_id={app_id}&app_key={app_key}".format(
-    app_id=EDAMAM_FOOD_DB_ID, app_key=EDAMAM_FOOD_DB_KEY
+AUTOCOMPLETE_AP = (
+    "https://api.edamam.com/auto-complete?app_id={app_id}&app_key={app_key}".format(
+        app_id=EDAMAM_FOOD_DB_ID, app_key=EDAMAM_FOOD_DB_KEY
+    )
 )
 
 # Id and keys for the recipe database api
@@ -79,8 +81,13 @@ def analyze_food(food_name):
         if len(parser_response["parsed"]) == 0:
             return None
         food_objs = []
+        data_list = None
+        if "parsed" in parser_response:
+            data_list = parser_response["parsed"]
+        else:
+            data_list = parser_response["hints"]
         # Loop through all the data that is returned from the API call
-        for data in parser_response["parsed"]:
+        for data in data_list:
             food_data = data["food"]
             category, category_created = FoodCategory.objects.get_or_create(
                 description=food_data["category"]
@@ -106,14 +113,18 @@ def analyze_food(food_name):
                 # Gets the nutrition data
                 nutrition_request = requests.post(NUTRIENTS_AP, json=ingredients).json()
                 # Adds each nutrient to the database
-                for ntr_code, nutrient_data in nutrition_request["totalNutrients"].items():
+                for ntr_code, nutrient_data in nutrition_request[
+                    "totalNutrients"
+                ].items():
                     nutrient, nutrient_created = Nutrient.objects.get_or_create(
                         ntr_code=ntr_code,
                         label=nutrient_data["label"],
                         unit_name=nutrient_data["unit"],
                     )
                     food_nutrient = FoodNutrient.objects.create(
-                        food=food_obj, nutrient=nutrient, amount=nutrient_data["quantity"]
+                        food=food_obj,
+                        nutrient=nutrient,
+                        amount=nutrient_data["quantity"],
                     )
             food_objs.append(food_obj)
 

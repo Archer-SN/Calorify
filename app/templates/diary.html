@@ -2,7 +2,7 @@
 
 {% block body %}
     <div x-data="{ open : false }">
-        <div id="food_modal" class="modal flex flex-col w-full" x-show="open" >
+        <div id="food-modal" class="flex flex-col w-full" x-show="open">
             <!--This is used for searching food in the database-->
             <span class="htmx-indicator loading loading-infinity loading-xs"></span> 
             <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2 hover:bg-red-500" @click="open = false">✕</button>              
@@ -11,7 +11,8 @@
                 hx-get="{% url 'food' %}" 
                 hx-trigger="keyup changed delay:500ms, search" 
                 hx-target="#search-results" 
-                hx-indicator=".htmx-indicator"/>
+                hx-indicator=".htmx-indicator"
+                hx-swap="innterHTML"/>
 
             <table class="table">
                 <thead>
@@ -23,11 +24,11 @@
                 <tbody id="search-results">
                 </tbody>
             </table>
-          </div>
+        </div>
         <div id="log">
             <div>
                 <!--Contains buttons for adding entries-->
-                <button class="btn btn-outline" hx-get="{% url 'food' %}" hx-target="#food-modal" hx-swap="beforeend" @click="open = true" >Add Food</button>
+                <button class="btn btn-outline" hx-get="{% url 'food' %}" hx-target="#search-results" hx-swap="beforeend" @click="open = ! open">Add Food</button>
                 <button class="btn btn-outline">Add Exercise</button>
             </div>
             <div>

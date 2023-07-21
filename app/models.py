@@ -8,10 +8,14 @@ from math import floor
 from datetime import datetime
 from field_history.tracker import FieldHistoryTracker
 from collections import Counter
+from string import Template
 
 from . import fields
 
 # Calories here means kcal
+
+
+FOOD_URL = "food"
 
 # A shorthand for each unit
 UNIT_CHOICES = (
@@ -302,8 +306,13 @@ class Food(models.Model):
         amount = (food_nutrient.amount / BASE_AMOUNT) * weight
         return amount
 
+    # Convert food into a table format
+    # The row contains the name and food source
+    # We have Alpine and HTMX attributes as well for front-end functionalities.
     def html_table_format(self):
-        return "<>"
+        return "<tr hx-trigger='click' hx-get={url} hx-vals={{ 'foodId': {food_id} }}><td>{label}</td><td>EDAMAM</td></tr>".format(
+            label=self.label, food_id=self.food_id, url=FOOD_URL
+        )
 
 
 # MeasureUnit will store all the names of all the units

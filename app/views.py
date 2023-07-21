@@ -51,11 +51,21 @@ def diary(request):
 # Handles food databse queries and add new entries to the database
 def food(request):
     if request.method == "GET":
+        food_id = request.GET.get("foodId", "")
         search = request.GET.get("search", "")
-        search_results = autocomplete_search(search)
-        for food_name in search_results:
-            analyze_food(food_name)
-        return HttpResponse(Food.objects.filter(label__icontains=search)[0:40])
+        # If the user wants to obtain more detailed data about a specific food
+        if food_id:
+            food = analyze_food(food_name)
+        # If the user just wants to search for food in the database
+        else:
+            search_results = autocomplete_search(search)
+            response = ""
+            for food_name in search_results:
+                analyze_food(food_name)
+            # Turn each food object into an html form
+            for food in Food.objects.filter(label__icontains=search)[0:40]:
+                response += food.html_table_format()
+            return HttpResponse(response)
     if request.method == "POST":
         pass
 
