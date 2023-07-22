@@ -7,11 +7,13 @@ from django.contrib.auth.models import AbstractUser
 from math import floor
 from datetime import datetime, time
 from field_history.tracker import FieldHistoryTracker
+from django.middleware.csrf import get_token
 from collections import Counter
 import json
 from htmlgenerator import *
 
 from . import fields
+from .forms import *
 
 # Calories here means kcal
 
@@ -331,7 +333,38 @@ class Food(models.Model):
         carbs = LI(P(B("Carbohydrates: "), self.get_nutrient(CARBS)))
         fats = LI(P(B("Fats: "), self.get_nutrient(FATS)))
         energy = LI(P(B("Energy: "), self.get_nutrient(ENERGY)))
-        return render(DIV(UL(energy, protein, carbs, fats), id="nutrients-summary", _class="bg-gray-100 border-solid border-black"), {})
+        return render(
+            DIV(
+                UL(energy, protein, carbs, fats),
+                id="nutrients-summary",
+                _class="bg-gray-100 border-solid border-black",
+            ),
+            {},
+        )
+
+    # Returns a form for the user to add new UserFood
+    def user_food_form(self, request, daily_entry_date):
+        divider = render(DIV("|", _class="divider divider-horizontal"), {})
+        form_as_div = UserFoodForm(
+            initial={
+                "food_id": self.food_id,
+                "csrfmiddlewaretoken": get_token(request),
+                "daily_entry_date": daily_entry_date,
+            }
+        ).as_div()
+        form_container = render(
+            FORM(
+                form_as_div,
+                INPUT(type="submit", value="submit", _class="btn btn-success"),
+                hx_post=FOOD_URL,
+                hx_target="#entries-container",
+                hx_swap="beforeend",
+                _class="form-control",
+            ),
+            {},
+        )
+        response = self.food_summary_format() + divider + form_container
+        return response
 
 
 # MeasureUnit will store all the names of all the units
@@ -507,6 +540,17 @@ class UserFood(models.Model):
 
     def get_nutrient(self, nutrient_code):
         return self.food.get_nutrient(nutrient_code, self.weight)
+
+    def html_table_format(self):
+        # TODO: Handle unit
+        response = TR(
+            TD(self.food.label),
+            TD(self.weight),
+            TD("g"),
+            TD(self.get_nutrient(ENERGY)),
+            TD("kcal"),
+        )
+        return render(response, {})
 
 
 # Stores the name and description of each exercise.

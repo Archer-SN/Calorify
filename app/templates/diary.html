@@ -12,7 +12,8 @@
                 hx-trigger="keyup changed delay:500ms, search" 
                 hx-target="#search-results" 
                 hx-indicator=".htmx-indicator"
-                hx-swap="innterHTML"/>
+                hx-swap="innterHTML"
+                />
 
             <table class="table">
                 <thead>
@@ -25,18 +26,7 @@
                 </tbody>
             </table>
             <div id="food-summary-panel" x-show="foodSummaryOpen" class="flex w-full flex-row justify-center">
-                <div id="nutrients-summary" class="bg-gray-100 border-solid border-black">
-                    <!--Summarize the amount of macronutrients and calories-->
-                </div>
-                <div class="divider divider-horizontal">|</div>
-                <div id="user-food-info" class="bg-gray-100 border-solid border-black">
-                    <!--This will be used in creating UserFood-->
-                    <form action="{% url 'food' %}" method="post" class="form-control">
-                        {% csrf_token %}
-                        {{ user_food_form }}
-                        <input type="submit" value="submit" class="btn btn-success">
-                    </form>
-                </div>
+                
             </div>
         </span>
         <div id="log">
@@ -45,19 +35,27 @@
                 <button class="btn btn-outline" hx-get="{% url 'food' %}" hx-target="#search-results" hx-swap="beforeend" @click="foodModalOpen = true">Add Food</button>
                 <button class="btn btn-outline" @click="foodSummaryOpen = true">Add Exercise</button>
             </div>
-            <div>
-                <!--Food and exercise entries are shown here-->
-                {% for food in daily_entry.food_intake %}
-                    <div class="flex flex-row">
-                        <p>{{ food.name }}</p>
-                        <p>{{ food.weight }}</p>
-                        <p>{{ food.energy }}</p>
-                    </div>
-                {% endfor %}
-                {% for exercise in daily_entry.exercises %}
-                    <div>{{ exercise.name }}</div>
-                {% endfor %}
-            </div>
+            <table class="table">
+                <tbody id="entries-container" >
+                    
+                    <!--Food and exercise entries are shown here-->
+                    {% for food in daily_entry.food_intake %}
+                        <tr>
+                            <td>{{ food.name }}</td>
+                            <td>{{ food.weight }}</td>
+                            <td>g</td>
+                            <td>{{ food.energy }}</td>
+                        </tr>
+                    {% endfor %}
+                    {% for exercise in daily_entry.exercises %}
+                        <tr>
+                            <td>{{ exercise.name }}</td>
+                            <td>{{ exercise.duration }}</td>
+                            <td>minutes</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
         <div id="date">
         

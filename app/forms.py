@@ -11,12 +11,16 @@ UNIT_CHOICES = (
 
 # Forms
 class UserFoodForm(forms.Form):
+    csrfmiddlewaretoken = forms.CharField(
+        max_length=100, widget=forms.HiddenInput(), required=False
+    )
     food_id = forms.CharField(
         max_length=100, widget=forms.HiddenInput(), required=False
     )
+    daily_entry_date = forms.DateField(widget=forms.HiddenInput(), required=False)
     now = datetime.now()
     current_time = now.strftime("%H:%M:%S")
-    time_added = forms.DateField(
+    time_added = forms.TimeField(
         label="Time of Day",
         initial=time(int(now.strftime("%H")), int(now.strftime("%M"))),
         widget=forms.TimeInput(format="%H:%M"),
