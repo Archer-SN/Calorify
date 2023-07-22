@@ -78,11 +78,11 @@ def analyze_food(food_name):
     parser_request = requests.get(PARSER_AP, params=parser_params)
     parser_response = parser_request.json()
     if parser_request.status_code == 200:
-        if len(parser_response["parsed"]) == 0:
-            return None
         food_objs = []
         data_list = None
         if "parsed" in parser_response:
+            if len(parser_response["parsed"]) == 0:
+                return None
             data_list = parser_response["parsed"]
         else:
             data_list = parser_response["hints"]

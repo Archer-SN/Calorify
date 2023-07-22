@@ -1,11 +1,11 @@
 {% extends "layout.html" %}
 
 {% block body %}
-    <div x-data="{ open : false }">
-        <div id="food-modal" class="flex flex-col w-full" x-show="open">
+    <div x-data="{ foodModalOpen : false, foodSummaryOpen: false }">
+        <span id="food-modal" class="flex flex-col w-full" x-show="foodModalOpen" x-trap="foodModalOpen" >
             <!--This is used for searching food in the database-->
             <span class="htmx-indicator loading loading-infinity loading-xs"></span> 
-            <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2 hover:bg-red-500" @click="open = false">✕</button>              
+            <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2 hover:bg-red-500" @click="foodModalOpen = false">✕</button>              
             <h1 class="text-lg font-bold">Add Food to Diary</h1>
             <input type="search" name="search" placeholder="Search food here" class="input input-bordered w-full max-w-xs" 
                 hx-get="{% url 'food' %}" 
@@ -24,12 +24,26 @@
                 <tbody id="search-results">
                 </tbody>
             </table>
-        </div>
+            <div id="food-summary-panel" x-show="foodSummaryOpen" class="flex w-full flex-row justify-center">
+                <div id="nutrients-summary" class="bg-gray-100 border-solid border-black">
+                    <!--Summarize the amount of macronutrients and calories-->
+                </div>
+                <div class="divider divider-horizontal">|</div>
+                <div id="user-food-info" class="bg-gray-100 border-solid border-black">
+                    <!--This will be used in creating UserFood-->
+                    <form action="{% url 'food' %}" method="post" class="form-control">
+                        {% csrf_token %}
+                        {{ user_food_form }}
+                        <input type="submit" value="submit" class="btn btn-success">
+                    </form>
+                </div>
+            </div>
+        </span>
         <div id="log">
             <div>
                 <!--Contains buttons for adding entries-->
-                <button class="btn btn-outline" hx-get="{% url 'food' %}" hx-target="#search-results" hx-swap="beforeend" @click="open = ! open">Add Food</button>
-                <button class="btn btn-outline">Add Exercise</button>
+                <button class="btn btn-outline" hx-get="{% url 'food' %}" hx-target="#search-results" hx-swap="beforeend" @click="foodModalOpen = true">Add Food</button>
+                <button class="btn btn-outline" @click="foodSummaryOpen = true">Add Exercise</button>
             </div>
             <div>
                 <!--Food and exercise entries are shown here-->
@@ -48,13 +62,20 @@
         <div id="date">
         
         </div>
-        <div id="summary">
+        <div id="summary" class="flex w-full justify-evenly border-solid border-2" >
             <!--Summarize Energy and Macronutrients-->
             <div>
                 <h2 class="text-xl font-bold">Energy Summary</h2>
+                <p class="font-bold">Consumed: {{ daily_entry.nutrients.general.energy }} kcal</p>
             </div>
+            <div class="divider divider-horizontal"></div>
             <div>
                 <h2 class="text-xl font-bold">Macronutrients Target</h2>
+                <p class="font-bold">Energy: {{ daily_entry.nutrients.general.energy }} kcal</p>
+                <p class="font-bold">Protein: {{ daily_entry.nutrients.protein.protein }} g</p>
+                <p class="font-bold">Carbohydrates: {{ daily_entry.nutrients.carbohydrates.carbs }} g</p>
+                <p class="font-bold">Fats: {{ daily_entry.nutrients.lipids.fat }} g</p>
+
             </div>
         </div>
         <div id="nutrients">

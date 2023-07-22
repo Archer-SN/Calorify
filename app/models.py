@@ -5,10 +5,11 @@ from django.utils.translation import gettext_lazy as _
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from math import floor
-from datetime import datetime
+from datetime import datetime, time
 from field_history.tracker import FieldHistoryTracker
 from collections import Counter
-from string import Template
+import json
+from htmlgenerator import *
 
 from . import fields
 
@@ -16,6 +17,11 @@ from . import fields
 
 
 FOOD_URL = "food"
+
+PROTEIN = "PROCNT"
+CARBS = "CHOCDF.net"
+FATS = "FAT"
+ENERGY = "ENERC_KCAL"
 
 # A shorthand for each unit
 UNIT_CHOICES = (
@@ -302,17 +308,30 @@ class Food(models.Model):
     def get_nutrient(self, nutrient_code, weight=BASE_AMOUNT):
         nutrient = Nutrient.objects.get(ntr_code=nutrient_code)
         # TODO: Fix this
-        food_nutrient = FoodNutrient.objects.filter(food=self, nutrient=nutrient)[0]
-        amount = (food_nutrient.amount / BASE_AMOUNT) * weight
-        return amount
+        try:
+            food_nutrient = FoodNutrient.objects.filter(food=self, nutrient=nutrient)[0]
+            amount = (food_nutrient.amount / BASE_AMOUNT) * weight
+            return amount
+        except IndexError:
+            return 0
 
-    # Convert food into a table format
+    # Convert Food into a table format
     # The row contains the name and food source
     # We have Alpine and HTMX attributes as well for front-end functionalities.
     def html_table_format(self):
-        return "<tr hx-trigger='click' hx-get={url} hx-vals={{ 'foodId': {food_id} }}><td>{label}</td><td>EDAMAM</td></tr>".format(
-            label=self.label, food_id=self.food_id, url=FOOD_URL
-        )
+        return (
+            "<tr @click='foodSummaryOpen = true' hx-trigger='click' hx-get={url} hx-target='#food-summary-panel' hx-swap='innerHTML' class='hover' hx-vals='{{ \"foodId\" : \""
+            + self.food_id
+            + "\"}}'><td>{label}</td><td>EDAMAM</td></tr>"
+        ).format(label=self.label, url=FOOD_URL)
+
+    # Convert Food into an HTML string that will be used in food-summary-panel
+    def food_summary_format(self):
+        protein = LI(P(B("Protein: "), self.get_nutrient(PROTEIN)))
+        carbs = LI(P(B("Carbohydrates: "), self.get_nutrient(CARBS)))
+        fats = LI(P(B("Fats: "), self.get_nutrient(FATS)))
+        energy = LI(P(B("Energy: "), self.get_nutrient(ENERGY)))
+        return render(DIV(UL(energy, protein, carbs, fats), id="nutrients-summary", _class="bg-gray-100 border-solid border-black"), {})
 
 
 # MeasureUnit will store all the names of all the units
@@ -380,11 +399,11 @@ class DailyEntry(models.Model):
             "d": self.date,
             "i": food_intake,
             "e": exercises,
-            "k": nutrients["ENERC_KCAL"],
+            "k": nutrients[ENERGY],
             "m": {
-                "p": nutrients["PROCNT"],
-                "c": nutrients["CHOCDF.net"],
-                "f": nutrients["FAT"],
+                "p": nutrients[PROTEIN],
+                "c": nutrients[CARBS],
+                "f": nutrients[FATS],
             },
         }
 
@@ -466,6 +485,7 @@ class UserFood(models.Model):
     )
     # Food weight in grams
     weight = models.FloatField(default=0)
+    time_added = models.TimeField(default=time())
 
     # Returns basic information of the user food. In this case, the name.
     def info(self):
@@ -504,6 +524,7 @@ class UserExercise(models.Model):
         DailyEntry, related_name="user_exercises", on_delete=models.CASCADE
     )
     duration = models.IntegerField(default=0)
+    time_added = models.TimeField(default=time())
 
     # Returns basic information of the exercise.
     def info(self):

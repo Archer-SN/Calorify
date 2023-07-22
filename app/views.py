@@ -3,6 +3,7 @@ from django.db import IntegrityError
 from .scripts import credentials
 from .models import *
 from .api import *
+from .forms import *
 
 from django.http import HttpResponseRedirect, JsonResponse
 from django.urls import reverse
@@ -10,6 +11,7 @@ from django.shortcuts import render, redirect
 from django.shortcuts import HttpResponse
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
+from django.middleware.csrf import get_token
 from datetime import datetime
 
 import requests
@@ -44,7 +46,11 @@ def diary(request):
         daily_entry, _ = DailyEntry.objects.get_or_create(
             user=request.user, date=datetime.now()
         )
-        return render(request, "diary.html", {"daily_entry": daily_entry.summarize()})
+        return render(
+            request,
+            "diary.html",
+            {"daily_entry": daily_entry.summarize(), "user_food_form": UserFoodForm()},
+        )
 
 
 @login_required
@@ -55,7 +61,21 @@ def food(request):
         search = request.GET.get("search", "")
         # If the user wants to obtain more detailed data about a specific food
         if food_id:
-            food = analyze_food(food_name)
+            # The first object is the one we want
+            food = analyze_food(food_id)[0]
+            divider = render(DIV(_class="divider divider-horizontal"), {})
+            form_as_div = UserFoodForm(initial={"food_id": food_id}).as_div()
+            form_container = render(
+                FORM(
+                    get_token(request),
+                    INPUT(type="submit", value="submit", _class="btn btn-success"),
+                    action="{{% url 'food' %}}",
+                    method="post",
+                    _class="form-control",
+                ),
+                {},
+            )
+            return HttpResponse(food.food_summary_format() + divider + form)
         # If the user just wants to search for food in the database
         else:
             search_results = autocomplete_search(search)
@@ -67,7 +87,12 @@ def food(request):
                 response += food.html_table_format()
             return HttpResponse(response)
     if request.method == "POST":
-        pass
+        form = UserFoodForm(request.POST)
+        if form.is_valid():
+            amount = form.cleaned_data["amount"]
+            time_added = form.cleaned_data["time_added"]
+            unit = form.cleaned_data["unit"]
+            food_id = form.cleaned_data["food_id"]
 
 
 # Handles the page where you can talk to chatGPT
