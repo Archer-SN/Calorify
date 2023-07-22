@@ -2,9 +2,8 @@
 
 {% block body %}
     <div x-data="{ foodModalOpen : false, foodSummaryOpen: false }">
-        <span id="food-modal" class="flex flex-col w-full" x-show="foodModalOpen" x-trap="foodModalOpen" >
+        <span id="food-modal" class="flex flex-col w-full border-solid border-2" x-show="foodModalOpen" x-trap="foodModalOpen" >
             <!--This is used for searching food in the database-->
-            <span class="htmx-indicator loading loading-infinity loading-xs"></span> 
             <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2 hover:bg-red-500" @click="foodModalOpen = false">✕</button>              
             <h1 class="text-lg font-bold">Add Food to Diary</h1>
             <input type="search" name="search" placeholder="Search food here" class="input input-bordered w-full max-w-xs" 
@@ -14,22 +13,24 @@
                 hx-indicator=".htmx-indicator"
                 hx-swap="innterHTML"
                 />
-
-            <table class="table">
+                
+                <table class="table">
                 <thead>
-                <tr>
+                    <tr>
                   <th>Description</th>
                   <th>Source</th>
                 </tr>
                 </thead>
                 <tbody id="search-results">
+                    <span class="htmx-indicator loading loading-infinity loading-lg"></span> 
                 </tbody>
             </table>
             <div id="food-summary-panel" x-show="foodSummaryOpen" class="flex w-full flex-row justify-center">
                 
             </div>
         </span>
-        <div id="log">
+        <div id="log" class="border-solid border-2">
+            <h1 class="text-lg font-bold">Daily Entries</h1>
             <div>
                 <!--Contains buttons for adding entries-->
                 <button class="btn btn-outline" hx-get="{% url 'food' %}" hx-target="#search-results" hx-swap="beforeend" @click="foodModalOpen = true">Add Food</button>
@@ -45,6 +46,7 @@
                             <td>{{ food.weight }}</td>
                             <td>g</td>
                             <td>{{ food.energy }}</td>
+                            <td>kcal</td>
                         </tr>
                     {% endfor %}
                     {% for exercise in daily_entry.exercises %}
