@@ -7,7 +7,7 @@ from django.utils.translation import gettext_lazy as _
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from math import floor
-from datetime import datetime, time
+from datetime import datetime, time, timedelta
 from field_history.tracker import FieldHistoryTracker
 from django.middleware.csrf import get_token
 from collections import Counter
@@ -72,6 +72,11 @@ READABLE_ACTIVITY_LEVEL = {
 }
 
 READABLE_SEX = {"M": "Male", "F": "Female"}
+
+
+def tomorrow():
+    return datetime.now() + timedelta(1)
+
 
 # Create your models here.
 
@@ -247,7 +252,7 @@ class Difficulty(models.Model):
 
 
 class Challenge(models.Model):
-    user_rpg = models.ManyToManyField(UserRPG)
+    user = models.ManyToManyField(User)
     difficulty = models.ForeignKey(Difficulty, on_delete=models.CASCADE)
     # The challenge's name
     name = models.CharField(max_length=64)
@@ -255,17 +260,21 @@ class Challenge(models.Model):
     description = models.TextField()
     is_completed = models.BooleanField(default=False)
     date_created = models.DateField(default=datetime.now)
-    expire_date = models.DateField(default=datetime.now)
+    expire_date = models.DateField(default=tomorrow)
 
     def complete_challenge(self):
         self.is_completed = True
-        self.user_rpg.gain_xp(self.difficulty.xp)
-        self.user_rpg.gain_gems(self.difficulty.gems)
+        self.user.userrpg.gain_xp(self.difficulty.xp)
+        self.user.userrpg.gain_gems(self.difficulty.gems)
 
     def is_expired(self):
         if datetime.now() > self.expire_date:
             return True
         return False
+
+    def html_format(self):
+        response = TR(TD(self.name), TD(self.difficulty), TD(self.expire_date))
+        return render(response, {})
 
 
 class Nutrient(models.Model):
@@ -310,10 +319,14 @@ class Food(models.Model):
 
     # Return the amount of the nutrient in the food based on the given food weight
     def get_nutrient(self, nutrient_code, weight=BASE_AMOUNT):
-        nutrient = Nutrient.objects.get(ntr_code=nutrient_code)
+        nutrient = Nutrient.objects.filter(ntr_code=nutrient_code)
+        if not nutrient:
+            return 0
         # TODO: Fix this
         try:
-            food_nutrient = FoodNutrient.objects.filter(food=self, nutrient=nutrient)[0]
+            food_nutrient = FoodNutrient.objects.filter(
+                food=self, nutrient=nutrient[0]
+            )[0]
             amount = (food_nutrient.amount / BASE_AMOUNT) * weight
             return amount
         except IndexError:
@@ -433,11 +446,11 @@ class DailyEntry(models.Model):
             "d": self.date,
             "i": food_intake,
             "e": exercises,
-            "k": nutrients[ENERGY],
+            "k": nutrients.get(ENERGY, 0),
             "m": {
-                "p": nutrients[PROTEIN],
-                "c": nutrients[CARBS],
-                "f": nutrients[FATS],
+                "p": nutrients.get(PROTEIN, 0),
+                "c": nutrients.get(CARBS, 0),
+                "f": nutrients.get(FATS, 0),
             },
         }
 

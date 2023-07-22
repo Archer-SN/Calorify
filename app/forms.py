@@ -20,11 +20,13 @@ class UserForm(forms.Form):
     ]
 
     SEX_CHOICES = [("M", "Male"), ("F", "Female")]
-    date_born = forms.DateField(label="Date of Birth", initial=date(2000, 1, 1))
+    date_born = forms.DateField(
+        label="Date of Birth (Year/Month/Day)", initial=date(2000, 1, 1)
+    )
     sex = forms.ChoiceField(label="Biological Sex", choices=SEX_CHOICES)
-    height = forms.IntegerField(label="Height", initial=170)
-    weight = forms.FloatField(label="Weight", initial=70)
-    body_fat = forms.FloatField(label="Body Fat (Optional)", initial=15)
+    height = forms.IntegerField(label="Height (cm)", initial=170)
+    weight = forms.FloatField(label="Weight (kg)", initial=70)
+    body_fat = forms.FloatField(label="Body Fat Percentage(Optional)", initial=15)
     activity_level = forms.ChoiceField(label="Activity Level", choices=ACTIVITY_LEVEL)
     meal_frequency = forms.IntegerField(
         label="How many meals do you eat per day?", initial=3

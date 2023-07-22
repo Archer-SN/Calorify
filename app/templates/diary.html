@@ -4,9 +4,22 @@
     <div x-data="{ foodModalOpen : false, foodSummaryOpen: false }">
         <div id="challenge" class="border-solid border-2">
             <h1 class="text-lg font-bold">Challenge</h1>
-            {% for challenge in challenges %}
-
-            {% endfor %}
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Difficulty</th>
+                        <th>Expiration Date</th>
+                    </tr>
+                </thead>
+                {% for challenge in challenges %}
+                <tr>
+                    <td>{{ challenge.name }}</td>
+                    <td>{{ challenge.difficulty }}</td>
+                    <td>{{ challenge.expire_date }}</td>
+                </tr>
+                {% endfor %}
+            </table>
         </div>
         <span id="food-modal" class="flex flex-col w-full border-solid border-2" x-show="foodModalOpen" x-trap="foodModalOpen" >
             <!--This is used for searching food in the database-->

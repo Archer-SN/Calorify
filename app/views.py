@@ -44,7 +44,31 @@ def survey(request):
 # This page should show you weight history and stuffs
 @login_required
 def home(request):
-    return render(request, "layout.html")
+    user = request.user
+    total_nutrients = Counter()
+    daily_entries = DailyEntry.objects.filter(user=user)
+    daily_entries_count = daily_entries.count()
+    for daily_entry in daily_entries:
+        total_nutrients += Counter(daily_entry.total_nutrients())
+    average_nutrients = total_nutrients
+    for nutrient in total_nutrients.keys():
+        average_nutrients[nutrient] = round(
+            average_nutrients[nutrient] / daily_entries_count, 1
+        )
+
+    return render(
+        request,
+        "home.html",
+        {
+            "user_info": user.info(),
+            "AVG": {
+                "energy": average_nutrients[ENERGY],
+                "protein": average_nutrients[PROTEIN],
+                "carbs": average_nutrients[CARBS],
+                "fats": average_nutrients[FATS],
+            },
+        },
+    )
 
 
 @login_required
@@ -55,13 +79,14 @@ def diary(request):
         daily_entry, _ = DailyEntry.objects.get_or_create(
             user=user, date=datetime.now()
         )
+        challenges = Challenge.objects.filter(user=user)
         return render(
             request,
             "diary.html",
             {
                 "daily_entry": daily_entry.summarize(),
                 "user_food_form": UserFoodForm(),
-                "challenges": Challenge.objects.filter(user_rpg=user.userrpg),
+                "challenges": challenges,
             },
         )
 
@@ -110,6 +135,15 @@ def food(request):
             return HttpResponse(new_user_food.html_table_format())
 
 
+@login_required
+def challenge(request):
+    if request.htmx:
+        if request.method == "POST":
+            pass
+    else:
+        pass
+
+
 # Handles the page where you can talk to chatGPT
 @login_required
 def ask_ai(request):
@@ -137,6 +171,7 @@ def ask_ai(request):
                             hx_vals=json.dumps(vals),
                             hx_swap="outerHTML",
                             hx_target="closest span",
+                            hx_indicator=".htmx-indicator",
                             _class="btn btn-outline btn-success",
                         ),
                         DIV(
@@ -144,9 +179,11 @@ def ask_ai(request):
                             _class="btn btn-outline btn-danger",
                             hx_get="empty",
                             hx_swap="delete",
+                            hx_indicator=".htmx-indicator",
                             hx_target="closest span",
                         ),
                     ),
+                    _class="border-solid border-2",
                 )
                 return HttpResponse(R(response, {}))
             elif prompt == "Recommend me an exercise routine":
