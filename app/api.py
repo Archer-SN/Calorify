@@ -233,8 +233,29 @@ def import_user_meal_plan(user, gpt_response, date=datetime.now()):
     return False
 
 
-def import_routine_plan():
-    pass
+def import_routine_plan(user):
+    messages = [
+        DEFAULT_SYSTEM_MESSAGE,
+        {
+            "role": "user",
+            "content": "Recommend me an exercise routine based on the following information: {info}".format(
+                user.info()
+            ),
+        },
+    ]
+
+    response = openai.ChatCompletion.create(
+        model=GPT_MODEL,
+        messages=messages,
+        temperature=1,
+        max_tokens=512,
+        top_p=1,
+        frequency_penalty=0,
+        presence_penalty=0,
+    )
+    response_message = response["choices"][0]["message"]
+
+    return response_message["content"]
 
 
 # Edamam provides a convenient autocomplete functionality

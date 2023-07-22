@@ -116,8 +116,9 @@ def ask_ai(request):
                 return HttpResponse("NOT WORKING!")
             elif prompt == "Analyze my history":
                 number_of_days = request.GET.get("days", 30)
-                response = ai_analyze_history(request.user, number_of_days)
-                return HttpResponse(response)
+                gpt_response = ai_analyze_history(request.user, number_of_days)
+                response = DIV(P(gpt_response))
+                return HttpResponse(R(response, {}))
             elif prompt == "Recommend me a meal plan":
                 gpt_response = ask_meal_plan_gpt(request.user)
                 vals = {"gptResponse": gpt_response}
@@ -130,15 +131,23 @@ def ask_ai(request):
                             hx_post="askai",
                             hx_vals=json.dumps(vals),
                             hx_swap="outerHTML",
+                            hx_target="closest span",
                             _class="btn btn-outline btn-success",
                         ),
-                        DIV("NO", _class="btn btn-outline btn-danger"),
+                        DIV(
+                            "NO",
+                            _class="btn btn-outline btn-danger",
+                            hx_get="empty",
+                            hx_swap="delete",
+                            hx_target="closest span",
+                        ),
                     ),
                 )
                 return HttpResponse(R(response, {}))
             elif prompt == "Recommend me an exercise routine":
-                response = ask_exercise_plan_gpt(request.user)
-                return HttpResponse(response)
+                gpt_response = ask_exercise_plan_gpt(request.user)
+                response = DIV(P(gpt_response))
+                return HttpResponse(R(response, {}))
             return HttpResponse("Non-existent prompt")
         # If user wants to import
         if request.method == "POST":
@@ -219,3 +228,7 @@ def register_view(request):
 # Renders the error page
 def error(request):
     pass
+
+
+def empty(request):
+    return HttpResponse()
