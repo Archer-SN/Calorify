@@ -1,7 +1,13 @@
 {% extends "layout.html" %}
-
+<!--TODO: CHALLENGE-->
 {% block body %}
     <div x-data="{ foodModalOpen : false, foodSummaryOpen: false }">
+        <div id="challenge" class="border-solid border-2">
+            <h1 class="text-lg font-bold">Challenge</h1>
+            {% for challenge in challenges %}
+
+            {% endfor %}
+        </div>
         <span id="food-modal" class="flex flex-col w-full border-solid border-2" x-show="foodModalOpen" x-trap="foodModalOpen" >
             <!--This is used for searching food in the database-->
             <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2 hover:bg-red-500" @click="foodModalOpen = false">✕</button>              

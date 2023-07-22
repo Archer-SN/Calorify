@@ -13,7 +13,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.middleware.csrf import get_token
 from datetime import date, datetime
-from htmlgenerator import DIV, P, SPAN
+from htmlgenerator import DIV, P, SPAN, FORM, BUTTON
 from htmlgenerator import render as R
 
 import requests
@@ -51,13 +51,18 @@ def home(request):
 # Renders the diary page
 def diary(request):
     if request.method == "GET":
+        user = request.user
         daily_entry, _ = DailyEntry.objects.get_or_create(
-            user=request.user, date=datetime.now()
+            user=user, date=datetime.now()
         )
         return render(
             request,
             "diary.html",
-            {"daily_entry": daily_entry.summarize(), "user_food_form": UserFoodForm()},
+            {
+                "daily_entry": daily_entry.summarize(),
+                "user_food_form": UserFoodForm(),
+                "challenges": Challenge.objects.filter(user_rpg=user.userrpg),
+            },
         )
 
 
@@ -199,29 +204,87 @@ def logout_view(request):
 
 
 def register_view(request):
-    if request.method == "POST":
-        username = request.POST["username"]
-        email = request.POST["email"]
+    if request.htmx:
+        # User submitted account information
+        if request.method == "POST":
+            if not request.user.is_authenticated:
+                username = request.POST["username"]
+                email = request.POST["email"]
 
-        # Ensure password matches confirmation
-        password = request.POST["password"]
-        confirmation = request.POST["confirmation"]
-        if password != confirmation:
-            return render(
-                request, "register.html", {"message": "Passwords must match."}
-            )
+                # Ensure password matches confirmation
+                password = request.POST["password"]
+                confirmation = request.POST["confirmation"]
+                if password != confirmation:
+                    return render(
+                        request, "register.html", {"message": "Passwords must match."}
+                    )
 
-        # Attempt to create new user
-        try:
-            user = User.objects.create_user(username, email, password)
-            user.save()
-        except IntegrityError:
-            return render(
-                request, "register.html", {"message": "Username already taken."}
-            )
-        login(request, user)
-        return HttpResponseRedirect(reverse("home"))
+                # Attempt to create new user
+                try:
+                    user = User.objects.create_user(username, email, password)
+                    user.save()
+                except IntegrityError:
+                    return render(
+                        request, "register.html", {"message": "Username already taken."}
+                    )
+                login(request, user)
+                # Ask the user about their information
+                form = UserForm().as_div()
+                response = FORM(
+                    form,
+                    BUTTON(
+                        "Submit", type="submit", _class="btn btn-outline btn-primary"
+                    ),
+                    hx_get="register",
+                    hx_swap="innerHTML",
+                    _class="form-control flex flex-col space-y-4 md:space-y-6",
+                )
+                return HttpResponse(R(response, {}))
+        # User submitted health data
+        # TODO: GET FOR NOW THOUGH WE WANT POST
+        elif request.method == "GET":
+            form = UserForm(request.GET)
+            user = request.user
+            print(form.errors)
+            if user.is_authenticated and form.is_valid():
+                date_born = form.cleaned_data["date_born"]
+                sex = form.cleaned_data["sex"]
+                height = form.cleaned_data["height"]
+                weight = form.cleaned_data["weight"]
+                body_fat = form.cleaned_data["body_fat"]
+                activity_level = form.cleaned_data["activity_level"]
+                meal_frequency = form.cleaned_data["meal_frequency"]
+                recommendation_frequency = form.cleaned_data["recommendation_frequency"]
+                weight_goal = form.cleaned_data["weight_goal"]
+                weight_goal_rate = form.cleaned_data["weight_goal_rate"]
+                User.objects.filter(id=user.id).update(
+                    date_born=date_born,
+                    sex=sex,
+                    height=height,
+                    weight=weight,
+                    body_fat=body_fat,
+                    activity_level=activity_level,
+                    meal_frequency=meal_frequency,
+                    recommendation_frequency=recommendation_frequency,
+                )
+                UserTargets.objects.filter(user=user).update(
+                    weight_goal=weight_goal, weight_goal_rate=weight_goal_rate
+                )
+                # TODO: FIX THIS BUG
+                return redirect(reverse("home"))
+        # Return the form if the input is wrong
+        form = UserForm().as_div()
+        response = FORM(
+            form,
+            BUTTON("Submit", type="submit", _class="btn btn-outline btn-primary"),
+            hx_get="register",
+            hx_swap="innerHTML",
+            _class="form-control flex flex-col space-y-4 md:space-y-6",
+        )
+        return HttpResponse(R(response, {}))
     else:
+        if request.user.is_authenticated:
+            return redirect(reverse("home"))
         return render(request, "register.html")
 
 

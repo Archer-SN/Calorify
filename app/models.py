@@ -2,6 +2,8 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 from model_utils import Choices
 
 from django.utils.translation import gettext_lazy as _
+
+from django.utils.translation import gettext_lazy as _
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from math import floor

@@ -1,12 +1,42 @@
 from django import forms
-from datetime import time, datetime
-
+from datetime import time, datetime, date
+import os
+import django
 
 # Units are hard coded for now
 UNIT_CHOICES = (
     ("http://www.edamam.com/ontologies/edamam.owl#Measure_gram", "g"),
     ("http://www.edamam.com/ontologies/edamam.owl#Measure_ounce", "oz"),
 )
+
+
+class UserForm(forms.Form):
+    ACTIVITY_LEVEL = [
+        ("NONE", "None"),
+        ("SED", "Sedentary"),
+        ("LA", "Lightly Active"),
+        ("MA", "Moderately Active"),
+        ("VA", "Very Active"),
+    ]
+
+    SEX_CHOICES = [("M", "Male"), ("F", "Female")]
+    date_born = forms.DateField(label="Date of Birth", initial=date(2000, 1, 1))
+    sex = forms.ChoiceField(label="Biological Sex", choices=SEX_CHOICES)
+    height = forms.IntegerField(label="Height", initial=170)
+    weight = forms.FloatField(label="Weight", initial=70)
+    body_fat = forms.FloatField(label="Body Fat (Optional)", initial=15)
+    activity_level = forms.ChoiceField(label="Activity Level", choices=ACTIVITY_LEVEL)
+    meal_frequency = forms.IntegerField(
+        label="How many meals do you eat per day?", initial=3
+    )
+    recommendation_frequency = forms.IntegerField(
+        label="How often do you want ChatGPT to recommend you? (In days)", initial=30
+    )
+    weight_goal = forms.FloatField(label="What's your weight goal?")
+    weight_goal_rate = forms.FloatField(label="How much deficit/surplus?")
+    csrfmiddlewaretoken = forms.CharField(
+        max_length=100, widget=forms.HiddenInput(), required=False
+    )
 
 
 # Forms
