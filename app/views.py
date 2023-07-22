@@ -13,10 +13,18 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.middleware.csrf import get_token
 from datetime import date, datetime
+from htmlgenerator import DIV, P, SPAN
+from htmlgenerator import render as R
 
 import requests
 import json
 import openai
+
+AVAILABLE_PROMPTS = {
+    "Analyze my history": ai_analyze_history,
+    "Recommend me a meal plan": ask_meal_plan_gpt,
+    "Recommend me an exercise routine": ask_exercise_plan_gpt,
+}
 
 
 # This function handles the index page
@@ -100,23 +108,51 @@ def food(request):
 # Handles the page where you can talk to chatGPT
 @login_required
 def ask_ai(request):
+    # If requested by htmx
     if request.htmx:
         if request.method == "GET":
             prompt = request.GET.get("prompt", "")
             if not prompt:
                 return HttpResponse("NOT WORKING!")
-            # message = {
-            #     "role": "user",
-            #     "content": "Generate a healthy and tasty meal plan that has a total of {tdee} calories.".format(
-            #         tdee=request.user.get_tdee()
-            #     ),
-            # }
-            # unhealthy_message = {}
-            # food_list = ask_meal_plan_gpt(request.user, message)
-            # import_user_meal_plan(request.user, food_list)
-            return HttpResponse()
+            elif prompt == "Analyze my history":
+                number_of_days = request.GET.get("days", 30)
+                response = ai_analyze_history(request.user, number_of_days)
+                return HttpResponse(response)
+            elif prompt == "Recommend me a meal plan":
+                gpt_response = ask_meal_plan_gpt(request.user)
+                vals = {"gptResponse": gpt_response}
+                response = DIV(
+                    P(gpt_response),
+                    SPAN(
+                        P("Import meal plan?"),
+                        DIV(
+                            "YES",
+                            hx_post="askai",
+                            hx_vals=json.dumps(vals),
+                            hx_swap="outerHTML",
+                            _class="btn btn-outline btn-success",
+                        ),
+                        DIV("NO", _class="btn btn-outline btn-danger"),
+                    ),
+                )
+                return HttpResponse(R(response, {}))
+            elif prompt == "Recommend me an exercise routine":
+                response = ask_exercise_plan_gpt(request.user)
+                return HttpResponse(response)
+            return HttpResponse("Non-existent prompt")
+        # If user wants to import
+        if request.method == "POST":
+            gpt_response = request.POST.get("gptResponse")
+            if import_user_meal_plan(request.user, gpt_response):
+                return HttpResponse(
+                    R(DIV("Import Completed", _class="alert alert-success"), {})
+                )
+            else:
+                return HttpResponse(
+                    R(DIV("Import Failed", _class="alert alert-failed"), {})
+                )
     else:
-        return render(request, "askai.html", {"prompts": AVAILABLE_PROMPTS})
+        return render(request, "askai.html", {"prompts": AVAILABLE_PROMPTS.keys()})
 
 
 @login_required

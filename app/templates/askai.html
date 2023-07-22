@@ -5,12 +5,12 @@
 {% block body %}
     <div>
         <div id="gpt-response" class="w-full bg-gray-100">
-    
+            <span class="htmx-indicator loading loading-infinity loading-lg"></span> 
         </div>
         <div id="prompts">
-            <button hx-get="{% url 'askai' %}" hx-target="#gpt-response" hx-swap="beforeend" hx-vals='{"prompt": "Analyze my history"}' class="btn btn-outline">Analyze my history</button>
-            <button hx-get="{% url 'askai' %}" hx-target="#gpt-response" hx-swap="beforeend" hx-vals='{"prompt": "Recommend me a meal plan"}' class="btn btn-outline">Recommend me a meal plan</button>
-            <button hx-get="{% url 'askai' %}" hx-target="#gpt-response" hx-swap="beforeend" hx-vals='{"prompt": "Recommend me an exercise routine"}' class="btn btn-outline">Recommend me an exercise routine</button>
+            <button  hx-get="{% url 'askai' %}" hx-target="#gpt-response" hx-swap="beforeend" hx-vals='{"prompt": "Analyze my history"}' hx-indicator=".htmx-indicator" class="btn btn-outline">Analyze my history</button>
+            <button hx-get="{% url 'askai' %}" hx-target="#gpt-response" hx-swap="beforeend" hx-vals='{"prompt": "Recommend me a meal plan"}' hx-indicator=".htmx-indicator" class="btn btn-outline">Recommend me a meal plan</button>
+            <button hx-get="{% url 'askai' %}" hx-target="#gpt-response" hx-swap="beforeend" hx-vals='{"prompt": "Recommend me an exercise routine"}' hx-indicator=".htmx-indicator" class="btn btn-outline">Recommend me an exercise routine</button>
         </div>
     </div>
 {% endblock %}

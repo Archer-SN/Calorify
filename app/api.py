@@ -65,8 +65,6 @@ DEFAULT_SYSTEM_MESSAGE = {
     "content": "Assistant is an intelligent chatbot designed to help users answer health and fitness related questions. Given each user's data, your advice should be customly made for them. Be concise with your advice. Make sure the food that you give exists in the EDAMAM database.",
 }
 
-AVAILABLE_PROMPTS = {"Analyze my history", "Recommend me a meal plan", "Recommend me an exercise routine"}
-
 # I'm not sure whether this should be put in views.py
 
 
@@ -141,10 +139,14 @@ def analyze_food(food_name):
 def analyze_meal_plan(food_dict_list):
     food_obj_dict_list = []
     for food_dict in food_dict_list:
-        # Gets the first food that is returned by the database
-        food = analyze_food(food_dict["food_name"])[0]
-        food_obj_dict = {"food": food, "food_portion": food_dict["food_portion"]}
-        food_obj_dict_list.append(food_obj_dict)
+        food_objs = analyze_food(food_dict["food_name"])
+        if food_objs:
+            # Gets the first food that is returned by the database
+            food = food_objs[0]
+            food_obj_dict = {"food": food, "food_portion": food_dict["food_portion"]}
+            food_obj_dict_list.append(food_obj_dict)
+        else:
+            continue
     return food_obj_dict_list
 
 
@@ -162,34 +164,16 @@ def import_user_food(user, food_obj_dict, date=datetime.now()):
 
 
 # Given a list of Food objects and their portions, use it to create UserFood objects
-def import_user_meal_plan(user, food_obj_dict_list, date=datetime.now()):
-    if not food_obj_dict_list:
-        return
-    for food_obj_dict in food_obj_dict_list:
-        user_food = import_user_food(user, food_obj_dict, date)
-        if not user_food:
-            print("{0} doesn't exist!".format(food_obj_dict["food"]))
-    return DailyEntry.objects.get(user=user, date=date).total_nutrients()
-
-
-def import_routine_plan():
-    pass
-
-
-# Edamam provides a convenient autocomplete functionality
-# which can be implemented for use when searching for ingredients.
-def autocomplete_search(search):
-    # Maximum food names to be returned
-    limit = 5
-    params = {"q": search, "limit": limit}
-    return requests.get(AUTOCOMPLETE_AP, params=params).json()
-
-
-# Ask ChatGPT for a meal plan given the user's information
-# food_obj_list is returned
-@retry(wait=wait_random_exponential(min=1, max=40), stop=stop_after_attempt(3))
-def ask_meal_plan_gpt(user, message):
-    messages = [DEFAULT_SYSTEM_MESSAGE, message]
+# Use this after you've asked gpt
+def import_user_meal_plan(user, gpt_response, date=datetime.now()):
+    messages = [
+        DEFAULT_SYSTEM_MESSAGE,
+        {"role": "system", "content": gpt_response},
+        {
+            "role": "user",
+            "content": "I want you to call the database with the food that you just gave me as parameters. The portion should be in grams",
+        },
+    ]
     functions = [
         {
             "name": "analyze_meal_plan",
@@ -225,10 +209,9 @@ def ask_meal_plan_gpt(user, message):
         top_p=1,
         frequency_penalty=0,
         presence_penalty=0,
-        function_call={"name": "analyze_meal_plan"},
     )
     response_message = response["choices"][0]["message"]
-
+    print(response_message)
     # Check if GPT wanted to call a function
     if response_message.get("function_call"):
         function_name = response_message["function_call"]["name"]
@@ -240,9 +223,59 @@ def ask_meal_plan_gpt(user, message):
             function_response = analyze_meal_plan(
                 food_dict_list=function_args.get("food_dict_list")
             )
-            return function_response
+            for food_obj_dict in function_response:
+                user_food = import_user_food(user, food_obj_dict, date)
+                if not user_food:
+                    print("{0} doesn't exist!".format(food_obj_dict["food"]))
+            # Imported successfully
+            return True
+    # Imported unsuccessfully
+    return False
 
-    return
+
+def import_routine_plan():
+    pass
+
+
+# Edamam provides a convenient autocomplete functionality
+# which can be implemented for use when searching for ingredients.
+def autocomplete_search(search):
+    # Maximum food names to be returned
+    limit = 5
+    params = {"q": search, "limit": limit}
+    return requests.get(AUTOCOMPLETE_AP, params=params).json()
+
+
+# Ask ChatGPT for a meal plan given the user's information
+# food_obj_list is returned
+@retry(wait=wait_random_exponential(min=1, max=40), stop=stop_after_attempt(3))
+def ask_meal_plan_gpt(user):
+    messages = [
+        DEFAULT_SYSTEM_MESSAGE,
+        {
+            "role": "user",
+            "content": "Recommend me a healthy meal plan that contains a total of {tdeg} and has {meal_frequency} meals. Give the portion in grams".format(
+                tdeg=user.get_tdeg(), meal_frequency=user.meal_frequency
+            ),
+        },
+    ]
+
+    response = openai.ChatCompletion.create(
+        model=GPT_MODEL,
+        messages=messages,
+        temperature=1,
+        max_tokens=512,
+        top_p=1,
+        frequency_penalty=0,
+        presence_penalty=0,
+    )
+    response_message = response["choices"][0]["message"]
+
+    return response_message["content"]
+
+
+def ask_exercise_plan_gpt(self):
+    pass
 
 
 # Ask the ai to analyze the user's history and create a plan based on it
@@ -277,6 +310,5 @@ def ai_analyze_history(user, number_of_days):
         frequency_penalty=0,
         presence_penalty=0,
     )
-    response_message = response["choices"][0]["message"]
-    print(response_message)
+    response_message = response["choices"][0]["message"]["content"]
     return response_message

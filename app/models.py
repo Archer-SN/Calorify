@@ -86,12 +86,12 @@ class User(AbstractUser):
     )
 
     SEX_CHOICES = [("M", "Male"), ("F", "Female")]
-    sex = models.CharField(max_length=1, choices=SEX_CHOICES)
+    sex = models.CharField(max_length=1, choices=SEX_CHOICES, default="M")
 
     # Store weight in kg
-    weight = models.FloatField(default=60)
+    weight = models.FloatField(default=75)
     # Store height in cm
-    height = models.IntegerField(default=170)
+    height = models.IntegerField(default=175)
     body_fat = models.FloatField(default=15)
     date_born = models.DateField(default=datetime.now)
 
@@ -321,11 +321,10 @@ class Food(models.Model):
     # The row contains the name and food source
     # We have Alpine and HTMX attributes as well for front-end functionalities.
     def html_table_format(self):
+        vals = {"foodId": self.food_id}
         return (
-            "<tr @click='foodSummaryOpen = true' hx-trigger='click' hx-get={url} hx-target='#food-summary-panel' hx-swap='innerHTML' class='hover' hx-vals='{{ \"foodId\" : \""
-            + self.food_id
-            + "\"}}'><td>{label}</td><td>EDAMAM</td></tr>"
-        ).format(label=self.label, url=FOOD_URL)
+            "<tr @click='foodSummaryOpen = true' hx-trigger='click' hx-get={url} hx-target='#food-summary-panel' hx-swap='innerHTML' class='hover' hx-vals='{vals}'><td>{label}</td><td>EDAMAM</td></tr>"
+        ).format(label=self.label, url=FOOD_URL, vals=json.dumps(vals))
 
     # Convert Food into an HTML string that will be used in food-summary-panel
     def food_summary_format(self):
