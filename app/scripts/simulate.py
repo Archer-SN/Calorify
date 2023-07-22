@@ -42,6 +42,7 @@ user1, _ = User.objects.get_or_create(
     last_name="Person",
 )
 user1.set_password("123")
+user1.save()
 
 user2, _ = User.objects.get_or_create(
     username="User2",
@@ -57,6 +58,7 @@ user2, _ = User.objects.get_or_create(
     last_name="Person",
 )
 user2.set_password("123")
+user2.save()
 
 user3, _ = User.objects.get_or_create(
     username="User3",
@@ -72,18 +74,21 @@ user3, _ = User.objects.get_or_create(
     last_name="Person",
 )
 user3.set_password("123")
+user3.save()
 
-
-def create_difficulties():
-    easy_difficulty = Difficulty.objects.create(name="Easy", xp=10, gems=5)
-    medium_difficulty = Difficulty.objects.create(name="Medium", xp=50, gems=10)
-    hard_difficulty = Difficulty.objects.create(name="Hard", xp=250, gems=15)
-    goggins_difficulty = Difficulty.objects.create(name="Goggins", xp=9001, gems=9001)
+easy_difficulty, _ = Difficulty.objects.get_or_create(name="Easy", xp=10, gems=5)
+medium_difficulty, _ = Difficulty.objects.get_or_create(name="Medium", xp=50, gems=10)
+hard_difficulty, _ = Difficulty.objects.get_or_create(name="Hard", xp=250, gems=15)
+goggins_difficulty, _ = Difficulty.objects.get_or_create(
+    name="Goggins", xp=9001, gems=9001
+)
 
 
 def create_challenge():
-    easy_challenge = Challenge.objects.create("Drink 2L water")
-    user1.challenge
+    easy_challenge = Challenge.objects.create(
+        name="Drink 2L water", difficulty=easy_difficulty
+    )
+    user1.challenge_set.add(easy_challenge)
 
 
 def create_daily_challenge():
@@ -150,8 +155,8 @@ def simulate_user3():
 
 
 def run():
-    create_difficulties()
     create_daily_challenge()
+    create_challenge()
     # simulate_user1_inconsistent()
     # simulate_user1_consistent()
     # simulate_user2()

@@ -250,6 +250,9 @@ class Difficulty(models.Model):
     # How many gems will be rewarded
     gems = models.PositiveIntegerField()
 
+    def __str__(self):
+        return self.name
+
 
 class Challenge(models.Model):
     user = models.ManyToManyField(User)
@@ -275,6 +278,13 @@ class Challenge(models.Model):
     def html_format(self):
         response = TR(TD(self.name), TD(self.difficulty), TD(self.expire_date))
         return render(response, {})
+
+    def info(self):
+        return {
+            "name": self.name,
+            "difficulty": self.difficulty,
+            "expire_date": self.expire_date,
+        }
 
 
 class Nutrient(models.Model):

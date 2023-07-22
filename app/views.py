@@ -80,13 +80,16 @@ def diary(request):
             user=user, date=datetime.now()
         )
         challenges = Challenge.objects.filter(user=user)
+        challenges_info = []
+        for challenge in challenges:
+            challenges_info.append(challenge.info())
         return render(
             request,
             "diary.html",
             {
                 "daily_entry": daily_entry.summarize(),
                 "user_food_form": UserFoodForm(),
-                "challenges": challenges,
+                "challenges": challenges_info,
             },
         )
 
