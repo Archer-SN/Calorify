@@ -65,6 +65,7 @@ DEFAULT_SYSTEM_MESSAGE = {
     "content": "Assistant is an intelligent chatbot designed to help users answer health and fitness related questions. Given each user's data, your advice should be customly made for them. Be concise with your advice. Make sure the food that you give exists in the EDAMAM database.",
 }
 
+AVAILABLE_PROMPTS = {"Analyze my history", "Recommend me a meal plan", "Recommend me an exercise routine"}
 
 # I'm not sure whether this should be put in views.py
 

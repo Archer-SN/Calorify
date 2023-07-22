@@ -11,9 +11,9 @@ UNIT_CHOICES = (
 
 # Forms
 class UserFoodForm(forms.Form):
-    csrfmiddlewaretoken = forms.CharField(
-        max_length=100, widget=forms.HiddenInput(), required=False
-    )
+    # csrfmiddlewaretoken = forms.CharField(
+    #     max_length=100, widget=forms.HiddenInput(), required=False
+    # )
     food_id = forms.CharField(
         max_length=100, widget=forms.HiddenInput(), required=False
     )

@@ -11,7 +11,7 @@
                 hx-trigger="keyup changed delay:500ms, search" 
                 hx-target="#search-results" 
                 hx-indicator=".htmx-indicator"
-                hx-swap="innterHTML"
+                hx-swap="innerHTML"
                 />
                 
                 <table class="table">
@@ -33,7 +33,7 @@
             <h1 class="text-lg font-bold">Daily Entries</h1>
             <div>
                 <!--Contains buttons for adding entries-->
-                <button class="btn btn-outline" hx-get="{% url 'food' %}" hx-target="#search-results" hx-swap="beforeend" @click="foodModalOpen = true">Add Food</button>
+                <button class="btn btn-outline" hx-get="{% url 'food' %}" hx-target="#search-results" hx-swap="innerHTML" @click="foodModalOpen = true">Add Food</button>
                 <button class="btn btn-outline" @click="foodSummaryOpen = true">Add Exercise</button>
             </div>
             <table class="table">

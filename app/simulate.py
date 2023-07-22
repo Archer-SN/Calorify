@@ -19,38 +19,43 @@ NUMBER_OF_DAYS = 30
 HEALTHY_MEAL_PLAN_MESSAGE = "Recommend me a healthy meal plan based on the following information: {info}"
 RANDOM_MEAL_PLAN_MESSAGE = "Recommend me a meal plan that is composed of fast foods and is my calorie goal based on the following information: {info}"
 
-user1_inconsistent, _ = User.objects.get_or_create(username="User1_in", email="a@gmail.com", sex="M",
+# Here is the information of each user
+# All users have the same health information but with different account age
+# User1 : 0 month
+# User2 : 1 month
+# User3 : 3 months
+# User4 : 6 months
+
+user1, _ = User.objects.get_or_create(username="User1", email="a@gmail.com", sex="M",
                                                    activity_level=User.ACTIVITY_LEVEL.MA,
                                                    weight="75", height="175", date_born=datetime(2006, 6, 15),
                                                    meal_frequency=3,
-                                                   recommendation_frequency=30, first_name="Inconsistent",
+                                                   recommendation_frequency=30, first_name="Extraordinary",
                                                    last_name="Person")
-user1_inconsistent.set_password("123")
-
-user1_consistent, _ = User.objects.get_or_create(username="User1_con", email="ab@gmail.com", sex="M",
-                                                 activity_level=User.ACTIVITY_LEVEL.MA,
-                                                 weight="75", height="175", date_born=datetime(2006, 6, 15),
-                                                 meal_frequency=3,
-                                                 recommendation_frequency=30, first_name="Consistent",
-                                                 last_name="Person")
-user1_consistent.set_password("123")
+user1.set_password("123")
 
 user2, _ = User.objects.get_or_create(username="User2", email="b@gmail.com", sex="M",
-                                      activity_level=User.ACTIVITY_LEVEL.SED,
-                                      weight="120", height="170", date_born=datetime(1996, 7, 12), meal_frequency=5,
-                                      recommendation_frequency=30, first_name="John", last_name="Doe")
+                                                   activity_level=User.ACTIVITY_LEVEL.MA,
+                                                   weight="75", height="175", date_born=datetime(2006, 6, 15),
+                                                   meal_frequency=3,
+                                                   recommendation_frequency=30, first_name="Extraordinary",
+                                                   last_name="Person")
 user2.set_password("123")
 
-user3, _ = User.objects.get_or_create(username="User3", email="c@gmail.com", sex="F",
-                                      activity_level=User.ACTIVITY_LEVEL.MA,
-                                      weight="45", height="155", date_born=datetime(1993, 7, 12), meal_frequency=2,
-                                      recommendation_frequency=30, first_name="Jane", last_name="Doe")
+user3, _ = User.objects.get_or_create(username="User3", email="c@gmail.com", sex="M",
+                                                   activity_level=User.ACTIVITY_LEVEL.MA,
+                                                   weight="75", height="175", date_born=datetime(2006, 6, 15),
+                                                   meal_frequency=3,
+                                                   recommendation_frequency=30, first_name="Extraordinary",
+                                                   last_name="Person")
 user3.set_password("123")
 
 user4, _ = User.objects.get_or_create(username="User4", email="d@gmail.com", sex="M",
-                                      activity_level=User.ACTIVITY_LEVEL.VA,
-                                      weight="90", height="185", date_born=datetime(1975, 2, 17), meal_frequency=1,
-                                      recommendation_frequency=30, first_name="David", last_name="Goggins")
+                                                   activity_level=User.ACTIVITY_LEVEL.MA,
+                                                   weight="75", height="175", date_born=datetime(2006, 6, 15),
+                                                   meal_frequency=3,
+                                                   recommendation_frequency=30, first_name="Extraordinary",
+                                                   last_name="Person")
 user4.set_password("123")
 
 
@@ -69,30 +74,25 @@ def create_monthly_challenge():
 def clear_daily_entry(user):
     DailyEntry.objects.filter(user=user).delete()
 
-def simulate_user1_inconsistent():
-    message = {"role": "user", "content": RANDOM_MEAL_PLAN_MESSAGE.format(info=user1_inconsistent.info())}
+def simulate_user1():
+    message = {"role": "user", "content": RANDOM_MEAL_PLAN_MESSAGE.format(info=user1.info())}
     unhealthy_foods = [{"food_name": "pizza", "food_portion": 500}, {"food_name": "Extra Crispy Chicken- Thigh", "food_portion": 500}, {"food_name": "Pancake", "food_portion": 300}, {"food_name": "Coke", "food_portion": 722}]
     for i in range(NUMBER_OF_DAYS + 1, 1, -1):
         meal_plan = analyze_meal_plan(unhealthy_foods)
 
-        print(import_user_meal_plan(user1_inconsistent, meal_plan, datetime.now() - timedelta(i)))
+        print(import_user_meal_plan(user1, meal_plan, datetime.now() - timedelta(i)))
 
     print("User1 Inconsistent Done!")
 
 
-def simulate_user1_consistent():
-    message = {"role": "user", "content": HEALTHY_MEAL_PLAN_MESSAGE.format(info=user1_consistent.info())}
+def simulate_user2():
+    message = {"role": "user", "content": HEALTHY_MEAL_PLAN_MESSAGE.format(info=user2.info())}
     for i in range(NUMBER_OF_DAYS, 0, -1):
-        meal_plan = ask_meal_plan_gpt(user1_consistent, message)
+        meal_plan = ask_meal_plan_gpt(user2, message)
         print("consistent" + str(i))
-        print(import_user_meal_plan(user1_consistent, meal_plan,
+        print(import_user_meal_plan(user2, meal_plan,
                                     date=datetime.now() - timedelta(i)))
     print("User1 Consistent Done!")
-
-
-def simulate_user2():
-    for i in range(NUMBER_OF_DAYS, 0, -1):
-        pass
 
 
 def simulate_user3():
@@ -103,6 +103,7 @@ def simulate_user3():
 def simulate_user4():
     for i in range(NUMBER_OF_DAYS, 0, -1):
         pass
+
 
 
 def run():

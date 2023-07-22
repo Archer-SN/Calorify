@@ -100,19 +100,23 @@ def food(request):
 # Handles the page where you can talk to chatGPT
 @login_required
 def ask_ai(request):
-    daily_entry, created = DailyEntry.objects.get_or_create(
-        user=request.user, date=datetime.now()
-    )
-    message = {
-        "role": "user",
-        "content": "Generate a healthy and tasty meal plan that has a total of {tdee} calories.".format(
-            tdee=request.user.get_tdee()
-        ),
-    }
-    unhealthy_message = {}
-    # food_list = ask_meal_plan_gpt(request.user, message)
-    # import_user_meal_plan(request.user, food_list)
-    return render(request, "askai.html")
+    if request.htmx:
+        if request.method == "GET":
+            prompt = request.GET.get("prompt", "")
+            if not prompt:
+                return HttpResponse("NOT WORKING!")
+            # message = {
+            #     "role": "user",
+            #     "content": "Generate a healthy and tasty meal plan that has a total of {tdee} calories.".format(
+            #         tdee=request.user.get_tdee()
+            #     ),
+            # }
+            # unhealthy_message = {}
+            # food_list = ask_meal_plan_gpt(request.user, message)
+            # import_user_meal_plan(request.user, food_list)
+            return HttpResponse()
+    else:
+        return render(request, "askai.html", {"prompts": AVAILABLE_PROMPTS})
 
 
 @login_required

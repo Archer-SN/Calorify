@@ -348,7 +348,7 @@ class Food(models.Model):
         form_as_div = UserFoodForm(
             initial={
                 "food_id": self.food_id,
-                "csrfmiddlewaretoken": get_token(request),
+                # "csrfmiddlewaretoken": get_token(request),
                 "daily_entry_date": daily_entry_date,
             }
         ).as_div()
@@ -446,6 +446,8 @@ class DailyEntry(models.Model):
         food_intake = []
         exercises = []
         nutrients = self.total_nutrients()
+        for nutrient_code in nutrients.keys():
+            nutrients[nutrient_code] = round(nutrients[nutrient_code], 1)
         for user_food in UserFood.objects.filter(daily_entry=self):
             food_intake.append(user_food.data())
         for exercise in UserExercise.objects.filter(daily_entry=self):
@@ -473,7 +475,7 @@ class DailyEntry(models.Model):
                     "trans-fats": nutrients.get("FATRN", 0),
                     "cholesterol": nutrients.get("CHOLE", 0),
                 },
-                "protien": {
+                "protein": {
                     "protein": nutrients.get("PROCNT", 0),
                 },
                 "vitamins": {

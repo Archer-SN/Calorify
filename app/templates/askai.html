@@ -1,5 +1,16 @@
 {% extends "layout.html" %}
 
+<!--MAKE SURE YOU USE '' FOR hx-vals!!!!!-->
+
 {% block body %}
+    <div>
+        <div id="gpt-response" class="w-full bg-gray-100">
     
+        </div>
+        <div id="prompts">
+            <button hx-get="{% url 'askai' %}" hx-target="#gpt-response" hx-swap="beforeend" hx-vals='{"prompt": "Analyze my history"}' class="btn btn-outline">Analyze my history</button>
+            <button hx-get="{% url 'askai' %}" hx-target="#gpt-response" hx-swap="beforeend" hx-vals='{"prompt": "Recommend me a meal plan"}' class="btn btn-outline">Recommend me a meal plan</button>
+            <button hx-get="{% url 'askai' %}" hx-target="#gpt-response" hx-swap="beforeend" hx-vals='{"prompt": "Recommend me an exercise routine"}' class="btn btn-outline">Recommend me an exercise routine</button>
+        </div>
+    </div>
 {% endblock %}
