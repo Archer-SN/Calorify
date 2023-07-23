@@ -88,7 +88,26 @@ def create_challenge():
     easy_challenge = Challenge.objects.create(
         name="Drink 2L water", difficulty=easy_difficulty
     )
+    
+    medium_challenge = Challenge.objects.create(
+        name="Run 2 miles", difficulty=medium_difficulty
+    )
+    
+    hard_challenge = Challenge.objects.create(
+        name="Weight training for 2 hours", difficulty=hard_difficulty
+    )
+    goggins_challenge = Challenge.objects.create(
+        name="Run 100 miles", difficulty=goggins_difficulty
+    )
+    
     user1.challenge_set.add(easy_challenge)
+    user1.challenge_set.add(medium_challenge)
+    user1.challenge_set.add(hard_challenge)
+    user1.challenge_set.add(goggins_challenge)
+    user2.challenge_set.add(easy_challenge)
+    user2.challenge_set.add(medium_challenge)
+    user2.challenge_set.add(hard_challenge)
+    user2.challenge_set.add(goggins_challenge)
 
 
 def create_daily_challenge():
@@ -108,10 +127,6 @@ def clear_daily_entry(user):
 
 
 def simulate_user1():
-    message = {
-        "role": "user",
-        "content": RANDOM_MEAL_PLAN_MESSAGE.format(info=user1.info()),
-    }
     unhealthy_foods = [
         {"food_name": "pizza", "food_portion": 500},
         {"food_name": "Extra Crispy Chicken- Thigh", "food_portion": 500},
@@ -119,16 +134,13 @@ def simulate_user1():
         {"food_name": "Coke", "food_portion": 722},
     ]
     for i in range(NUMBER_OF_DAYS + 1, 1, -1):
-        meal_plan = analyze_meal_plan(unhealthy_foods)
-
-        print(import_user_meal_plan(user1, meal_plan, datetime.now() - timedelta(i)))
+        print(import_user_meal_plan(user1, str(unhealthy_foods, datetime.now() - timedelta(i)))
 
     print("User1 Done!")
 
 
 def simulate_user2():
-    healthy_foods = {
-        "foods": [
+    healthy_foods = [
             {"food_name": "lean chicken breast", "food_portion": 120},
             {"food_name": "sweet potato", "food_portion": 150},
             {"food_name": "broccoli", "food_portion": 100},
@@ -139,12 +151,11 @@ def simulate_user2():
             {"food_name": "brown rice", "food_portion": 200},
             {"food_name": "stir-fried vegetables", "food_portion": 100},
         ]
-    }
+    
 
     for i in range(NUMBER_OF_DAYS, 0, -1):
-        meal_plan = analyze_meal_plan(healthy_foods)
         print(
-            import_user_meal_plan(user2, meal_plan, date=datetime.now() - timedelta(i))
+            import_user_meal_plan(user2, str(healthy_foods), date=datetime.now() - timedelta(i))
         )
     print("User2 Done!")
 
@@ -157,13 +168,8 @@ def simulate_user3():
 def run():
     create_daily_challenge()
     create_challenge()
-    # simulate_user1_inconsistent()
-    # simulate_user1_consistent()
-    # simulate_user2()
-    # simulate_user3()
-    # simulate_user4()
-    # ai_analyze_history(user1_inconsistent, NUMBER_OF_DAYS)
-    # ai_analyze_history(user1_consistent, NUMBER_OF_DAYS)
+    simulate_user1()
+    simulate_user2
 
 
 run()

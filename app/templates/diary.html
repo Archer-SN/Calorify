@@ -13,10 +13,11 @@
                     </tr>
                 </thead>
                 {% for challenge in challenges %}
-                    <tr>
+                    <tr >
                         <td>{{ challenge.name }}</td>
                         <td>{{ challenge.difficulty }}</td>
                         <td>{{ challenge.expire_date }}</td>
+                        <td hx-post="{% url 'challenge' %}" hx-target="closest tr" hx-swap="innerHTML" hx-vals='{"challengeId" : {{ challenge.id }} }' class="btn btn-outline btn-success">Complete Challenge</td>
                     </tr>
                 {% endfor %}
             </table>

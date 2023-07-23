@@ -267,8 +267,9 @@ class Challenge(models.Model):
 
     def complete_challenge(self):
         self.is_completed = True
-        self.user.userrpg.gain_xp(self.difficulty.xp)
-        self.user.userrpg.gain_gems(self.difficulty.gems)
+        # TODO: Fix this bug
+        #self.user.userrpg.gain_xp(self.difficulty.xp)
+        #self.user.userrpg.gain_gems(self.difficulty.gems)
 
     def is_expired(self):
         if datetime.now() > self.expire_date:
@@ -281,6 +282,7 @@ class Challenge(models.Model):
 
     def info(self):
         return {
+            "id": self.id,    
             "name": self.name,
             "difficulty": self.difficulty,
             "expire_date": self.expire_date,

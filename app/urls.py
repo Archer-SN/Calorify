@@ -19,6 +19,7 @@ urlpatterns = [
     path("askai", views.ask_ai, name="askai"),
     
     path("food", views.food, name="food"),    
-    
+    path("challenge", views.challenge, name="challenge"),
+
     path("empty", views.empty, name="empty")
 ]

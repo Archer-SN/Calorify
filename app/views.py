@@ -82,7 +82,8 @@ def diary(request):
         challenges = Challenge.objects.filter(user=user)
         challenges_info = []
         for challenge in challenges:
-            challenges_info.append(challenge.info())
+            if not challenge.is_completed:
+                challenges_info.append(challenge.info())
         return render(
             request,
             "diary.html",
@@ -113,7 +114,7 @@ def food(request):
             for food_name in search_results:
                 analyze_food(food_name)
             # Turn each food object into an html form
-            for food in Food.objects.filter(label__icontains=search)[0:40]:
+            for food in Food.objects.filter(label__icontains=search)[0:20]:
                 response += food.html_table_format()
             return HttpResponse(response)
     if request.method == "POST":
@@ -141,8 +142,21 @@ def food(request):
 @login_required
 def challenge(request):
     if request.htmx:
+        # User checks out the challenge
         if request.method == "POST":
-            pass
+            challenge_id = request.POST.get("challengeId", "")
+            user = request.user
+            if not challenge_id:
+                return HttpResponse("Challenge does not exist. Challenge ID: " + challenge_id)
+            print(1)
+            user_challenge = Challenge.objects.get(id=challenge_id, user=user);
+            if user_challenge.is_completed:
+                return HttpResponse("ALready Done")
+            user_challenge.complete_challenge()
+            # TODO: Make this more elegant
+            user_challenge.is_completed = True
+            user_challenge.save()
+            return HttpResponse()
     else:
         pass
 
