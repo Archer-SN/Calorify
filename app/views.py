@@ -339,6 +339,7 @@ def register_view(request):
             _class="form-control flex flex-col space-y-4 md:space-y-6",
         )
         return HttpResponse(R(response, {}))
+    # If not a request from HTMX, but normal forms
     else:
         if request.user.is_authenticated:
             return redirect(reverse("home"))
@@ -350,5 +351,7 @@ def error(request):
     pass
 
 
+# This is used for making empty HTMX requests
+# Use case: Deleting elements
 def empty(request):
     return HttpResponse()

@@ -21,7 +21,9 @@ class UserForm(forms.Form):
 
     SEX_CHOICES = [("M", "Male"), ("F", "Female")]
     date_born = forms.DateField(
-        label="Date of Birth (Year/Month/Day)", initial=date(2000, 1, 1)
+        label="Date of Birth",
+        initial=date(2000, 1, 1),
+        widget=forms.widgets.DateInput(attrs={"type": "date"}),
     )
     sex = forms.ChoiceField(label="Biological Sex", choices=SEX_CHOICES)
     height = forms.IntegerField(label="Height (cm)", initial=170)
@@ -39,6 +41,16 @@ class UserForm(forms.Form):
     csrfmiddlewaretoken = forms.CharField(
         max_length=100, widget=forms.HiddenInput(), required=False
     )
+
+    def __init__(self, *args, **kwargs):
+        super(UserForm, self).__init__(*args, **kwargs)
+        for field in self.fields:
+            self.fields[field].widget.attrs.update(
+                {
+                    "class": "bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                }
+            )
+            self.fields[field]
 
 
 # Forms

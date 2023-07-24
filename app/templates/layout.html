@@ -20,20 +20,29 @@
 
 <body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}' class="flex flex-col">
 <div class="navbar bg-base-100">
-    <div class="flex-1">
-        <a class="btn btn-ghost normal-case text-xl">Calorify</a>
-    </div>
-    <div class="flex-none">
-        <ul class="menu menu-horizontal px-1">
-            {% block navigation %}
-                <li><a href="{% url 'home' %}" class="hover:bg-teal-200">Home</a></li>
-                <li><a href="{% url 'askai' %}" class="hover:bg-teal-200">Ask AI</a></li>
-                <li><a href="{% url 'diary' %}" class="hover:bg-teal-200">Diary</a></li>
-            {% endblock %}
-            {% if request.user.is_authenticated %}
+    <div class="navbar-start"> 
+        <!--Has the links to each page-->
+        <div class="flex-1">
+            <a class="btn btn-ghost normal-case text-xl">Calorify</a>
+        </div>
+        <div class="flex-none">
+            <ul class="menu menu-horizontal px-1">
+                {% block navigation %}
+                    <li><a href="{% url 'home' %}" class="hover:bg-teal-200">Home</a></li>
+                    <li><a href="{% url 'askai' %}" class="hover:bg-teal-200">Ask AI</a></li>
+                    <li><a href="{% url 'diary' %}" class="hover:bg-teal-200">Diary</a></li>
+                {% endblock %}
+            </ul>
+        </div>
+    </div> 
+    <div class="navbar-end">
+        <!--Shows gems and level-->
+        <!--Also shows logout button-->
+        {% if request.user.is_authenticated %}
+            <ul class="menu menu-horizontal px-1">
                 <li><a href="{% url 'logout' %}" class="hover:bg-red-500">Logout</a></li>
-            {% endif %}
-        </ul>
+            </ul>
+        {% endif %}
     </div>
 </div>
 {% block body %}
