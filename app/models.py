@@ -2,8 +2,7 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 from model_utils import Choices
 
 from django.utils.translation import gettext_lazy as _
-
-from django.utils.translation import gettext_lazy as _
+from django.shortcuts import reverse
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from math import floor
@@ -18,9 +17,6 @@ from . import fields
 from .forms import *
 
 # Calories here means kcal
-
-
-FOOD_URL = "food"
 
 PROTEIN = "PROCNT"
 CARBS = "CHOCDF.net"
@@ -268,8 +264,8 @@ class Challenge(models.Model):
     def complete_challenge(self):
         self.is_completed = True
         # TODO: Fix this bug
-        #self.user.userrpg.gain_xp(self.difficulty.xp)
-        #self.user.userrpg.gain_gems(self.difficulty.gems)
+        # self.user.userrpg.gain_xp(self.difficulty.xp)
+        # self.user.userrpg.gain_gems(self.difficulty.gems)
 
     def is_expired(self):
         if datetime.now() > self.expire_date:
@@ -282,7 +278,7 @@ class Challenge(models.Model):
 
     def info(self):
         return {
-            "id": self.id,    
+            "id": self.id,
             "name": self.name,
             "difficulty": self.difficulty,
             "expire_date": self.expire_date,
@@ -326,7 +322,9 @@ class Food(models.Model):
             "nutrient"
         ):
             ntr_code = food_nutrient.nutrient.ntr_code
-            nutrients_counter[ntr_code] = (food_nutrient.amount / BASE_AMOUNT) * weight
+            nutrients_counter[ntr_code] = round(
+                (food_nutrient.amount / BASE_AMOUNT) * weight, 1
+            )
         return nutrients_counter
 
     # Return the amount of the nutrient in the food based on the given food weight
@@ -351,7 +349,7 @@ class Food(models.Model):
         vals = {"foodId": self.food_id}
         return (
             "<tr @click='foodSummaryOpen = true' hx-trigger='click' hx-get={url} hx-target='#food-summary-panel' hx-swap='innerHTML' class='hover' hx-vals='{vals}'><td>{label}</td><td>EDAMAM</td></tr>"
-        ).format(label=self.label, url=FOOD_URL, vals=json.dumps(vals))
+        ).format(label=self.label, url=reverse("food"), vals=json.dumps(vals))
 
     # Convert Food into an HTML string that will be used in food-summary-panel
     def food_summary_format(self):
@@ -382,7 +380,7 @@ class Food(models.Model):
             FORM(
                 form_as_div,
                 INPUT(type="submit", value="submit", _class="btn btn-success"),
-                hx_post=FOOD_URL,
+                hx_post=reverse("userfood"),
                 hx_target="#entries-container",
                 hx_swap="beforeend",
                 _class="form-control",
@@ -475,7 +473,7 @@ class DailyEntry(models.Model):
         for nutrient_code in nutrients.keys():
             nutrients[nutrient_code] = round(nutrients[nutrient_code], 1)
         for user_food in UserFood.objects.filter(daily_entry=self):
-            food_intake.append(user_food.data())
+            food_intake.append(user_food.entry_format())
         for exercise in UserExercise.objects.filter(daily_entry=self):
             exercises.append(exercise.data())
 
@@ -577,6 +575,21 @@ class UserFood(models.Model):
             TD("g"),
             TD(self.get_nutrient(ENERGY)),
             TD("kcal"),
+        )
+        return render(response, {})
+
+    # TODO: Make right left click and then have a choice
+    def entry_format(self):
+        response = TR(
+            TD(self.food.label),
+            TD(self.weight),
+            TD("g"),
+            TD(self.get_nutrient(ENERGY)),
+            TD("kcal"),
+            _class="hover hover:red-bg-200",
+            hx_delete=reverse("userfood"),
+            hx_trigger="hover",
+            hx_swap="delete",
         )
         return render(response, {})
 

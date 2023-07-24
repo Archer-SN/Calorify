@@ -56,18 +56,12 @@
                 <button class="btn btn-outline" hx-get="{% url 'food' %}" hx-target="#search-results" hx-swap="innerHTML" @click="foodModalOpen = true">Add Food</button>
                 <button class="btn btn-outline" @click="foodSummaryOpen = true">Add Exercise</button>
             </div>
-            <table class="table overflow-scroll">
+            <table class="max-h-48 table overflow-scroll">
                 <tbody id="entries-container" >
                     
                     <!--Food and exercise entries are shown here-->
-                    {% for food in daily_entry.food_intake %}
-                        <tr class="hover" hx-post="{% url 'food' %}" hx-trigger="hover[delete]">
-                            <td>{{ food.name }}</td>
-                            <td>{{ food.weight }}</td>
-                            <td>g</td>
-                            <td>{{ food.energy }}</td>
-                            <td>kcal</td>
-                        </tr>
+                    {% for food_entry in daily_entry.food_intake %}
+                        {{ food_entry | safe }}
                     {% endfor %}
                     {% for exercise in daily_entry.exercises %}
                         <tr class="hover">

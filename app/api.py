@@ -67,6 +67,8 @@ DEFAULT_SYSTEM_MESSAGE = {
 
 # I'm not sure whether this should be put in views.py
 
+# TODO: Optimize AI query
+
 
 # Add the given food to the database if it does not yet exist
 # We'll call the database with the food weight of 100 grams (A standard weight for storing in the database)
@@ -171,6 +173,7 @@ def import_user_food(user, food_obj_dict, date=datetime.now()):
 
 # Given a list of Food objects and their portions, use it to create UserFood objects
 # Use this after you've asked gpt
+# TODO: The longest part of import is probably analyzing the food. Optimize it.
 def import_user_meal_plan(user, gpt_response, date=datetime.now()):
     messages = [
         DEFAULT_SYSTEM_MESSAGE,
@@ -240,13 +243,18 @@ def import_user_meal_plan(user, gpt_response, date=datetime.now()):
     return False
 
 
-def import_routine_plan(user):
+def import_exercise_plan():
+    pass
+
+
+# Ask ChatGPT for the exercise plan
+def ask_exercise_plan_gpt(user):
     messages = [
         DEFAULT_SYSTEM_MESSAGE,
         {
             "role": "user",
             "content": "Recommend me an exercise routine based on the following information: {info}".format(
-                user.info()
+                info=user.info()
             ),
         },
     ]
@@ -263,15 +271,6 @@ def import_routine_plan(user):
     response_message = response["choices"][0]["message"]
 
     return response_message["content"]
-
-
-# Edamam provides a convenient autocomplete functionality
-# which can be implemented for use when searching for ingredients.
-def autocomplete_search(search):
-    # Maximum food names to be returned
-    limit = 5
-    params = {"q": search, "limit": limit}
-    return requests.get(AUTOCOMPLETE_AP, params=params).json()
 
 
 # Ask ChatGPT for a meal plan given the user's information
@@ -300,10 +299,6 @@ def ask_meal_plan_gpt(user):
     response_message = response["choices"][0]["message"]
 
     return response_message["content"]
-
-
-def ask_exercise_plan_gpt(self):
-    pass
 
 
 # Ask the ai to analyze the user's history and create a plan based on it
@@ -340,3 +335,12 @@ def ai_analyze_history(user, number_of_days):
     )
     response_message = response["choices"][0]["message"]["content"]
     return response_message
+
+
+# Edamam provides a convenient autocomplete functionality
+# which can be implemented for use when searching for ingredients.
+def autocomplete_search(search):
+    # Maximum food names to be returned
+    limit = 5
+    params = {"q": search, "limit": limit}
+    return requests.get(AUTOCOMPLETE_AP, params=params).json()

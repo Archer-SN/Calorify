@@ -19,6 +19,8 @@ urlpatterns = [
     path("askai", views.ask_ai, name="askai"),
     
     path("food", views.food, name="food"),    
+    path("userfood", views.user_food, name="userfood"),    
+    path("exercise", views.exercise, name="exercise"),
     path("challenge", views.challenge, name="challenge"),
 
     path("empty", views.empty, name="empty")

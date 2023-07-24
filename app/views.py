@@ -117,6 +117,10 @@ def food(request):
             for food in Food.objects.filter(label__icontains=search)[0:20]:
                 response += food.html_table_format()
             return HttpResponse(response)
+
+
+@login_required
+def user_food(request):
     if request.method == "POST":
         form = UserFoodForm(request.POST)
         print(form.errors)
@@ -137,6 +141,16 @@ def food(request):
                 food_id=food_id,
             )
             return HttpResponse(new_user_food.html_table_format())
+    elif request.method == "DELETE":
+        print("hello")
+        return HttpResponse()
+
+
+@login_required
+def exercise(request):
+    if request.method == "GET":
+        user = request.user
+        return ask_exercise_plan_gpt(user)
 
 
 @login_required
