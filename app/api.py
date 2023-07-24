@@ -82,6 +82,7 @@ def analyze_food(food_name):
         if "parsed" in parser_response:
             if len(parser_response["parsed"]) == 0:
                 return None
+            # For now we want only one
             data_list = parser_response["parsed"]
         else:
             data_list = parser_response["hints"]
@@ -98,7 +99,7 @@ def analyze_food(food_name):
             food_obj.label = food_data["label"]
             food_obj.category = category
             food_obj.save()
-            if not food_obj_created:
+            if not FoodNutrient.objects.filter(food=food_obj).exists:
                 # We are going to use 100g as a standard quantity for storing food in the database
                 ingredients = {
                     "ingredients": [
@@ -223,6 +224,7 @@ def import_user_meal_plan(user, gpt_response, date=datetime.now()):
             function_response = analyze_meal_plan(
                 food_dict_list=function_args.get("food_dict_list")
             )
+            print(function_response)
             for food_obj_dict in function_response:
                 user_food = import_user_food(user, food_obj_dict, date)
                 if not user_food:

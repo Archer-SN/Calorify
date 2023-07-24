@@ -147,9 +147,11 @@ def challenge(request):
             challenge_id = request.POST.get("challengeId", "")
             user = request.user
             if not challenge_id:
-                return HttpResponse("Challenge does not exist. Challenge ID: " + challenge_id)
+                return HttpResponse(
+                    "Challenge does not exist. Challenge ID: " + challenge_id
+                )
             print(1)
-            user_challenge = Challenge.objects.get(id=challenge_id, user=user);
+            user_challenge = Challenge.objects.get(id=challenge_id, user=user)
             if user_challenge.is_completed:
                 return HttpResponse("ALready Done")
             user_challenge.complete_challenge()
@@ -295,7 +297,7 @@ def register_view(request):
                 )
                 return HttpResponse(R(response, {}))
         # User submitted health data
-        # TODO: GET FOR NOW THOUGH WE WANT POST
+        # TODO: GET FOR NOW, THOUGH WE WANT POST
         elif request.method == "GET":
             form = UserForm(request.GET)
             user = request.user
@@ -324,10 +326,11 @@ def register_view(request):
                 UserTargets.objects.filter(user=user).update(
                     weight_goal=weight_goal, weight_goal_rate=weight_goal_rate
                 )
-                # TODO: FIX THIS BUG
-                return redirect(reverse("home"))
+                response = HttpResponse()
+                response["HX-Redirect"] = reverse("home")
+                return response
         # Return the form if the input is wrong
-        form = UserForm().as_div()
+        form = UserForm(request.GET).as_div()
         response = FORM(
             form,
             BUTTON("Submit", type="submit", _class="btn btn-outline btn-primary"),

@@ -169,7 +169,7 @@ def run():
     create_daily_challenge()
     create_challenge()
     simulate_user1()
-    simulate_user2
+    simulate_user2()
 
 
 run()

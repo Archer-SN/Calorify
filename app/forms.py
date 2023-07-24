@@ -57,6 +57,6 @@ class UserFoodForm(forms.Form):
         initial=time(int(now.strftime("%H")), int(now.strftime("%M"))),
         widget=forms.TimeInput(format="%H:%M"),
     )
-    amount = forms.FloatField(initial=1)
+    amount = forms.FloatField(initial=100)
     # TODO: Unit Feature omitted for now
     unit = forms.ChoiceField(choices=UNIT_CHOICES)
