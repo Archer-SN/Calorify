@@ -192,7 +192,9 @@ def ask_ai(request):
             elif prompt == "Analyze my history":
                 number_of_days = request.GET.get("days", 30)
                 gpt_response = ai_analyze_history(request.user, number_of_days)
-                response = DIV(P(gpt_response))
+                response = DIV(
+                    H1("History Analysis", _class="text-lg font-bold"), P(gpt_response)
+                )
                 return HttpResponse(R(response, {}))
             elif prompt == "Recommend me a meal plan":
                 gpt_response = ask_meal_plan_gpt(request.user)
@@ -219,7 +221,7 @@ def ask_ai(request):
                             hx_target="closest span",
                         ),
                     ),
-                    _class="border-solid border-2",
+                    _class="border-solid border-2 p-3",
                 )
                 return HttpResponse(R(response, {}))
             elif prompt == "Recommend me an exercise routine":

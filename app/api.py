@@ -312,11 +312,13 @@ def meal_plan_table_format(paragraph, food_dict_list):
     ]
     response = DIV(
         H1("Meal Plan Recommendation", _class="text-lg font-bold"),
+        P(paragraph),
         TABLE(
-            THEAD(TR(TH("Food Name"), TH("Amount"), TH("Unit"))),
+            THEAD(TR(TH("Food Name"), TH("Amount"), TH("Unit"), TH("Calories"))),
             TBODY(*table_body_elements),
             _class="table",
         ),
+        _class="p-3",
     )
     return response
 

@@ -24,33 +24,36 @@
                 </tbody>
             </table>
         </div>
-        <span id="food-modal" class="flex flex-col w-full border-solid border-2" x-show="foodModalOpen" x-trap="foodModalOpen" >
-            <!--This is used for searching food in the database-->
-            <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2 hover:bg-red-500" @click="foodModalOpen = false">✕</button>              
-            <h1 class="text-lg font-bold">Add Food to Diary</h1>
-            <input type="search" name="search" placeholder="Search food here" class="input input-bordered w-full max-w-xs" 
-                hx-get="{% url 'food' %}" 
-                hx-trigger="keyup changed delay:500ms, search" 
-                hx-target="#search-results" 
-                hx-indicator=".htmx-indicator"
-                hx-swap="innerHTML"
-                />
-                
-                <table class="table">
-                <thead>
-                    <tr>
-                  <th>Description</th>
-                  <th>Source</th>
-                </tr>
-                </thead>
-                <tbody id="search-results">
-                    <span class="htmx-indicator loading loading-infinity loading-lg"></span> 
-                </tbody>
-            </table>
-            <div id="food-summary-panel" x-show="foodSummaryOpen" class="flex w-full flex-row justify-center">
-                
-            </div>
-        </span>
+        <div class="overflow-auto" style="background-color: rgba(0,0,0,0.5)" x-show="foodModalOpen" :class="{ 'absolute inset-0 z-10 flex items-start justify-center': foodModalOpen }">
+            <!-- overlay -->
+            <span id="food-modal" class="flex flex-col w-full border-solid border-2 bg-white shadow-2xl m-4 sm:m-8" x-show="foodModalOpen" x-trap="foodModalOpen" @click.away="foodModalOpen = false" >
+                <!--This is used for searching food in the database-->
+                <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2 hover:bg-red-500" @click="foodModalOpen = false">✕</button>              
+                <h1 class="text-lg font-bold">Add Food to Diary</h1>
+                <input type="search" name="search" placeholder="Search food here" class="input input-bordered w-full max-w-xs" 
+                    hx-get="{% url 'food' %}" 
+                    hx-trigger="keyup changed delay:500ms, search" 
+                    hx-target="#search-results" 
+                    hx-indicator=".htmx-indicator"
+                    hx-swap="innerHTML"
+                    />
+                    
+                    <table class="table">
+                    <thead>
+                        <tr>
+                    <th>Description</th>
+                    <th>Source</th>
+                    </tr>
+                    </thead>
+                    <tbody id="search-results">
+                        <span class="htmx-indicator loading loading-infinity loading-lg"></span> 
+                    </tbody>
+                </table>
+                <div id="food-summary-panel" x-show="foodSummaryOpen" class="flex w-full flex-row justify-center">
+                    
+                </div>
+            </span>
+        </div>
         <div id="log" class="border-solid border-2">
             <h1 class="text-lg font-bold">Daily Entries</h1>
             <div>

@@ -20,19 +20,19 @@
 
 <body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}' class="flex flex-col">
 <div class="navbar bg-base-100">
-    <div class="navbar-start flex flex-1 flex-row place-content-center"> 
+    <div class="navbar-start"> 
+        <a href="{% url 'home' %}" class="btn btn-ghost normal-case text-xl">Calorify</a>
+    </div> 
+    <div class="navbar-center hidden lg:flex">
         <!--Has the links to each page-->
-            <ul class="menu menu-horizontal px-1">
-                <li>
-                    <a href="{% url 'home' %}" class="btn btn-ghost normal-case text-xl">Calorify</a>
-                </li>
+            <ul class="menu menu-horizontal px-1 ">
                 {% block navigation %}
                     <li><a href="{% url 'home' %}" class="hover:bg-teal-200">Home</a></li>
                     <li><a href="{% url 'askai' %}" class="hover:bg-teal-200">Ask AI</a></li>
                     <li><a href="{% url 'diary' %}" class="hover:bg-teal-200">Diary</a></li>
                 {% endblock %}
             </ul>
-    </div> 
+    </div>
     <div class="navbar-end">
         <!--Shows gems and level-->
         <!--Also shows logout button-->
