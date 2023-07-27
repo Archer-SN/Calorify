@@ -12,14 +12,16 @@
                         <th>Expiration Date</th>
                     </tr>
                 </thead>
-                {% for challenge in challenges %}
-                    <tr >
-                        <td>{{ challenge.name }}</td>
-                        <td>{{ challenge.difficulty }}</td>
-                        <td>{{ challenge.expire_date }}</td>
-                        <td hx-post="{% url 'challenge' %}" hx-target="closest tr" hx-swap="innerHTML" hx-vals='{"challengeId" : {{ challenge.id }} }' class="btn btn-outline btn-success">Complete Challenge</td>
-                    </tr>
-                {% endfor %}
+                <tbody>
+                    {% for challenge in challenges %}
+                        <tr >
+                            <td>{{ challenge.name }}</td>
+                            <td>{{ challenge.difficulty }}</td>
+                            <td>{{ challenge.expire_date }}</td>
+                            <td hx-post="{% url 'challenge' %}" hx-target="closest tr" hx-swap="innerHTML" hx-vals='{"challengeId" : {{ challenge.id }} }' class="btn btn-outline btn-success">Complete Challenge</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
             </table>
         </div>
         <span id="food-modal" class="flex flex-col w-full border-solid border-2" x-show="foodModalOpen" x-trap="foodModalOpen" >

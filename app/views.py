@@ -198,7 +198,7 @@ def ask_ai(request):
                 gpt_response = ask_meal_plan_gpt(request.user)
                 vals = {"gptResponse": gpt_response}
                 response = DIV(
-                    P(gpt_response),
+                    gpt_response,
                     SPAN(
                         P("Import meal plan?"),
                         DIV(

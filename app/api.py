@@ -11,6 +11,7 @@ import requests
 import os
 import django
 from tenacity import retry, wait_random_exponential, stop_after_attempt
+from htmlgenerator import *
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "calorify.settings")
 django.setup()
@@ -297,6 +298,29 @@ def ask_exercise_plan_gpt(user):
     return response_message["content"]
 
 
+# Given a paragraph and a list of dictionary of food names, amounts, units, and calories, create a html table for it
+def meal_plan_table_format(paragraph, food_dict_list):
+    print(food_dict_list)
+    table_body_elements = [
+        TR(
+            TD(food_dict["food_name"]),
+            TD(food_dict["amount"]),
+            TD(food_dict["unit"]),
+            TD(food_dict["calories"]),
+        )
+        for food_dict in food_dict_list
+    ]
+    response = DIV(
+        H1("Meal Plan Recommendation", _class="text-lg font-bold"),
+        TABLE(
+            THEAD(TR(TH("Food Name"), TH("Amount"), TH("Unit"))),
+            TBODY(*table_body_elements),
+            _class="table",
+        ),
+    )
+    return response
+
+
 # Ask ChatGPT for a meal plan given the user's information
 # food_obj_list is returned
 @retry(wait=wait_random_exponential(min=1, max=40), stop=stop_after_attempt(3))
@@ -310,17 +334,71 @@ def ask_meal_plan_gpt(user):
             ),
         },
     ]
-
+    functions = [
+        {
+            "name": "meal_plan_table_format",
+            "description": "Given a paragraph and a list of dictionary of food names, amounts, units, and calories, create a html table for it",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "paragraph": {
+                        "type": "string",
+                        "description": "A paragraph of what ChatGPT wants to say before recommending the meal plan",
+                    },
+                    "food_dict_list": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "food_name": {
+                                    "type": "string",
+                                    "description": "Name of the food",
+                                },
+                                "amount": {
+                                    "type": "number",
+                                    "description": "Amount of food",
+                                },
+                                "unit": {
+                                    "type": "string",
+                                    "description": "Weight unit",
+                                },
+                                "calories": {
+                                    "type": "string",
+                                    "description": "Total calories",
+                                },
+                            },
+                        },
+                    },
+                },
+                "required": ["paragraph", "food_dict_list"],
+            },
+        }
+    ]
     response = openai.ChatCompletion.create(
         model=GPT_MODEL,
         messages=messages,
+        functions=functions,
         temperature=1,
-        max_tokens=512,
+        max_tokens=2048,
         top_p=1,
         frequency_penalty=0,
         presence_penalty=0,
     )
     response_message = response["choices"][0]["message"]
+
+    if response_message.get("function_call"):
+        function_name = response_message["function_call"]["name"]
+        if (
+            function_name == "meal_plan_table_format"
+            and response_message["function_call"]["arguments"] is not None
+        ):
+            function_args = json.loads(response_message["function_call"]["arguments"])
+            function_response = meal_plan_table_format(
+                paragraph=function_args.get("paragraph"),
+                food_dict_list=function_args.get("food_dict_list"),
+            )
+            print(function_response)
+            return function_response
 
     return response_message["content"]
 
