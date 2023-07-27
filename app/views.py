@@ -15,6 +15,7 @@ from django.middleware.csrf import get_token
 from datetime import date, datetime
 from htmlgenerator import DIV, P, SPAN, FORM, BUTTON
 from htmlgenerator import render as R
+from asgiref.sync import sync_to_async, async_to_sync
 
 import requests
 import json
@@ -178,8 +179,20 @@ def challenge(request):
 
 
 # Handles the page where you can talk to chatGPT
+# We have to do this becasue login_required does not yet support async views
 @login_required
 def ask_ai(request):
+    async def handle_import_meal_plan() -> HttpResponse:
+        gpt_response = request.POST.get("gptResponse")
+        if await import_user_meal_plan(request.user, gpt_response):
+            return HttpResponse(
+                R(DIV("Import Completed", _class="alert alert-success"), {})
+            )
+        else:
+            return HttpResponse(
+                R(DIV("Import Failed", _class="alert alert-failed"), {})
+            )
+
     # If requested by htmx
     if request.htmx:
         if request.method == "GET":
@@ -226,15 +239,8 @@ def ask_ai(request):
             return HttpResponse("Non-existent prompt")
         # If user wants to import
         if request.method == "POST":
-            gpt_response = request.POST.get("gptResponse")
-            if import_user_meal_plan(request.user, gpt_response):
-                return HttpResponse(
-                    R(DIV("Import Completed", _class="alert alert-success"), {})
-                )
-            else:
-                return HttpResponse(
-                    R(DIV("Import Failed", _class="alert alert-failed"), {})
-                )
+            return asyncio.run(handle_import_meal_plan())
+
     else:
         return render(request, "askai.html", {"prompts": AVAILABLE_PROMPTS.keys()})
 
