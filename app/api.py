@@ -6,6 +6,8 @@ from datetime import datetime, timedelta
 
 import openai
 import json
+
+# import grequests
 import requests
 import asyncio
 import os
@@ -72,6 +74,11 @@ DEFAULT_SYSTEM_MESSAGE = {
 # TODO: Optimize AI query
 
 
+# We're going to obtain Category and Nutrient from the food database.
+def food_database_init():
+    pass
+
+
 # Add the given food to the database if it does not yet exist
 # We'll call the database with the food weight of 100 grams (A standard weight for storing in the database)
 # Return a Food object that is created
@@ -124,6 +131,7 @@ async def analyze_food(food_name, is_importing=False):
                 # Gets the nutrition data
                 nutrition_request = requests.post(NUTRIENTS_AP, json=ingredients).json()
                 # Adds each nutrient to the database
+                food_nutrient_list = []
                 for ntr_code, nutrient_data in nutrition_request[
                     "totalNutrients"
                 ].items():
@@ -132,11 +140,13 @@ async def analyze_food(food_name, is_importing=False):
                         label=nutrient_data["label"],
                         unit_name=nutrient_data["unit"],
                     )
-                    food_nutrient = FoodNutrient.objects.create(
+                    food_nutrient = FoodNutrient(
                         food=food_obj,
                         nutrient=nutrient,
                         amount=nutrient_data["quantity"],
                     )
+                    food_nutrient_list.append(food_nutrient)
+                FoodNutrient.objects.bulk_create(food_nutrient_list)
             food_objs.append(food_obj)
 
         return food_objs
@@ -173,7 +183,6 @@ async def analyze_meal_plan(food_dict_list, is_importing=False):
 
 # Create the new user food entry in the database
 # import means that we don't have to analyze the food
-@sync_to_async
 def import_user_food(user, food_obj_dict, date=datetime.now()):
     food = food_obj_dict["food"]
     daily_entry, created = DailyEntry.objects.get_or_create(user=user, date=date)
