@@ -67,7 +67,31 @@ DEFAULT_SYSTEM_MESSAGE = {
 
 # I'm not sure whether this should be put in views.py
 
-# TODO: Optimize AI query
+# TODO: Optimize AI and Models query
+
+
+# This is just to create all the Nutrient models so that we don't have to create it later on
+def food_database_init():
+    parser_response = requests.get(PARSER_AP, params={"ingr": "banana"}).json()
+    data_list = parser_response["parsed"]
+    food_data = data_list[0]["food"]
+    ingredients = {
+        "ingredients": [
+            {
+                "quantity": STANDARD_MEASURE_QUANTITY,
+                "measureURI": STANDARD_MEASURE_URI,
+                "foodId": food_data["foodId"],
+            }
+        ]
+    }
+    nutrition_request = requests.post(NUTRIENTS_AP, json=ingredients).json()
+    for ntr_code, nutrient_data in nutrition_request["totalNutrients"].items():
+        nutrient, nutrient_created = Nutrient.objects.get_or_create(
+            id=ntr_code,
+            label=nutrient_data["label"],
+            unit_name=nutrient_data["unit"],
+        )
+        print(nutrient)
 
 
 # Add the given food to the database if it does not yet exist
@@ -104,8 +128,8 @@ def analyze_food(food_name, is_importing=False):
             food_obj.label = food_data["label"]
             food_obj.category = category
             food_obj.save()
-            # TODO: Fix importing gives 0 calories without doing this
-            if not food_obj_created or is_importing:
+            # Any micronutrient will do, but not MACRONUTRIENT because they were created during parsing!
+            if not FoodNutrient.objects.filter(food=food_obj, nutrient_id="P"):
                 print(food_obj)
                 # We are going to use 100g as a standard quantity for storing food in the database
                 ingredients = {
@@ -119,20 +143,20 @@ def analyze_food(food_name, is_importing=False):
                 }
                 # Gets the nutrition data
                 nutrition_request = requests.post(NUTRIENTS_AP, json=ingredients).json()
-                # Adds each nutrient to the database
-                for ntr_code, nutrient_data in nutrition_request[
-                    "totalNutrients"
-                ].items():
-                    nutrient, nutrient_created = Nutrient.objects.get_or_create(
-                        ntr_code=ntr_code,
-                        label=nutrient_data["label"],
-                        unit_name=nutrient_data["unit"],
-                    )
-                    food_nutrient = FoodNutrient.objects.create(
+                nutrients_data = nutrition_request["totalNutrients"]
+                # Adds each food nutrient to the database
+                food_nutrient_list = []
+                for nutrient in Nutrient.objects.all():
+                    amount = 0
+                    if nutrient.id in nutrients_data:
+                        amount = nutrients_data[nutrient.id].get("quantity", 0)
+                    food_nutrient = FoodNutrient(
                         food=food_obj,
                         nutrient=nutrient,
-                        amount=nutrient_data["quantity"],
+                        amount=amount,
                     )
+                    food_nutrient_list.append(food_nutrient)
+                FoodNutrient.objects.bulk_create(food_nutrient_list)
             food_objs.append(food_obj)
 
         return food_objs

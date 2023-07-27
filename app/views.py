@@ -44,6 +44,9 @@ def survey(request):
 # This page should show you weight history and stuffs
 @login_required
 def home(request):
+    # Initialize the food database for a very new database
+    if not Nutrient.objects.filter().exists():
+        food_database_init()
     user = request.user
     total_nutrients = Counter()
     daily_entries = DailyEntry.objects.filter(user=user)
