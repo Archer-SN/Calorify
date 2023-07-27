@@ -15,7 +15,6 @@ from django.middleware.csrf import get_token
 from datetime import date, datetime
 from htmlgenerator import DIV, P, SPAN, FORM, BUTTON
 from htmlgenerator import render as R
-from asgiref.sync import sync_to_async, async_to_sync
 
 import requests
 import json
@@ -96,40 +95,28 @@ def diary(request):
         )
 
 
-@sync_to_async
 @login_required
 # Handles food databse queries and add new entries to the database
-async def food(request):
-    food_id = request.GET.get("foodId", "")
-    search = request.GET.get("search", "")
-    daily_entry_date = request.GET.get("date", str(date.today()))
-
-    @sync_to_async
-    async def handle_analyze():
-        # The first object is the one we want
-        food = analyze_food(food_id)[0]
-        return HttpResponse(
-            sync_to_async(food.user_food_form)(request, daily_entry_date)
-        )
-
-    @sync_to_async
-    async def handle_search():
-        search_results = autocomplete_search(search)
-        response = ""
-        coros = [analyze_food(food_name) for food_name in search_results]
-        await asyncio.gather(*coros)
-        # Turn each food object into an html form
-        async for food in Food.objects.filter(label__icontains=search)[0:20]:
-            response += food.html_table_format()
-        return HttpResponse(response)
-
+def food(request):
     if request.method == "GET":
+        food_id = request.GET.get("foodId", "")
+        search = request.GET.get("search", "")
         # If the user wants to obtain more detailed data about a specific food
         if food_id:
-            return asyncio.run(handle_analyze())
+            daily_entry_date = request.GET.get("date", str(date.today()))
+            # The first object is the one we want
+            food = analyze_food(food_id)[0]
+            return HttpResponse(food.user_food_form(request, daily_entry_date))
         # If the user just wants to search for food in the database
         else:
-            return asyncio.run(handle_search())
+            search_results = autocomplete_search(search)
+            response = ""
+            for food_name in search_results:
+                analyze_food(food_name)
+            # Turn each food object into an html form
+            for food in Food.objects.filter(label__icontains=search)[0:20]:
+                response += food.html_table_format()
+            return HttpResponse(response)
 
 
 @login_required
@@ -191,20 +178,8 @@ def challenge(request):
 
 
 # Handles the page where you can talk to chatGPT
-# We have to do this becasue login_required does not yet support async views
 @login_required
 def ask_ai(request):
-    async def handle_import_meal_plan() -> HttpResponse:
-        gpt_response = request.POST.get("gptResponse")
-        if await import_user_meal_plan(request.user, gpt_response):
-            return HttpResponse(
-                R(DIV("Import Completed", _class="alert alert-success"), {})
-            )
-        else:
-            return HttpResponse(
-                R(DIV("Import Failed", _class="alert alert-failed"), {})
-            )
-
     # If requested by htmx
     if request.htmx:
         if request.method == "GET":
@@ -251,8 +226,15 @@ def ask_ai(request):
             return HttpResponse("Non-existent prompt")
         # If user wants to import
         if request.method == "POST":
-            return asyncio.run(handle_import_meal_plan())
-
+            gpt_response = request.POST.get("gptResponse")
+            if import_user_meal_plan(request.user, gpt_response):
+                return HttpResponse(
+                    R(DIV("Import Completed", _class="alert alert-success"), {})
+                )
+            else:
+                return HttpResponse(
+                    R(DIV("Import Failed", _class="alert alert-failed"), {})
+                )
     else:
         return render(request, "askai.html", {"prompts": AVAILABLE_PROMPTS.keys()})
 

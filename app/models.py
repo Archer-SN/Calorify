@@ -287,7 +287,7 @@ class Challenge(models.Model):
 
 class Nutrient(models.Model):
     # The code that the food database uses for identifying the nutrient
-    id = models.CharField(max_length=32, unique=True, primary_key=True)
+    ntr_code = models.CharField(max_length=32)
     # The name of the nutrient
     label = models.CharField(max_length=64)
     # The standard unit of measure for the nutrient (per 100g of food)
@@ -321,7 +321,7 @@ class Food(models.Model):
         for food_nutrient in FoodNutrient.objects.filter(food=self).select_related(
             "nutrient"
         ):
-            ntr_code = food_nutrient.nutrient.id
+            ntr_code = food_nutrient.nutrient.ntr_code
             nutrients_counter[ntr_code] = round(
                 (food_nutrient.amount / BASE_AMOUNT) * weight, 1
             )
@@ -329,7 +329,7 @@ class Food(models.Model):
 
     # Return the amount of the nutrient in the food based on the given food weight
     def get_nutrient(self, nutrient_code, weight=BASE_AMOUNT):
-        nutrient = Nutrient.objects.filter(id=nutrient_code)
+        nutrient = Nutrient.objects.filter(ntr_code=nutrient_code)
         if not nutrient:
             return 0
         # TODO: Fix this
