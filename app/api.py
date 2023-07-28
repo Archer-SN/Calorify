@@ -124,7 +124,7 @@ def analyze_food(food_name, is_importing=False):
             )
             # Create the food object if it does not yet exist
             food_obj, food_obj_created = Food.objects.get_or_create(
-                food_id=food_data["foodId"]
+                id=food_data["foodId"]
             )
             food_obj.label = food_data["label"]
             food_obj.category = category

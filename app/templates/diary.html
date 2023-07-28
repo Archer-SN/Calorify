@@ -28,7 +28,7 @@
             <!-- overlay -->
             <span id="food-modal" class="flex flex-col w-full border-solid border-2 bg-white shadow-2xl m-4 sm:m-8" x-show="foodModalOpen" x-trap="foodModalOpen" @click.away="foodModalOpen = false" >
                 <!--This is used for searching food in the database-->
-                <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2 hover:bg-red-500" @click="foodModalOpen = false">✕</button>              
+                <button class="btn btn-sm btn-circle btn-ghost place-self-end right-2 top-2 hover:bg-red-500" @click="foodModalOpen = false">✕</button>              
                 <h1 class="text-lg font-bold">Add Food to Diary</h1>
                 <input type="search" name="search" placeholder="Search food here" class="input input-bordered w-full max-w-xs" 
                     hx-get="{% url 'food' %}" 
@@ -47,10 +47,17 @@
                     </thead>
                     <tbody id="search-results">
                         <span class="htmx-indicator loading loading-infinity loading-lg"></span> 
+                        {% block food_search_result %}
+                            {% for food_data in food_data_list %}
+                                <tr @click='foodSummaryOpen = true' hx-trigger='click' hx-get="{% url 'food' %}" hx-target='#food-summary-panel' hx-swap='innerHTML' class='hover' hx-vals='{{ food_data.vals }}'>
+                                    <td>{{ food_data.label }}</td>
+                                    <td>EDAMAM</td>
+                                </tr>
+                            {% endfor %}
+                        {% endblock %}
                     </tbody>
                 </table>
                 <div id="food-summary-panel" x-show="foodSummaryOpen" class="flex w-full flex-row justify-center">
-                    
                 </div>
             </span>
         </div>
@@ -65,10 +72,18 @@
                 <tbody id="entries-container" >
                     
                     <!--Food and exercise entries are shown here-->
-                    {% for food_entry in daily_entry.food_intake %}
-                        {{ food_entry | safe }}
-                    {% endfor %}
-                    {% for exercise in daily_entry.exercises %}
+                    {% block food_entries %}
+                        {% for food_entry in food_intake %}
+                            <tr hx-vals='{{ food_entry.vals }}'>
+                                <td>{{ food_entry.label }}</td>
+                                <td>{{ food_entry.weight }}</td>
+                                <td>g</td>
+                                <td>{{ food_entry.energy }}</td>
+                                <td>kcal</td>
+                            </tr>
+                        {% endfor %}
+                    {% endblock %}
+                    {% for exercise in exercises %}
                         <tr class="hover">
                             <td>{{ exercise.name }}</td>
                             <td>{{ exercise.duration }}</td>
@@ -83,19 +98,21 @@
         </div>
         <div id="summary" class="flex w-full justify-evenly border-solid border-2" >
             <!--Summarize Energy and Macronutrients-->
-            <div>
-                <h2 class="text-xl font-bold">Energy Summary</h2>
-                <p class="font-bold">Consumed: {{ daily_entry.nutrients.general.energy }} kcal</p>
-            </div>
-            <div class="divider divider-horizontal"></div>
-            <div>
-                <h2 class="text-xl font-bold">Macronutrients Target</h2>
-                <p class="font-bold">Energy: {{ daily_entry.nutrients.general.energy }} kcal</p>
-                <p class="font-bold">Protein: {{ daily_entry.nutrients.protein.protein }} g</p>
-                <p class="font-bold">Carbohydrates: {{ daily_entry.nutrients.carbohydrates.carbs }} g</p>
-                <p class="font-bold">Fats: {{ daily_entry.nutrients.lipids.fat }} g</p>
+            {% block nutrients_summary %}
+                <div>
+                    <h2 class="text-xl font-bold">Energy Summary</h2>
+                    <p class="font-bold">Consumed: {{ nutrients.general.energy }} kcal</p>
+                </div>
+                <div class="divider divider-horizontal"></div>
+                <div>
+                    <h2 class="text-xl font-bold">Macronutrients Target</h2>
+                    <p class="font-bold">Energy: {{ nutrients.general.energy }} kcal</p>
+                    <p class="font-bold">Protein: {{ nutrients.protein.protein }} g</p>
+                    <p class="font-bold">Carbohydrates: {{ nutrients.carbohydrates.carbs }} g</p>
+                    <p class="font-bold">Fats: {{ nutrients.lipids.fat }} g</p>
 
-            </div>
+                </div>
+            {% endblock %}
         </div>
         <div id="nutrients">
             <!--Summarize each nutrients-->

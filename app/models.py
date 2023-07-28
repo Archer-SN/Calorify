@@ -306,7 +306,7 @@ class FoodCategory(models.Model):
 # Food class has data about the amount of calories, macronutrients, and nutrients.
 class Food(models.Model):
     # An id of the food in EDAMAM database
-    food_id = models.CharField(max_length=128, unique=True, primary_key=True)
+    id = models.CharField(max_length=128, unique=True, primary_key=True)
     # Label of the food (i.e. its name)
     label = models.CharField(max_length=64)
     food_category = models.ForeignKey(FoodCategory, null=True, on_delete=models.CASCADE)
@@ -342,14 +342,17 @@ class Food(models.Model):
         except IndexError:
             return 0
 
-    # Convert Food into a table format
-    # The row contains the name and food source
-    # We have Alpine and HTMX attributes as well for front-end functionalities.
-    def html_table_format(self):
-        vals = {"foodId": self.food_id}
-        return (
-            "<tr @click='foodSummaryOpen = true' hx-trigger='click' hx-get={url} hx-target='#food-summary-panel' hx-swap='innerHTML' class='hover' hx-vals='{vals}'><td>{label}</td><td>EDAMAM</td></tr>"
-        ).format(label=self.label, url=reverse("food"), vals=json.dumps(vals))
+    # Returns detailed information of the user food.
+    # It is used in html
+    def data(self):
+        vals = {"foodId": self.id}
+        return {
+            "label": self.label,
+            "weight": 100,
+            "unit": "g",
+            "energy": self.get_nutrient("ENERC_KCAL"),
+            "vals": json.dumps(vals),
+        }
 
     # Convert Food into an HTML string that will be used in food-summary-panel
     def food_summary_format(self):
@@ -371,7 +374,7 @@ class Food(models.Model):
         divider = render(DIV("|", _class="divider divider-horizontal"), {})
         form_as_div = UserFoodForm(
             initial={
-                "food_id": self.food_id,
+                "food_id": self.id,
                 # "csrfmiddlewaretoken": get_token(request),
                 "daily_entry_date": daily_entry_date,
             }
@@ -473,7 +476,7 @@ class DailyEntry(models.Model):
         for nutrient_code in nutrients.keys():
             nutrients[nutrient_code] = round(nutrients[nutrient_code], 1)
         for user_food in UserFood.objects.filter(daily_entry=self):
-            food_intake.append(user_food.entry_format())
+            food_intake.append(user_food.data())
         for exercise in UserExercise.objects.filter(daily_entry=self):
             exercises.append(exercise.data())
 
@@ -542,6 +545,7 @@ class UserFood(models.Model):
     daily_entry = models.ForeignKey(
         DailyEntry, related_name="user_foods", on_delete=models.CASCADE
     )
+    unit = models.ForeignKey(MeasureUnit, on_delete=models.CASCADE, null=True)
     # Food weight in grams
     weight = models.FloatField(default=0)
     time_added = models.TimeField(default=time())
@@ -553,11 +557,13 @@ class UserFood(models.Model):
     # Returns detailed information of the user food.
     # It is used in html
     def data(self):
+        vals = {"id": self.id}
         return {
-            "id": self.id,
-            "name": self.food.label,
+            "label": self.food.label,
             "weight": self.weight,
+            "unit": self.unit,
             "energy": self.get_nutrient("ENERC_KCAL"),
+            "vals": json.dumps(vals),
         }
 
     # Return the amount of each nutrient in the food

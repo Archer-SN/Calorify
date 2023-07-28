@@ -15,6 +15,7 @@ from django.middleware.csrf import get_token
 from datetime import date, datetime
 from htmlgenerator import DIV, P, SPAN, FORM, BUTTON
 from htmlgenerator import render as R
+from render_block import render_block_to_string
 
 import requests
 import json
@@ -48,6 +49,7 @@ def home(request):
     if not Nutrient.objects.filter().exists():
         food_database_init()
     user = request.user
+    # Put this in models.py
     total_nutrients = Counter()
     daily_entries = DailyEntry.objects.filter(user=user)
     daily_entries_count = daily_entries.count()
@@ -87,11 +89,14 @@ def diary(request):
         for challenge in challenges:
             if not challenge.is_completed:
                 challenges_info.append(challenge.info())
+        summary = daily_entry.summarize()
         return render(
             request,
             "diary.html",
             {
-                "daily_entry": daily_entry.summarize(),
+                "food_intake": summary["food_intake"],
+                "exercises": summary["exercises"],
+                "nutrients": summary["nutrients"],
                 "user_food_form": UserFoodForm(),
                 "challenges": challenges_info,
             },
@@ -113,12 +118,16 @@ def food(request):
         # If the user just wants to search for food in the database
         else:
             search_results = autocomplete_search(search)
-            response = ""
+            food_data_list = []
             for food_name in search_results:
                 analyze_food(food_name)
             # Turn each food object into an html form
             for food in Food.objects.filter(label__icontains=search)[0:20]:
-                response += food.html_table_format()
+                food_data_list.append(food.data())
+            context = {"food_data_list": food_data_list}
+            response = render_block_to_string(
+                "diary.html", "food_search_result", context
+            )
             return HttpResponse(response)
 
 
@@ -143,7 +152,7 @@ def user_food(request):
                 weight=amount,
                 food_id=food_id,
             )
-            return HttpResponse(new_user_food.html_table_format())
+            return HttpResponse(new_user_food.data())
     elif request.method == "DELETE":
         print("hello")
         return HttpResponse()
