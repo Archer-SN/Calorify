@@ -58,6 +58,21 @@
                     </tbody>
                 </table>
                 <div id="food-summary-panel" x-show="foodSummaryOpen" class="flex w-full flex-row justify-center">
+                    {% block food_summary %}
+                        <div class="bg-gray-100 border-solid border-black p-5">
+                            <ul>
+                                <li>Protein: {{ food.protein }} g</li>
+                                <li>Carbohydrates: {{ food.carbs }} g</li>
+                                <li>Fats: {{ food.fats }} g</li>
+                                <li>Energy: {{ food.energy }} kcal</li>
+                            </ul>
+                            <div class="divider divider-horizontal"></div>
+                            <form hx-post="{% url 'userfood' %}" hx-target="#entries-container" hx-swap="beforeend" class="form-control">
+                                {{ user_food_form }}
+                                <input type="submit" value="submit" class="btn btn-success">
+                            </form>
+                        </div>
+                    {% endblock %}
                 </div>
             </span>
         </div>

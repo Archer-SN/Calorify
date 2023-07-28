@@ -13,8 +13,6 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.middleware.csrf import get_token
 from datetime import date, datetime
-from htmlgenerator import DIV, P, SPAN, FORM, BUTTON
-from htmlgenerator import render as R
 from render_block import render_block_to_string
 
 import requests
@@ -114,7 +112,18 @@ def food(request):
             daily_entry_date = request.GET.get("date", str(date.today()))
             # The first object is the one we want
             food = analyze_food(food_id)[0]
-            return HttpResponse(food.user_food_form(request, daily_entry_date))
+            user_food_form = UserFoodForm(
+                initial={
+                    "food_id": food_id,
+                    "daily_entry_date": daily_entry_date,
+                }
+            )
+            context = {
+                "food": food.get_macronutrients(),
+                "user_food_form": user_food_form,
+            }
+            response = render_block_to_string("diary.html", "food_summary", context)
+            return HttpResponse(response)
         # If the user just wants to search for food in the database
         else:
             search_results = autocomplete_search(search)
@@ -123,7 +132,7 @@ def food(request):
                 analyze_food(food_name)
             # Turn each food object into an html form
             for food in Food.objects.filter(label__icontains=search)[0:20]:
-                food_data_list.append(food.data())
+                food_data_list.append(food.get_data())
             context = {"food_data_list": food_data_list}
             response = render_block_to_string(
                 "diary.html", "food_search_result", context
@@ -152,7 +161,9 @@ def user_food(request):
                 weight=amount,
                 food_id=food_id,
             )
-            return HttpResponse(new_user_food.data())
+            context = {"food_intake": [new_user_food.data()]}
+            response = render_block_to_string("diary.html", "food_entries", context)
+            return HttpResponse(response)
     elif request.method == "DELETE":
         print("hello")
         return HttpResponse()

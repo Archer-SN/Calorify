@@ -11,7 +11,6 @@ from field_history.tracker import FieldHistoryTracker
 from django.middleware.csrf import get_token
 from collections import Counter
 import json
-from htmlgenerator import *
 
 from . import fields
 from .forms import *
@@ -344,7 +343,7 @@ class Food(models.Model):
 
     # Returns detailed information of the user food.
     # It is used in html
-    def data(self):
+    def get_data(self):
         vals = {"foodId": self.id}
         return {
             "label": self.label,
@@ -354,44 +353,15 @@ class Food(models.Model):
             "vals": json.dumps(vals),
         }
 
-    # Convert Food into an HTML string that will be used in food-summary-panel
-    def food_summary_format(self):
-        protein = LI(P(B("Protein: "), self.get_nutrient(PROTEIN)))
-        carbs = LI(P(B("Carbohydrates: "), self.get_nutrient(CARBS)))
-        fats = LI(P(B("Fats: "), self.get_nutrient(FATS)))
-        energy = LI(P(B("Energy: "), self.get_nutrient(ENERGY)))
-        return render(
-            DIV(
-                UL(energy, protein, carbs, fats),
-                id="nutrients-summary",
-                _class="bg-gray-100 border-solid border-black",
-            ),
-            {},
-        )
-
-    # Returns a form for the user to add new UserFood
-    def user_food_form(self, request, daily_entry_date):
-        divider = render(DIV("|", _class="divider divider-horizontal"), {})
-        form_as_div = UserFoodForm(
-            initial={
-                "food_id": self.id,
-                # "csrfmiddlewaretoken": get_token(request),
-                "daily_entry_date": daily_entry_date,
-            }
-        ).as_div()
-        form_container = render(
-            FORM(
-                form_as_div,
-                INPUT(type="submit", value="submit", _class="btn btn-success"),
-                hx_post=reverse("userfood"),
-                hx_target="#entries-container",
-                hx_swap="beforeend",
-                _class="form-control",
-            ),
-            {},
-        )
-        response = self.food_summary_format() + divider + form_container
-        return response
+    # Returns a dictionary of macronutrients including energy, protein, carbs, and fats
+    def get_macronutrients(self):
+        macronutrients_dict = {
+            "protein": self.get_nutrient(PROTEIN),
+            "carbs": self.get_nutrient(CARBS),
+            "fats": self.get_nutrient(FATS),
+            "energy": self.get_nutrient(ENERGY),
+        }
+        return macronutrients_dict
 
 
 # MeasureUnit will store all the names of all the units
@@ -572,33 +542,6 @@ class UserFood(models.Model):
 
     def get_nutrient(self, nutrient_code):
         return self.food.get_nutrient(nutrient_code, self.weight)
-
-    def html_table_format(self):
-        # TODO: Handle unit
-        response = TR(
-            TD(self.food.label),
-            TD(self.weight),
-            TD("g"),
-            TD(self.get_nutrient(ENERGY)),
-            TD("kcal"),
-        )
-        return render(response, {})
-
-    # TODO: Make right left click and then have a choice
-    def entry_format(self):
-        response = TR(
-            TD(self.food.label),
-            TD(self.weight),
-            TD("g"),
-            TD(self.get_nutrient(ENERGY)),
-            TD("kcal"),
-            _class="hover hover:red-bg-200",
-            hx_delete=reverse("userfood"),
-            hx_trigger="hover",
-            hx_swap="delete",
-        )
-        return render(response, {})
-
 
 # Stores the name and description of each exercise.
 class Exercise(models.Model):
