@@ -10,7 +10,28 @@ UNIT_CHOICES = (
 )
 
 
-class UserForm(forms.Form):
+class AccountForm(forms.Form):
+    username = forms.CharField(label="Username", max_length=32)
+    email = forms.EmailField(label="Email")
+    password = forms.CharField(
+        label="Password", max_length=32, widget=forms.PasswordInput
+    )
+    password_confirmation = forms.CharField(
+        label="Password Confirmation", max_length=32, widget=forms.PasswordInput
+    )
+
+    def __init__(self, *args, **kwargs):
+        super(AccountForm, self).__init__(*args, **kwargs)
+        for field in self.fields:
+            self.fields[field].widget.attrs.update(
+                {
+                    "class": "bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                }
+            )
+            self.fields[field]
+
+
+class HealthInfoForm(forms.Form):
     ACTIVITY_LEVEL = [
         ("NONE", "None"),
         ("SED", "Sedentary"),
@@ -38,12 +59,9 @@ class UserForm(forms.Form):
     )
     weight_goal = forms.FloatField(label="What's your weight goal?")
     weight_goal_rate = forms.FloatField(label="How much deficit/surplus?")
-    csrfmiddlewaretoken = forms.CharField(
-        max_length=100, widget=forms.HiddenInput(), required=False
-    )
 
     def __init__(self, *args, **kwargs):
-        super(UserForm, self).__init__(*args, **kwargs)
+        super(HealthInfoForm, self).__init__(*args, **kwargs)
         for field in self.fields:
             self.fields[field].widget.attrs.update(
                 {

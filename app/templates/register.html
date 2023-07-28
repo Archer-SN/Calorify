@@ -14,8 +14,35 @@
                   <span>Error!</span>
                 </div>
                 {% endif %}
-                <form class="flex flex-col space-y-4 md:space-y-6" hx-post="{% url 'register' %}" hx-swap="innerHTML">
-                    {% comment %} {% csrf_token %} {% endcomment %}
+                {% block form %}
+                    {% if form_type == "account" %}
+                        <form hx-post="{% url 'register' %}" hx-swap="outerHTML" hx-target="this" hx-vals="{{ vals }}" class="form-control flex flex-col space-y-4 md:space-y-6">
+                            {% csrf_token %}    
+                            {% for field in form %}
+                            <div>
+                                <label for="{{ field.id_for_label }}" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">{{ field.label }}</label>
+                                {{ field }}
+                            </div>
+                            {% endfor %}
+                            <input type="submit" value="Submit" class="btn btn-outline btn-primary">
+                        </form>    
+                    {% elif form_type == "health" %}
+                        <form hx-get="{% url 'register' %}" hx-swap="outerHTML" hx-target="this" hx-vals="{{ vals }}" class="form-control flex flex-col space-y-4 md:space-y-6">
+                            {% csrf_token %}
+                            {% for field in form %}
+                            <div>
+                                <label for="{{ field.id_for_label }}" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">{{ field.label }}</label>
+                                {{ field }}
+                            </div>
+                            {% endfor %}
+                            <input type="submit" value="Submit" class="btn btn-outline btn-primary">
+                        </form>    
+                    {% endif %}
+                {% endblock %}
+                <p class="text-sm font-light text-gray-500 dark:text-gray-400">
+                    Already have an account? <a href="{% url 'login' %}" class="font-medium text-primary-600 hover:underline dark:text-primary-500">Login Here</a>
+                </p>
+                {% comment %} <form class="flex flex-col space-y-4 md:space-y-6" hx-post="{% url 'register' %}" hx-swap="innerHTML">
                     <div>
                         <label for="username" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Username</label>
                         <input type="text" name="username" id="username" class="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" required="">
@@ -35,11 +62,8 @@
                     <div class="flex items-center justify-between">
                         <a href="#" class="text-sm font-medium text-primary-600 hover:underline dark:text-primary-500">Forgot password?</a>
                     </div>
-                    <button type="submit" class="btn btn-outline btn-primary">Register</button>
-                    <p class="text-sm font-light text-gray-500 dark:text-gray-400">
-                        Already have an account? <a href="{% url 'login' %}" class="font-medium text-primary-600 hover:underline dark:text-primary-500">Login Here</a>
-                    </p>
-                </form>
+                    <input type="submit" class="btn btn-outline btn-primary">
+                </form> {% endcomment %}
             </div>
         </div>
     </div>

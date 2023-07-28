@@ -12,6 +12,8 @@ from django.shortcuts import HttpResponse
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.middleware.csrf import get_token
+from django.views.decorators.csrf import csrf_protect
+from django.template import RequestContext
 from datetime import date, datetime
 from render_block import render_block_to_string
 
@@ -298,47 +300,49 @@ def logout_view(request):
     return HttpResponseRedirect(reverse("login"))
 
 
+@csrf_protect
 def register_view(request):
     if request.htmx:
         # User submitted account information
         if request.method == "POST":
             if not request.user.is_authenticated:
-                username = request.POST["username"]
-                email = request.POST["email"]
+                form = AccountForm(request.POST)
+                if form.is_valid():
+                    username = form.cleaned_data["username"]
+                    email = form.cleaned_data["email"]
 
-                # Ensure password matches confirmation
-                password = request.POST["password"]
-                confirmation = request.POST["confirmation"]
-                if password != confirmation:
-                    return render(
-                        request, "register.html", {"message": "Passwords must match."}
-                    )
+                    # Ensure password matches confirmation
+                    password = form.cleaned_data["password"]
+                    confirmation = form.cleaned_data["password_confirmation"]
+                    if password != confirmation:
+                        return render(
+                            request,
+                            "register.html",
+                            {"message": "Passwords must match."},
+                        )
 
-                # Attempt to create new user
-                try:
-                    user = User.objects.create_user(username, email, password)
-                    user.save()
-                except IntegrityError:
-                    return render(
-                        request, "register.html", {"message": "Username already taken."}
+                    # Attempt to create new user
+                    try:
+                        user = User.objects.create_user(username, email, password)
+                        user.save()
+                    except IntegrityError:
+                        return render(
+                            request,
+                            "register.html",
+                            {"message": "Username already taken."},
+                        )
+                    login(request, user)
+                    # Ask the user about their information
+                    form = HealthInfoForm()
+                    context = {"form": form, "form_type": "health"}
+                    response = render_block_to_string(
+                        "register.html", "form", RequestContext(request, context)
                     )
-                login(request, user)
-                # Ask the user about their information
-                form = UserForm().as_div()
-                response = FORM(
-                    form,
-                    BUTTON(
-                        "Submit", type="submit", _class="btn btn-outline btn-primary"
-                    ),
-                    hx_get="register",
-                    hx_swap="innerHTML",
-                    _class="form-control flex flex-col space-y-4 md:space-y-6",
-                )
-                return HttpResponse(R(response, {}))
+                    return HttpResponse(response)
         # User submitted health data
-        # TODO: GET FOR NOW, THOUGH WE WANT POST
+        # TODO: We want to use PATCH, but because of csrftoken error thing, we can't do it.
         elif request.method == "GET":
-            form = UserForm(request.GET)
+            form = HealthInfoForm(request.GET)
             user = request.user
             print(form.errors)
             if user.is_authenticated and form.is_valid():
@@ -369,20 +373,19 @@ def register_view(request):
                 response["HX-Redirect"] = reverse("home")
                 return response
         # Return the form if the input is wrong
-        form = UserForm(request.GET).as_div()
-        response = FORM(
-            form,
-            BUTTON("Submit", type="submit", _class="btn btn-outline btn-primary"),
-            hx_get="register",
-            hx_swap="innerHTML",
-            _class="form-control flex flex-col space-y-4 md:space-y-6",
+        form = HealthInfoForm(request.GET)
+        context = {"form": form, "form_type": "account"}
+        response = render_block_to_string(
+            "register.html", "form", RequestContext(request, context)
         )
-        return HttpResponse(R(response, {}))
+        return HttpResponse(response)
     # If not a request from HTMX, but normal forms
     else:
         if request.user.is_authenticated:
             return redirect(reverse("home"))
-        return render(request, "register.html")
+        return render(
+            request, "register.html", {"form": AccountForm(), "form_type": "account"}
+        )
 
 
 # Renders the error page
