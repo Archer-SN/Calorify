@@ -27,13 +27,13 @@
                             </thead>
                             <tbody x-data="{ foodDictList : {{ food_dict_list }} }">
                                 {% for food_dict in food_dict_list %}
-                                    <tr>
-                                        <td>{{ food_dict.food_name }}</td>
+                                    <tr class="hover">
+                                        <td>{{ food_dict.food_name | title }}</td>
                                         <td>{{ food_dict.amount }}</td>
                                         <td>{{ food_dict.unit }}</td>
                                         <td>{{ food_dict.calories }}</td>
                                         <td>
-                                            <button @click="foodDictList.splice()" hx-delete="{% url 'empty' %}" hx-target="closest tr" hx-swap="delete" class="btn btn-outline btn-danger">Remove</button>
+                                            <button x-data="{ index : {{ forloop.counter0 }} }" @click="foodDictList.splice(index, 1)" hx-delete="{% url 'empty' %}" hx-target="closest tr" hx-swap="delete" class="btn btn-outline btn-danger">Remove</button>
                                         </td>
                                     </tr>
                                 {% endfor %}
