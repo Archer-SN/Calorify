@@ -300,7 +300,7 @@ def login_view(request):
 
 def logout_view(request):
     logout(request)
-    return HttpResponseRedirect(reverse("login"))
+    return redirect(reverse("login"))
 
 
 @csrf_protect

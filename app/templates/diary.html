@@ -97,7 +97,7 @@
                         <!--Food and exercise entries are shown here-->
                         {% block food_entries %}
                             {% for food_entry in food_intake %}
-                                <tr data="{ showFoodEntry: true }" >
+                                <tr data="{ showFoodEntry: true }" class="hover rounded border-solid border-y-2" >
                                     <td>{{ food_entry.label }}</td>
                                     <td>{{ food_entry.weight }}</td>
                                     <td>g</td>
@@ -150,7 +150,9 @@
                 <div id="nutrients">
                     <!--Summarize each nutrients-->
                     {% for  nutrient_category in nutrient_categories  %}
-                    
+                        <div>
+
+                        </div>
                     {% endfor %}
                 </div>
             {% endblock  %}
