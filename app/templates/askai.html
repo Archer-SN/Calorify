@@ -25,20 +25,23 @@
                                     <th>Calories</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody x-data="{ foodDictList : {{ food_dict_list }} }">
                                 {% for food_dict in food_dict_list %}
                                     <tr>
                                         <td>{{ food_dict.food_name }}</td>
                                         <td>{{ food_dict.amount }}</td>
                                         <td>{{ food_dict.unit }}</td>
                                         <td>{{ food_dict.calories }}</td>
+                                        <td>
+                                            <button @click="foodDictList.splice()" hx-delete="{% url 'empty' %}" hx-target="closest tr" hx-swap="delete" class="btn btn-outline btn-danger">Remove</button>
+                                        </td>
                                     </tr>
                                 {% endfor %}
                             </tbody>
                         </table>
                         <span>
                             <p>Import meal plan?</p>
-                            <div hx-post="askai" hx-vals="{{ vals }}" hx-swap="outerHTML" hx-target="closest span" hx-indicator=".htmx-indicator" class="btn btn-outline btn-success">YES</div>
+                            <div hx-post="{% url 'askai' %}" hx-vals="{{ vals }}" hx-swap="outerHTML" hx-target="closest span" hx-indicator=".htmx-indicator" class="btn btn-outline btn-success">YES</div>
                             <div hx-get="empty" hx-swap="delete" hx-indicator=".htmx-indicator" hx-target="closest span" class="btn btn-outline btn-danger">NO</div>
                         </span>
                     </div>

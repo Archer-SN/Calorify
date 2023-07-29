@@ -543,6 +543,7 @@ class UserFood(models.Model):
     def get_nutrient(self, nutrient_code):
         return self.food.get_nutrient(nutrient_code, self.weight)
 
+
 # Stores the name and description of each exercise.
 class Exercise(models.Model):
     name = models.CharField(max_length=64)

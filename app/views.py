@@ -232,18 +232,18 @@ def ask_ai(request):
                 return HttpResponse(response)
             return HttpResponse("Non-existent prompt")
         # If user wants to import
-        if request.method == "POST":
+        elif request.method == "POST":
             food_dict_list_json = request.POST.get("food_dict_list")
             food_dict_list = json.loads(food_dict_list_json)
-            print(food_dict_list_json)
-            print(food_dict_list)
-            import_user_meal_plan(request.user, food_dict_list)
             # Import successful
-            if import_user_meal_plan(request.user, gpt_response):
+            if import_user_meal_plan(request.user, food_dict_list):
                 return HttpResponse()
             # Import failed
             else:
                 return HttpResponse()
+        # If the user wants remove something that the AI recommends
+        elif request.method == "DELETE":
+            pass
     else:
         return render(request, "askai.html", {"prompts": AVAILABLE_PROMPTS.keys()})
 

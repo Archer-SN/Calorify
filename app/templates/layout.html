@@ -14,6 +14,9 @@
     <script src="https://unpkg.com/htmx.org@1.9.3" integrity="sha384-lVb3Rd/Ca0AxaoZg5sACe8FJKF0tnUgR2Kd7ehUOG5GCcROv5uBIZsOqovBAcWua" crossorigin="anonymous"></script>
     <!--this extension allows you to use it as the swapping mechanism in htmx which is necessary to retain Alpine state when you have entire Alpine components swapped by htmx.-->
     <script src="https://unpkg.com/htmx.org/dist/ext/alpine-morph.js"></script>
+    <!--Sweetalert2 library for cool alert UI-->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="{% static '' %}"></script>
     {% block script %}
     {% endblock %}
 </head>
@@ -21,16 +24,25 @@
 <body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}' class="flex flex-col">
 <div class="navbar bg-base-100">
     <div class="navbar-start"> 
+        <div class="dropdown">
+            <!--Only shown when the screen is small-->
+            <label tabindex="0" class="btn btn-ghost lg:hidden">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h8m-8 6h16" /></svg>
+              </label>
+            <ul tabindex="0" class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52">
+                <li><a href="{% url 'home' %}" class="hover:bg-teal-200">Home</a></li>
+                <li><a href="{% url 'askai' %}" class="hover:bg-teal-200">Ask AI</a></li>
+                <li><a href="{% url 'diary' %}" class="hover:bg-teal-200">Diary</a></li>
+            </ul>
+        </div>
         <a href="{% url 'home' %}" class="btn btn-ghost normal-case text-xl">Calorify</a>
     </div> 
     <div class="navbar-center hidden lg:flex">
         <!--Has the links to each page-->
             <ul class="menu menu-horizontal px-1 ">
-                {% block navigation %}
-                    <li><a href="{% url 'home' %}" class="hover:bg-teal-200">Home</a></li>
-                    <li><a href="{% url 'askai' %}" class="hover:bg-teal-200">Ask AI</a></li>
-                    <li><a href="{% url 'diary' %}" class="hover:bg-teal-200">Diary</a></li>
-                {% endblock %}
+                <li><a href="{% url 'home' %}" class="hover:bg-teal-200">Home</a></li>
+                <li><a href="{% url 'askai' %}" class="hover:bg-teal-200">Ask AI</a></li>
+                <li><a href="{% url 'diary' %}" class="hover:bg-teal-200">Diary</a></li>
             </ul>
     </div>
     <div class="navbar-end">

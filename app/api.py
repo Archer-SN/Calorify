@@ -24,6 +24,7 @@ openai.api_key = OPEN_AI_KEY
 GPT_MODEL = "gpt-3.5-turbo"
 # Similar to the above model but can accept more text input
 GPT_MODEL_16K = "gpt-3.5-turbo-16k"
+GPT_MODEL_4 = "gpt-4"
 
 # Id and Keys for the food database api
 EDAMAM_FOOD_DB_ID = "35db61c2"
@@ -63,7 +64,7 @@ STANDARD_MEASURE_QUANTITY = 100
 
 DEFAULT_SYSTEM_MESSAGE = {
     "role": "system",
-    "content": "Assistant is an intelligent chatbot designed to help users answer health and fitness related questions. Given each user's data, your advice should be customly made for them. Be concise with your advice. Make sure the food that you give exists in the EDAMAM database.",
+    "content": "Assistant is an intelligent chatbot designed to help users answer health, fitness, and cooking related questions. Given each user's data, your advice should be customly made for them. Be concise with your advice. Make sure the food that you give exists in the EDAMAM database.",
 }
 
 # I'm not sure whether this should be put in views.py
@@ -190,7 +191,7 @@ def import_user_food(user, food_obj_dict, date=datetime.now()):
     daily_entry, created = DailyEntry.objects.get_or_create(user=user, date=date)
     if food:
         user_food = UserFood.objects.create(
-            food=food, daily_entry=daily_entry, weight=food_obj_dict["food_portion"]
+            food=food, daily_entry=daily_entry, weight=food_obj_dict["amount"]
         )
         return user_food
     return
@@ -240,7 +241,7 @@ def ask_exercise_plan_gpt(user):
 
 # Given a paragraph and a list of dictionary of food names, amounts, units, and calories, create a context that will be used in rendering
 def create_meal_plan_context(paragraph, food_dict_list):
-    vals = {"food_dict_list": food_dict_list}
+    vals = {"food_dict_list": json.dumps(food_dict_list)}
     context = {
         "type": "meal",
         "paragraph": paragraph,
@@ -258,7 +259,7 @@ def ask_meal_plan_gpt(user):
         DEFAULT_SYSTEM_MESSAGE,
         {
             "role": "user",
-            "content": "Recommend me a healthy meal plan that contains a total of {tdeg} and has {meal_frequency} meals. Give the portion in grams".format(
+            "content": "Recommend me a delicious healthy meal plan that is not boring that contains a total of {tdeg} calories and splitted into {meal_frequency} meals. Give the portion in grams".format(
                 tdeg=user.get_tdeg(), meal_frequency=user.meal_frequency
             ),
         },
@@ -303,6 +304,7 @@ def ask_meal_plan_gpt(user):
             },
         }
     ]
+    # TODO: The 3.5 model does not recommend a satisfactory answer. It consistently recommends less than the specified calories. We will now use 4 instead, but first we need to use a total of $1
     response = openai.ChatCompletion.create(
         model=GPT_MODEL,
         messages=messages,
