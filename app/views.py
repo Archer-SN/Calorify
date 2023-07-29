@@ -211,57 +211,39 @@ def ask_ai(request):
             prompt = request.GET.get("prompt", "")
             if not prompt:
                 return HttpResponse("NOT WORKING!")
+            # The user asks to analyze their history
             elif prompt == "Analyze my history":
                 number_of_days = request.GET.get("days", 30)
                 gpt_response = ai_analyze_history(request.user, number_of_days)
-                response = DIV(
-                    H1("History Analysis", _class="text-lg font-bold"), P(gpt_response)
-                )
-                return HttpResponse(R(response, {}))
+                context = {"type": "analysis", "paragraph": gpt_response}
+                response = render_block_to_string("askai.html", "gpt_response", context)
+                return HttpResponse(response)
+            # The user asks to recommend a meal plan
             elif prompt == "Recommend me a meal plan":
-                gpt_response = ask_meal_plan_gpt(request.user)
-                vals = {"gptResponse": gpt_response}
-                response = DIV(
-                    gpt_response,
-                    SPAN(
-                        P("Import meal plan?"),
-                        DIV(
-                            "YES",
-                            hx_post="askai",
-                            hx_vals=json.dumps(vals),
-                            hx_swap="outerHTML",
-                            hx_target="closest span",
-                            hx_indicator=".htmx-indicator",
-                            _class="btn btn-outline btn-success",
-                        ),
-                        DIV(
-                            "NO",
-                            _class="btn btn-outline btn-danger",
-                            hx_get="empty",
-                            hx_swap="delete",
-                            hx_indicator=".htmx-indicator",
-                            hx_target="closest span",
-                        ),
-                    ),
-                    _class="border-solid border-2 p-3",
-                )
-                return HttpResponse(R(response, {}))
+                # If the api call is successful, a context should be returned
+                context = ask_meal_plan_gpt(request.user)
+                response = render_block_to_string("askai.html", "gpt_response", context)
+                return HttpResponse(response)
+            # The user asks to recommend an exercise routine
             elif prompt == "Recommend me an exercise routine":
                 gpt_response = ask_exercise_plan_gpt(request.user)
-                response = DIV(P(gpt_response))
-                return HttpResponse(R(response, {}))
+                context = {"type": "exercise", "paragraph": gpt_response}
+                response = render_block_to_string("askai.html", "gpt_response", context)
+                return HttpResponse(response)
             return HttpResponse("Non-existent prompt")
         # If user wants to import
         if request.method == "POST":
-            gpt_response = request.POST.get("gptResponse")
+            food_dict_list_json = request.POST.get("food_dict_list")
+            food_dict_list = json.loads(food_dict_list_json)
+            print(food_dict_list_json)
+            print(food_dict_list)
+            import_user_meal_plan(request.user, food_dict_list)
+            # Import successful
             if import_user_meal_plan(request.user, gpt_response):
-                return HttpResponse(
-                    R(DIV("Import Completed", _class="alert alert-success"), {})
-                )
+                return HttpResponse()
+            # Import failed
             else:
-                return HttpResponse(
-                    R(DIV("Import Failed", _class="alert alert-failed"), {})
-                )
+                return HttpResponse()
     else:
         return render(request, "askai.html", {"prompts": AVAILABLE_PROMPTS.keys()})
 

@@ -176,7 +176,7 @@ def analyze_meal_plan(food_dict_list, is_importing=False):
         if food_objs:
             # Gets the first food that is returned by the database
             food = food_objs[0]
-            food_obj_dict = {"food": food, "food_portion": food_dict["food_portion"]}
+            food_obj_dict = {"food": food, "amount": food_dict["amount"]}
             food_obj_dict_list.append(food_obj_dict)
         else:
             continue
@@ -196,76 +196,16 @@ def import_user_food(user, food_obj_dict, date=datetime.now()):
     return
 
 
-# Given a list of Food objects and their portions, use it to create UserFood objects
+# Given food_dict_list and user, analyze each food and create a new instance of model
 # Use this after you've asked gpt
 # TODO: The longest part of import is probably analyzing the food. Optimize it.
-def import_user_meal_plan(user, gpt_response, date=datetime.now()):
-    messages = [
-        DEFAULT_SYSTEM_MESSAGE,
-        {"role": "system", "content": gpt_response},
-        {
-            "role": "user",
-            "content": "I want you to call the database with the food that you just gave me as parameters. The portion should be in grams",
-        },
-    ]
-    functions = [
-        {
-            "name": "analyze_meal_plan",
-            "description": "Call the food database to obtain food nutrients for each food",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "food_dict_list": {
-                        "type": "array",
-                        "items": {
-                            "type": "object",
-                            "properties": {
-                                "food_name": {"type": "string"},
-                                "food_portion": {
-                                    "type": "number",
-                                    "description": "amount of food in grams",
-                                },
-                            },
-                        },
-                        "description": "A list of foods.",
-                    }
-                },
-                "required": ["food_dict_list"],
-            },
-        }
-    ]
-    response = openai.ChatCompletion.create(
-        model=GPT_MODEL,
-        messages=messages,
-        functions=functions,
-        temperature=1,
-        max_tokens=512,
-        top_p=1,
-        frequency_penalty=0,
-        presence_penalty=0,
-    )
-    response_message = response["choices"][0]["message"]
-    print(response_message)
-    # Check if GPT wanted to call a function
-    if response_message.get("function_call"):
-        function_name = response_message["function_call"]["name"]
-        if (
-            function_name == "analyze_meal_plan"
-            and response_message["function_call"]["arguments"] is not None
-        ):
-            function_args = json.loads(response_message["function_call"]["arguments"])
-            function_response = analyze_meal_plan(
-                food_dict_list=function_args.get("food_dict_list"), is_importing=True
-            )
-            print(function_response)
-            for food_obj_dict in function_response:
-                user_food = import_user_food(user, food_obj_dict, date)
-                if not user_food:
-                    print("{0} doesn't exist!".format(food_obj_dict["food"]))
-            # Imported successfully
-            return True
-    # Imported unsuccessfully
-    return False
+def import_user_meal_plan(user, food_dict_list, date=datetime.now()):
+    food_obj_dict_list = analyze_meal_plan(food_dict_list, is_importing=True)
+    for food_obj_dict in food_obj_dict_list:
+        user_food = import_user_food(user, food_obj_dict, date)
+        if not user_food:
+            print("{0} doesn't exist!".format(food_obj_dict["food"]))
+    return True
 
 
 def import_exercise_plan():
@@ -298,33 +238,20 @@ def ask_exercise_plan_gpt(user):
     return response_message["content"]
 
 
-# Given a paragraph and a list of dictionary of food names, amounts, units, and calories, create a html table for it
-def meal_plan_table_format(paragraph, food_dict_list):
-    print(food_dict_list)
-    table_body_elements = [
-        TR(
-            TD(food_dict["food_name"]),
-            TD(food_dict["amount"]),
-            TD(food_dict["unit"]),
-            TD(food_dict["calories"]),
-        )
-        for food_dict in food_dict_list
-    ]
-    response = DIV(
-        H1("Meal Plan Recommendation", _class="text-lg font-bold"),
-        P(paragraph),
-        TABLE(
-            THEAD(TR(TH("Food Name"), TH("Amount"), TH("Unit"), TH("Calories"))),
-            TBODY(*table_body_elements),
-            _class="table",
-        ),
-        _class="p-3",
-    )
-    return response
+# Given a paragraph and a list of dictionary of food names, amounts, units, and calories, create a context that will be used in rendering
+def create_meal_plan_context(paragraph, food_dict_list):
+    vals = {"food_dict_list": food_dict_list}
+    context = {
+        "type": "meal",
+        "paragraph": paragraph,
+        "food_dict_list": food_dict_list,
+        "vals": json.dumps(vals),
+    }
+    return context
 
 
 # Ask ChatGPT for a meal plan given the user's information
-# food_obj_list is returned
+# If successful a context for rendering in html is returned
 @retry(wait=wait_random_exponential(min=1, max=40), stop=stop_after_attempt(3))
 def ask_meal_plan_gpt(user):
     messages = [
@@ -338,8 +265,8 @@ def ask_meal_plan_gpt(user):
     ]
     functions = [
         {
-            "name": "meal_plan_table_format",
-            "description": "Given a paragraph and a list of dictionary of food names, amounts, units, and calories, create a html table for it",
+            "name": "create_meal_plan_context",
+            "description": "Given a paragraph and a list of dictionary of food names, amounts, units, and calories, create a context for rendering in html",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -391,15 +318,14 @@ def ask_meal_plan_gpt(user):
     if response_message.get("function_call"):
         function_name = response_message["function_call"]["name"]
         if (
-            function_name == "meal_plan_table_format"
+            function_name == "create_meal_plan_context"
             and response_message["function_call"]["arguments"] is not None
         ):
             function_args = json.loads(response_message["function_call"]["arguments"])
-            function_response = meal_plan_table_format(
+            function_response = create_meal_plan_context(
                 paragraph=function_args.get("paragraph"),
                 food_dict_list=function_args.get("food_dict_list"),
             )
-            print(function_response)
             return function_response
 
     return response_message["content"]
