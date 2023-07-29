@@ -527,7 +527,7 @@ class UserFood(models.Model):
     # Returns detailed information of the user food.
     # It is used in html
     def data(self):
-        vals = {"id": self.id}
+        vals = {"user_food_id": self.id}
         return {
             "label": self.food.label,
             "weight": self.weight,

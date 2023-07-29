@@ -77,7 +77,7 @@ def home(request):
 
 
 @login_required
-# Renders the diary page
+# Handles the diary page
 def diary(request):
     if request.method == "GET":
         user = request.user
@@ -142,12 +142,19 @@ def food(request):
             return HttpResponse(response)
 
 
+# Handles everything related to UserFood object
 @login_required
 def user_food(request):
+    # Creates new UserFood instance
     if request.method == "POST":
+        user_food_id = request.POST.get("user_food_id")
         form = UserFoodForm(request.POST)
-        print(form.errors)
-        if form.is_valid():
+        # Given a user_food_id, delete a UserFood instance from the databse
+        if user_food_id:
+            UserFood.objects.filter(id=user_food_id).delete()
+            return HttpResponse()
+        # The user wants to create a new UserFood instance
+        elif form.is_valid():
             amount = form.cleaned_data["amount"]
             time_added = form.cleaned_data["time_added"]
             unit = form.cleaned_data["unit"]
@@ -166,11 +173,9 @@ def user_food(request):
             context = {"food_intake": [new_user_food.data()]}
             response = render_block_to_string("diary.html", "food_entries", context)
             return HttpResponse(response)
-    elif request.method == "DELETE":
-        print("hello")
-        return HttpResponse()
 
 
+# Handles everything related to Exercise model
 @login_required
 def exercise(request):
     if request.method == "GET":

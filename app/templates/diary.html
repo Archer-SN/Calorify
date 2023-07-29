@@ -96,14 +96,14 @@
                         <!--Food and exercise entries are shown here-->
                         {% block food_entries %}
                             {% for food_entry in food_intake %}
-                                <tr hx-vals='{{ food_entry.vals }}'>
+                                <tr>
                                     <td>{{ food_entry.label }}</td>
                                     <td>{{ food_entry.weight }}</td>
                                     <td>g</td>
                                     <td>{{ food_entry.energy }}</td>
                                     <td>kcal</td>
                                     <td>
-                                        <button hx-delete="{% url 'userfood' %}">Delete</button>
+                                        <button hx-post="{% url 'userfood' %}" hx-vals='{{ food_entry.vals }}' hx-swap="delete" hx-target="closest tr" class="btn btn-outlin btn-danger">Delete</button>
                                     </td>
                                 </tr>
                             {% endfor %}
