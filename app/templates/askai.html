@@ -13,7 +13,7 @@
                         <p>{{ paragraph }}</p>
                     </div>
                 {% elif type == "meal" %}
-                    <div class="border-solid border-2 p-3">   
+                    <div x-data="{ foodDictList : {{ food_dict_list }} }" class="border-solid border-2 p-3">   
                         <h1 class="text-lg font-bold">Meal Plan Recommendation</h1>
                         <p>{{ paragraph }}</p>
                         <table class="table">
@@ -25,7 +25,7 @@
                                     <th>Calories</th>
                                 </tr>
                             </thead>
-                            <tbody x-data="{ foodDictList : {{ food_dict_list }} }">
+                            <tbody>
                                 {% for food_dict in food_dict_list %}
                                     <tr class="hover">
                                         <td>{{ food_dict.food_name | title }}</td>
@@ -41,8 +41,9 @@
                         </table>
                         <span>
                             <p>Import meal plan?</p>
-                            <div hx-post="{% url 'askai' %}" hx-vals="{{ vals }}" hx-swap="outerHTML" hx-target="closest span" hx-indicator=".htmx-indicator" class="btn btn-outline btn-success">YES</div>
-                            <div hx-get="empty" hx-swap="delete" hx-indicator=".htmx-indicator" hx-target="closest span" class="btn btn-outline btn-danger">NO</div>
+                            <input :value="JSON.stringify(foodDictList)" class="hidden" name="foodDictList" type="text">
+                            <button hx-post="{% url 'askai' %}" hx-include="[name='foodDictList']" hx-swap="outerHTML" hx-target="closest span" hx-indicator=".htmx-indicator" class="btn btn-outline btn-success">YES</button>
+                            <button hx-get="empty" hx-swap="delete" hx-indicator=".htmx-indicator" hx-target="closest span" class="btn btn-outline btn-danger">NO</button>
                         </span>
                     </div>
                 {% elif type == "exercise" %}

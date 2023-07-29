@@ -233,7 +233,8 @@ def ask_ai(request):
             return HttpResponse("Non-existent prompt")
         # If user wants to import
         elif request.method == "POST":
-            food_dict_list_json = request.POST.get("food_dict_list")
+            print(request.POST)
+            food_dict_list_json = request.POST.get("foodDictList")
             food_dict_list = json.loads(food_dict_list_json)
             # Import successful
             if import_user_meal_plan(request.user, food_dict_list):
