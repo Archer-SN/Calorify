@@ -8,7 +8,7 @@
 <!--TODO: CHALLENGE-->
 {% block body %}
     <div x-data="{ foodModalOpen : false, foodSummaryOpen: false }" class="flex flex-row px-16 gap-8">
-        <div id="main" class="grow flex flex-col gap-6">
+        <div id="main" class="rounded grow flex flex-col gap-6">
             <div id="challenge" class="border-solid border-2">
                 <h1 class="text-lg font-bold">Challenge</h1>
                 <table class="table">
@@ -17,11 +17,12 @@
                             <th>Name</th>
                             <th>Difficulty</th>
                             <th>Expiration Date</th>
+                            <th><!--For delete buttons--></th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for challenge in challenges %}
-                            <tr >
+                            <tr class="hover">
                                 <td>{{ challenge.name }}</td>
                                 <td>{{ challenge.difficulty }}</td>
                                 <td>{{ challenge.expire_date }}</td>
@@ -83,27 +84,35 @@
                     </div>
                 </span>
             </div>
-            <div id="log" class="border-solid border-2">
+            <div id="log" class="gap-6 rounded border-solid border-2 flex flex-col">
                 <h1 class="text-lg font-bold">Daily Entries</h1>
                 <div>
                     <!--Contains buttons for adding entries-->
                     <button class="btn btn-outline" hx-get="{% url 'food' %}" hx-target="#search-results" hx-swap="innerHTML" @click="foodModalOpen = true">Add Food</button>
                     <button class="btn btn-outline" @click="foodSummaryOpen = true">Add Exercise</button>
                 </div>
-                <table class="max-h-48 table overflow-scroll">
+                <table class="max-h-28 table overflow-scroll">
                     <tbody id="entries-container" >
                         
                         <!--Food and exercise entries are shown here-->
                         {% block food_entries %}
                             {% for food_entry in food_intake %}
-                                <tr>
+                                <tr data="{ showFoodEntry: true }" >
                                     <td>{{ food_entry.label }}</td>
                                     <td>{{ food_entry.weight }}</td>
                                     <td>g</td>
                                     <td>{{ food_entry.energy }}</td>
                                     <td>kcal</td>
                                     <td>
-                                        <button hx-post="{% url 'userfood' %}" hx-vals='{{ food_entry.vals }}' hx-swap="delete" hx-target="closest tr" class="btn btn-outlin btn-danger">Delete</button>
+                                        <button 
+                                        hx-trigger="click" 
+                                        hx-post="{% url 'userfood' %}" 
+                                        hx-vals='{{ food_entry.vals }}' 
+                                        hx-swap="delete" 
+                                        hx-target="closest tr" 
+                                        @click="showFoodEntry = false"
+                                        class="btn btn-outline btn-error"
+                                            >Delete</button>
                                     </td>
                                 </tr>
                             {% endfor %}
@@ -121,48 +130,30 @@
             <div id="date">
             
             </div>
-            <div id="summary" class="flex w-full justify-evenly border-solid border-2" >
-                <!--Summarize Energy and Macronutrients-->
-                {% block nutrients_summary %}
-                    <div>
-                        <h2 class="text-xl font-bold">Energy Summary</h2>
-                        <p class="font-bold">Consumed: {{ nutrients.general.energy }} kcal</p>
-                    </div>
-                    <div class="divider divider-horizontal"></div>
-                    <div>
-                        <h2 class="text-xl font-bold">Macronutrients Target</h2>
-                        <p class="font-bold">Energy: {{ nutrients.general.energy }} kcal</p>
-                        <p class="font-bold">Protein: {{ nutrients.protein.protein }} g</p>
-                        <p class="font-bold">Carbohydrates: {{ nutrients.carbohydrates.carbs }} g</p>
-                        <p class="font-bold">Fats: {{ nutrients.lipids.fat }} g</p>
-    
-                    </div>
-                {% endblock %}
-            </div>
-            <div id="nutrients">
-                <!--Summarize each nutrients-->
-                <div id="general">
-            
+            {% block nutrients_summary %}
+                <div id="summary" class="flex w-full justify-evenly border-solid border-2" >
+                    <!--Summarize Energy and Macronutrients-->
+                        <div>
+                            <h2 class="text-xl font-bold">Energy Summary</h2>
+                            <p class="font-bold">Consumed: {{ nutrient_categories.general.energy }} kcal</p>
+                        </div>
+                        <div class="divider divider-horizontal"></div>
+                        <div>
+                            <h2 class="text-xl font-bold">Macronutrients Target</h2>
+                            <p class="font-bold">Energy: {{ nutrient_categories.general.energy }} kcal</p>
+                            <p class="font-bold">Protein: {{ nutrient_categories.protein.protein }} g</p>
+                            <p class="font-bold">Carbohydrates: {{ nutrient_categories.carbohydrates.carbs }} g</p>
+                            <p class="font-bold">Fats: {{ nutrient_categories.lipids.fat }} g</p>
+        
+                        </div>
                 </div>
-                <div id="carbohydrates">
-            
+                <div id="nutrients">
+                    <!--Summarize each nutrients-->
+                    {% for  nutrient_category in nutrient_categories  %}
+                    
+                    {% endfor %}
                 </div>
-                <div id="lipids">
-            
-                </div>
-                <div id="general">
-            
-                </div>
-                <div id="general">
-            
-                </div>
-                <div id="vitamins">
-            
-                </div>
-                <div id="minerals">
-            
-                </div>
-            </div>
+            {% endblock  %}
         </div>
         <div id="calendar-container">
             <input type="date" name="calendar" id="calendar">

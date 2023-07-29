@@ -437,14 +437,61 @@ class DailyEntry(models.Model):
             },
         }
 
+    # Returns a dictionary of categorized nutrients
+    def summarize_nutrients(self):
+        nutrients = self.total_nutrients()
+        for nutrient_code in nutrients.keys():
+            nutrients[nutrient_code] = round(nutrients[nutrient_code], 1)
+        return {
+            "general": {
+                "energy": nutrients.get("ENERC_KCAL", 0),
+                "water": nutrients.get("WATER", 0),
+            },
+            "carbohydrates": {
+                "carbs": nutrients.get("CHOCDF.net", 0),
+                "sugar": nutrients.get("SUGAR", 0),
+                "fiber": nutrients.get("FIBTG", 0),
+            },
+            "lipids": {
+                "fat": nutrients.get("FAT", 0),
+                "monosaturated": nutrients.get("FAMS", 0),
+                "polyunsaturated": nutrients.get("FAPU", 0),
+                "saturated": nutrients.get("FASAT", 0),
+                "trans-fats": nutrients.get("FATRN", 0),
+                "cholesterol": nutrients.get("CHOLE", 0),
+            },
+            "protein": {
+                "protein": nutrients.get("PROCNT", 0),
+            },
+            "vitamins": {
+                "b1": nutrients.get("THIA", 0),
+                "b2": nutrients.get("RIBF", 0),
+                "b3": nutrients.get("NIA", 0),
+                "b6": nutrients.get("VITB6A", 0),
+                "b12": nutrients.get("VITB12", 0),
+                "folate": nutrients.get("FOLFD", 0),
+                "vitamin a": nutrients.get("VITA_RAE", 0),
+                "vitamin c": nutrients.get("VITC", 0),
+                "vitamin d": nutrients.get("VITD", 0),
+                "vitamin e": nutrients.get("TOCPHA", 0),
+                "vitamin k": nutrients.get("VITK1", 0),
+            },
+            "minerals": {
+                "calcium": nutrients.get("CA", 0),
+                "iron": nutrients.get("FE", 0),
+                "magnesium": nutrients.get("MG", 0),
+                "phosphorus": nutrients.get("P", 0),
+                "potassium": nutrients.get("K", 0),
+                "sodium": nutrients.get("NA", 0),
+                "zinc": nutrients.get("ZN", 0),
+            },
+        }
+
     # A more detailed version of Daily Entry summary
     # It is used in html templates
     def summarize(self):
         food_intake = []
         exercises = []
-        nutrients = self.total_nutrients()
-        for nutrient_code in nutrients.keys():
-            nutrients[nutrient_code] = round(nutrients[nutrient_code], 1)
         for user_food in UserFood.objects.filter(daily_entry=self):
             food_intake.append(user_food.data())
         for exercise in UserExercise.objects.filter(daily_entry=self):
@@ -454,50 +501,7 @@ class DailyEntry(models.Model):
             "date": self.date,
             "food_intake": food_intake,
             "exercises": exercises,
-            "nutrients": {
-                "general": {
-                    "energy": nutrients.get("ENERC_KCAL", 0),
-                    "water": nutrients.get("WATER", 0),
-                },
-                "carbohydrates": {
-                    "carbs": nutrients.get("CHOCDF.net", 0),
-                    "sugar": nutrients.get("SUGAR", 0),
-                    "fiber": nutrients.get("FIBTG", 0),
-                },
-                "lipids": {
-                    "fat": nutrients.get("FAT", 0),
-                    "monosaturated": nutrients.get("FAMS", 0),
-                    "polyunsaturated": nutrients.get("FAPU", 0),
-                    "saturated": nutrients.get("FASAT", 0),
-                    "trans-fats": nutrients.get("FATRN", 0),
-                    "cholesterol": nutrients.get("CHOLE", 0),
-                },
-                "protein": {
-                    "protein": nutrients.get("PROCNT", 0),
-                },
-                "vitamins": {
-                    "b1": nutrients.get("THIA", 0),
-                    "b2": nutrients.get("RIBF", 0),
-                    "b3": nutrients.get("NIA", 0),
-                    "b6": nutrients.get("VITB6A", 0),
-                    "b12": nutrients.get("VITB12", 0),
-                    "folate": nutrients.get("FOLFD", 0),
-                    "vitamin a": nutrients.get("VITA_RAE", 0),
-                    "vitamin c": nutrients.get("VITC", 0),
-                    "vitamin d": nutrients.get("VITD", 0),
-                    "vitamin e": nutrients.get("TOCPHA", 0),
-                    "vitamin k": nutrients.get("VITK1", 0),
-                },
-                "minerals": {
-                    "calcium": nutrients.get("CA", 0),
-                    "iron": nutrients.get("FE", 0),
-                    "magnesium": nutrients.get("MG", 0),
-                    "phosphorus": nutrients.get("P", 0),
-                    "potassium": nutrients.get("K", 0),
-                    "sodium": nutrients.get("NA", 0),
-                    "zinc": nutrients.get("ZN", 0),
-                },
-            },
+            "nutrient_categories": self.summarize_nutrients(),
         }
 
     # Returns the total nutrients consumed for the day
