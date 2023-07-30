@@ -7,9 +7,9 @@
 
 <!--TODO: CHALLENGE-->
 {% block body %}
-    <div x-data="{ foodModalOpen : false, foodSummaryOpen: false }" class="flex flex-row px-16 gap-8">
-        <div id="main" class="rounded grow flex flex-col gap-6">
-            <div id="challenge" class="border-solid border-2">
+    <div x-data="{ foodModalOpen : false, foodSummaryOpen: false }" class="flex flex-row gap-6 px-12 py-4">
+        <div id="main" class="grow flex flex-col gap-6">
+            <div id="challenge" class="rounded-lg px-4 py-6 border-solid border-2">
                 <h1 class="text-lg font-bold">Challenge</h1>
                 <table class="table">
                     <thead>
@@ -34,68 +34,72 @@
             </div>
             <div class="overflow-auto" style="background-color: rgba(0,0,0,0.5)" x-show="foodModalOpen" :class="{ 'absolute inset-0 z-10 flex items-start justify-center': foodModalOpen }">
                 <!-- overlay -->
-                <span id="food-modal" class="flex flex-col w-full border-solid border-2 bg-white shadow-2xl m-4 sm:m-8" x-show="foodModalOpen" x-trap="foodModalOpen" @click.away="foodModalOpen = false" >
+                <span id="food-modal" class="max-h-full rounded-lg px-6 flex flex-col justify-evenly gap-6 w-full border-solid border-2 bg-white shadow-2xl m-4 sm:m-8" x-show="foodModalOpen" x-trap="foodModalOpen" @click.away="foodModalOpen = false" >
                     <!--This is used for searching food in the database-->
-                    <button class="btn btn-sm btn-circle btn-ghost place-self-end right-2 top-2 hover:bg-red-500" @click="foodModalOpen = false">✕</button>              
-                    <h1 class="text-lg font-bold">Add Food to Diary</h1>
-                    <input type="search" name="search" placeholder="Search food here" class="input input-bordered w-full max-w-xs" 
-                        hx-get="{% url 'food' %}" 
-                        hx-trigger="keyup changed delay:500ms, search" 
-                        hx-target="#search-results" 
-                        hx-indicator=".htmx-indicator"
-                        hx-swap="innerHTML"
-                        />
-                        
-                        <table class="table">
-                        <thead>
-                            <tr>
-                        <th>Description</th>
-                        <th>Source</th>
-                        </tr>
-                        </thead>
-                        <tbody id="search-results">
-                            <span class="htmx-indicator loading loading-infinity loading-lg"></span> 
-                            {% block food_search_result %}
-                                {% for food_data in food_data_list %}
-                                    <tr @click='foodSummaryOpen = true' hx-trigger='click' hx-get="{% url 'food' %}" hx-target='#food-summary-panel' hx-swap='innerHTML' class='hover' hx-vals='{{ food_data.vals }}'>
-                                        <td>{{ food_data.label }}</td>
-                                        <td>EDAMAM</td>
-                                    </tr>
-                                {% endfor %}
-                            {% endblock %}
-                        </tbody>
-                    </table>
-                    <div id="food-summary-panel" x-show="foodSummaryOpen" class="flex w-full flex-row justify-center">
-                        {% block food_summary %}
-                            <div class="bg-gray-100 border-solid border-black p-5">
+                    <button class="inline btn btn-sm btn-circle btn-ghost place-self-end right-2 top-2 hover:bg-red-500" @click="foodModalOpen = false">✕</button>              
+                    <h1 class="text-xl font-bold">Add Food to Diary</h1>
+                    <div>
+                        <input type="search" name="search" placeholder="Search food here" class="input input-bordered w-full max-w-xl" 
+                            hx-get="{% url 'food' %}" 
+                            hx-trigger="keyup changed delay:500ms, search" 
+                            hx-target="#search-results" 
+                            hx-indicator=".htmx-indicator"
+                            hx-swap="innerHTML"
+                            />
+                    </div>
+                    <div class="basis-1/4 overflow-y-auto border-solid border-2 rounded-lg">
+                        <table class="table table-pin-cols table-pin-rows">
+                            <thead>
+                                <tr>
+                            <th>Description</th>
+                            <th>Source</th>
+                            </tr>
+                            </thead>
+                            <tbody id="search-results">
+                                <span class="htmx-indicator loading loading-infinity loading-lg"></span> 
+                                {% block food_search_result %}
+                                    {% for food_data in food_data_list %}
+                                        <tr @click='foodSummaryOpen = true' hx-trigger='click' hx-get="{% url 'userfood' %}" hx-target='#food-summary-panel' hx-swap='innerHTML' class='hover' hx-vals='{{ food_data.vals }}'>
+                                            <td>{{ food_data.label }}</td>
+                                            <td>EDAMAM</td>
+                                        </tr>
+                                    {% endfor %}
+                                {% endblock %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% block food_summary %}
+                        <div id="food-summary-panel" x-show="foodSummaryOpen" class="w-full place-self-center flex flex-row justify-evenly p-5 gap-6">
+                            <div class="basis-1/2 border-solid border-2 rounded-lg">
                                 <ul>
                                     <li>Protein: {{ food.protein }} g</li>
                                     <li>Carbohydrates: {{ food.carbs }} g</li>
                                     <li>Fats: {{ food.fats }} g</li>
                                     <li>Energy: {{ food.energy }} kcal</li>
                                 </ul>
-                                <div class="divider divider-horizontal"></div>
-                                <form hx-post="{% url 'userfood' %}" hx-target="#entries-container" hx-swap="beforeend" class="form-control">
+                            </div>
+                            <div class="basis-1/2 order-solid border-2 rounded-lg p-6">
+                                <form id="userfood-form" hx-post="{% url 'userfood' %}" hx-target="#entries-container" hx-swap="beforeend" class="form-control flex flex-col gap-2">
+                                    {% csrf_token %}
                                     {{ user_food_form }}
-                                    <input type="submit" value="submit" class="btn btn-success">
+                                    <input type="submit" value="Add To Diary" class="btn btn-success">
                                 </form>
                             </div>
-                        {% endblock %}
-                    </div>
+                        </div>
+                    {% endblock %}
                 </span>
             </div>
-            <div id="log" class="gap-6 rounded border-solid border-2 flex flex-col">
-                <h1 class="text-lg font-bold">Daily Entries</h1>
-                <div>
-                    <!--Contains buttons for adding entries-->
-                    <button class="btn btn-outline" hx-get="{% url 'food' %}" hx-target="#search-results" hx-swap="innerHTML" @click="foodModalOpen = true">Add Food</button>
-                    <button class="btn btn-outline" @click="foodSummaryOpen = true">Add Exercise</button>
-                </div>
-                <table class="max-h-28 table overflow-scroll">
-                    <tbody id="entries-container" >
-                        
-                        <!--Food and exercise entries are shown here-->
-                        {% block food_entries %}
+            {% block food_entries %}
+                <div id="log" class="px-4 py-6 rounded-lg border-solid border-2 flex flex-col gap-4">
+                    <h1 class="text-lg font-bold">Daily Entries</h1>
+                    <div>
+                        <!--Contains buttons for adding entries-->
+                        <button class="btn btn-outline" hx-get="{% url 'food' %}" hx-target="#search-results" hx-swap="innerHTML" @click="foodModalOpen = true">Add Food</button>
+                        <button class="btn btn-outline" @click="foodSummaryOpen = true">Add Exercise</button>
+                    </div>
+                    <table class="basis-1 table overflow-scroll">
+                        <tbody id="entries-container" >
+                            <!--Food and exercise entries are shown here-->
                             {% for food_entry in food_intake %}
                                 <tr data="{ showFoodEntry: true }" class="hover rounded border-solid border-y-2" >
                                     <td>{{ food_entry.label }}</td>
@@ -116,47 +120,44 @@
                                     </td>
                                 </tr>
                             {% endfor %}
-                        {% endblock %}
-                        {% for exercise in exercises %}
-                            <tr class="hover">
-                                <td>{{ exercise.name }}</td>
-                                <td>{{ exercise.duration }}</td>
-                                <td>minutes</td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-            <div id="date">
+                            {% for exercise in exercises %}
+                                <tr class="hover">
+                                    <td>{{ exercise.name }}</td>
+                                    <td>{{ exercise.duration }}</td>
+                                    <td>minutes</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% block nutrients_summary %}
+                    <div id="summary" class="py-6 flex w-full justify-evenly border-solid border-2 rounded-lg" >
+                        <!--Summarize Energy and Macronutrients-->
+                            <div>
+                                <h2 class="text-xl font-bold">Energy Summary</h2>
+                                <p class="font-bold">Consumed: {{ nutrient_categories.general.energy }} kcal</p>
+                            </div>
+                            <div class="divider divider-horizontal"></div>
+                            <div>
+                                <h2 class="text-xl font-bold">Macronutrients Target</h2>
+                                <p class="font-bold">Energy: {{ nutrient_categories.general.energy }} kcal</p>
+                                <p class="font-bold">Protein: {{ nutrient_categories.protein.protein }} g</p>
+                                <p class="font-bold">Carbohydrates: {{ nutrient_categories.carbohydrates.carbs }} g</p>
+                                <p class="font-bold">Fats: {{ nutrient_categories.lipids.fat }} g</p>
             
-            </div>
-            {% block nutrients_summary %}
-                <div id="summary" class="flex w-full justify-evenly border-solid border-2" >
-                    <!--Summarize Energy and Macronutrients-->
-                        <div>
-                            <h2 class="text-xl font-bold">Energy Summary</h2>
-                            <p class="font-bold">Consumed: {{ nutrient_categories.general.energy }} kcal</p>
-                        </div>
-                        <div class="divider divider-horizontal"></div>
-                        <div>
-                            <h2 class="text-xl font-bold">Macronutrients Target</h2>
-                            <p class="font-bold">Energy: {{ nutrient_categories.general.energy }} kcal</p>
-                            <p class="font-bold">Protein: {{ nutrient_categories.protein.protein }} g</p>
-                            <p class="font-bold">Carbohydrates: {{ nutrient_categories.carbohydrates.carbs }} g</p>
-                            <p class="font-bold">Fats: {{ nutrient_categories.lipids.fat }} g</p>
-        
-                        </div>
-                </div>
-                <div id="nutrients">
-                    <!--Summarize each nutrients-->
-                    {% for  nutrient_category in nutrient_categories  %}
-                        <div>
+                            </div>
+                    </div>
+                    <div id="nutrients">
+                        <!--Summarize each nutrients-->
+                        {% for  nutrient_category in nutrient_categories  %}
+                            <div>
 
-                        </div>
-                    {% endfor %}
-                </div>
-            {% endblock  %}
-        </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endblock  %}
+            </div>
+        {% endblock %}
         <div id="calendar-container">
             <input type="date" name="calendar" id="calendar">
         </div>

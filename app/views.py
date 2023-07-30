@@ -122,39 +122,17 @@ def diary(request):
 # Handles food databse queries and add new entries to the database
 def food(request):
     if request.method == "GET":
-        food_id = request.GET.get("foodId", "")
         search = request.GET.get("search", "")
-        # If the user wants to obtain more detailed data about a specific food
-        if food_id:
-            daily_entry_date = request.GET.get("date", str(date.today()))
-            # The first object is the one we want
-            food = analyze_food(food_id)[0]
-            user_food_form = UserFoodForm(
-                initial={
-                    "food_id": food_id,
-                    "daily_entry_date": daily_entry_date,
-                }
-            )
-            context = {
-                "food": food.get_macronutrients(),
-                "user_food_form": user_food_form,
-            }
-            response = render_block_to_string("diary.html", "food_summary", context)
-            return HttpResponse(response)
-        # If the user just wants to search for food in the database
-        else:
-            search_results = autocomplete_search(search)
-            food_data_list = []
-            for food_name in search_results:
-                analyze_food(food_name)
-            # Turn each food object into an html form
-            for food in Food.objects.filter(label__icontains=search)[0:20]:
-                food_data_list.append(food.get_data())
-            context = {"food_data_list": food_data_list}
-            response = render_block_to_string(
-                "diary.html", "food_search_result", context
-            )
-            return HttpResponse(response)
+        search_results = autocomplete_search(search)
+        food_data_list = []
+        for food_name in search_results:
+            analyze_food(food_name)
+        # Turn each food object into an html form
+        for food in Food.objects.filter(label__icontains=search)[0:20]:
+            food_data_list.append(food.get_data())
+        context = {"food_data_list": food_data_list}
+        response = render_block_to_string("diary.html", "food_search_result", context)
+        return HttpResponse(response)
 
 
 # Handles everything related to UserFood object
@@ -187,6 +165,25 @@ def user_food(request):
             )
             context = {"food_intake": [new_user_food.data()]}
             response = render_block_to_string("diary.html", "food_entries", context)
+            return HttpResponse(response)
+    elif request.method == "GET":
+        food_id = request.GET.get("foodId", "")
+        # If the user wants to obtain more detailed data about a specific food
+        if food_id:
+            daily_entry_date = request.GET.get("date", str(date.today()))
+            # The first object is the one we want
+            food = analyze_food(food_id)[0]
+            user_food_form = UserFoodForm(
+                initial={
+                    "food_id": food_id,
+                    "daily_entry_date": daily_entry_date,
+                }
+            )
+            context = {
+                "food": food.get_macronutrients(),
+                "user_food_form": user_food_form,
+            }
+            response = render_block_to_string("diary.html", "food_summary", context)
             return HttpResponse(response)
 
 

@@ -356,10 +356,10 @@ class Food(models.Model):
     # Returns a dictionary of macronutrients including energy, protein, carbs, and fats
     def get_macronutrients(self):
         macronutrients_dict = {
-            "protein": self.get_nutrient(PROTEIN),
-            "carbs": self.get_nutrient(CARBS),
-            "fats": self.get_nutrient(FATS),
-            "energy": self.get_nutrient(ENERGY),
+            "protein": round(self.get_nutrient(PROTEIN), 1),
+            "carbs": round(self.get_nutrient(CARBS), 1),
+            "fats": round(self.get_nutrient(FATS), 1),
+            "energy": round(self.get_nutrient(ENERGY), 1),
         }
         return macronutrients_dict
 
