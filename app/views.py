@@ -121,18 +121,29 @@ def diary(request):
 @login_required
 # Handles food databse queries and add new entries to the database
 def food(request):
-    if request.method == "GET":
-        search = request.GET.get("search", "")
-        search_results = autocomplete_search(search)
-        food_data_list = []
-        for food_name in search_results:
-            analyze_food(food_name)
-        # Turn each food object into an html form
-        for food in Food.objects.filter(label__icontains=search)[0:20]:
-            food_data_list.append(food.get_data())
-        context = {"food_data_list": food_data_list}
-        response = render_block_to_string("diary.html", "food_search_result", context)
-        return HttpResponse(response)
+    if request.htmx:
+        if request.method == "GET":
+            food_obj_list = []
+            search = request.GET.get("search", "")
+            if search:
+                # search_results = autocomplete_search(search)
+                # for food_name in search_results:
+                #     # is_importing is True so that we analyze only one food (For performance purpose)
+                food_objs = analyze_food(search)
+                print(food_objs)
+                for food_obj in food_objs:
+                    if food_obj not in food_obj_list:
+                        food_obj_list.append(food_obj)
+            else:
+                for food in Food.objects.filter(label__icontains=search)[0:20]:
+                    food_obj_list.append(food)
+            context = {
+                "food_data_list": [food_obj.get_data() for food_obj in food_obj_list]
+            }
+            response = render_block_to_string(
+                "diary.html", "food_search_result", context
+            )
+            return HttpResponse(response)
 
 
 # Handles everything related to UserFood object

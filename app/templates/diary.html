@@ -80,7 +80,6 @@
                             </div>
                             <div class="basis-1/2 order-solid border-2 rounded-lg p-6">
                                 <form id="userfood-form" hx-post="{% url 'userfood' %}" hx-target="#entries-container" hx-swap="beforeend" class="form-control flex flex-col gap-2">
-                                    {% csrf_token %}
                                     {{ user_food_form }}
                                     <input type="submit" value="Add To Diary" class="btn btn-success">
                                 </form>

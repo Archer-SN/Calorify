@@ -107,14 +107,10 @@ def analyze_food(food_name, is_importing=False):
     if parser_request.status_code == 200:
         food_objs = []
         data_list = None
-        if "parsed" in parser_response:
-            if len(parser_response["parsed"]) == 0:
-                return None
-            if is_importing:
-                # If we're importing, we want to only analyze one food to save time.
-                data_list = parser_response["parsed"][0:1]
-            else:
-                data_list = parser_response["parsed"]
+        # Parsed returns one food
+        # Hints returns many
+        if "parsed" in parser_response and parser_response["parsed"] and is_importing:
+            data_list = parser_response["parsed"][0:1]
         else:
             data_list = parser_response["hints"]
         # Loop through all the data that is returned from the API call
@@ -160,7 +156,7 @@ def analyze_food(food_name, is_importing=False):
                     food_nutrient_list.append(food_nutrient)
                 FoodNutrient.objects.bulk_create(food_nutrient_list)
             food_objs.append(food_obj)
-
+        print(food_objs)
         return food_objs
     else:
         print(food_name)
@@ -373,6 +369,6 @@ def ai_analyze_history(user, number_of_days):
 # which can be implemented for use when searching for ingredients.
 def autocomplete_search(search):
     # Maximum food names to be returned
-    limit = 5
-    params = {"q": search, "limit": limit}
-    return requests.get(AUTOCOMPLETE_AP, params=params).json()
+    params = {"q": search}
+    response = requests.get(AUTOCOMPLETE_AP, params=params)
+    return json.loads(response.content)
