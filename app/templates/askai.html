@@ -47,9 +47,36 @@
                         </span>
                     </div>
                 {% elif type == "exercise" %}
-                    <div>
+                    <div x-data="{ exerciseDictList : {{ exercise_dict_list }} }" class="border-solid border-2 p-3">   
                         <h1 class="text-lg font-bold">Exercise Routine Recommendation</h1>
-                        {{ paragraph }}
+                        <p>{{ paragraph }}</p>
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Exercise Name</th>
+                                    <th>Sets</th>
+                                    <th>Reps</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for exercise_dict in exercise_dict_list %}
+                                    <tr class="hover">
+                                        <td>{{ exercise_dict.exercise_name | title }}</td>
+                                        <td>{{ exercise_dict.sets }}</td>
+                                        <td>{{ exercise_dict.reps }}</td>
+                                        <td>
+                                            <button x-data="{ index : {{ forloop.counter0 }} }" @click="exerciseDictList.splice(index, 1)" hx-delete="{% url 'empty' %}" hx-target="closest tr" hx-swap="delete" class="btn btn-outline btn-error">Remove</button>
+                                        </td>
+                                    </tr>
+                                 {% endfor %}
+                            </tbody>
+                        </table>
+                        <span>
+                            <p>Import exercise plan?</p>
+                            <input :value="JSON.stringify(exerciseDictList)" class="hidden" name="exerciseDictList" type="text">
+                            <button hx-post="{% url 'askai' %}" hx-include="[name='exerciseDictList']" hx-swap="outerHTML" hx-target="closest span" hx-indicator=".htmx-indicator" class="btn btn-outline btn-success">YES</button>
+                            <button hx-get="empty" hx-swap="delete" hx-indicator=".htmx-indicator" hx-target="closest span" class="btn btn-outline btn-error">NO</button>
+                        </span>
                     </div>
                 {% endif %}
             {% endblock %}
