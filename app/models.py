@@ -412,7 +412,15 @@ class DailyEntry(models.Model):
     user = models.ForeignKey(
         User, related_name="daily_entries", on_delete=models.CASCADE
     )
-    date = models.DateField(default=datetime.now, unique=True)
+    date = models.DateField(default=datetime.now)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "date"],
+                name="There cant be 2 same daily entries for one user!",
+            )
+        ]
 
     # This summary will be used by AI
     # A shortened version of summary to reduce API usage cost

@@ -82,36 +82,35 @@ def home(request):
 @login_required
 # Handles the diary page
 def diary(request):
-    if request.htmx:
-        # Given daily entry, returns total nutrients data
-        if request.method == "GET":
+    if request.method == "GET":
+        user = request.user
+        challenges = Challenge.objects.filter(user=user)
+        challenges_info = []
+        for challenge in challenges:
+            if not challenge.is_completed:
+                challenges_info.append(challenge.info())
+        # Renders part of the page (Though almost the whole page)
+        if request.htmx:
+            # Given a new date, renders the body of the page
+            chosen_date = request.GET.get("date", datetime.now())
+            daily_entry, _ = DailyEntry.objects.get_or_create(
+                user=user, date=chosen_date
+            )
+            summary = daily_entry.summarize()
+            context = {**summary, "challenges": challenges_info}
+            response = render_block_to_string("diary.html", "body", context)
+            return HttpResponse(response)
+        # Renders the whole page if not an htmx request
+        else:
             daily_entry, _ = DailyEntry.objects.get_or_create(
                 user=user, date=datetime.now()
             )
-            context = {"nutrient_categories": daily_entry.summarize_nutrients}
-            response = render_block_to_string(
-                "diary.html", "nutrients_summary", context
-            )
-            return
-    else:
-        if request.method == "GET":
-            user = request.user
-            daily_entry, _ = DailyEntry.objects.get_or_create(
-                user=user, date=datetime.now()
-            )
-            challenges = Challenge.objects.filter(user=user)
-            challenges_info = []
-            for challenge in challenges:
-                if not challenge.is_completed:
-                    challenges_info.append(challenge.info())
             summary = daily_entry.summarize()
             return render(
                 request,
                 "diary.html",
                 {
-                    "food_intake": summary["food_intake"],
-                    "exercises": summary["exercises"],
-                    "nutrient_categories": summary["nutrient_categories"],
+                    **summary,
                     "challenges": challenges_info,
                 },
             )
@@ -129,8 +128,9 @@ def nutrients(request):
         # Given daily entry, returns total nutrients data
         if request.method == "GET":
             user = request.user
+            daily_entry_date = request.GET.get("daily_entry_date", datetime.today())
             daily_entry, _ = DailyEntry.objects.get_or_create(
-                user=user, date=datetime.now()
+                user=user, date=daily_entry_date
             )
             context = {"nutrient_categories": daily_entry.summarize_nutrients()}
             response = render_block_to_string(
@@ -185,8 +185,12 @@ def user_food(request):
                 time_added = form.cleaned_data["time_added"]
                 unit = form.cleaned_data["unit"]
                 food_id = form.cleaned_data["food_id"]
-                daily_entry_date = form.cleaned_data["daily_entry_date"]
-                daily_entry, _ = DailyEntry.objects.get_or_create(user=request.user)
+                daily_entry_date = request.POST.get(
+                    "daily_entry_date", datetime.today()
+                )
+                daily_entry, _ = DailyEntry.objects.get_or_create(
+                    user=request.user, date=daily_entry_date
+                )
                 # TODO: Make a system that handle different units
                 new_user_food = UserFood.objects.create(
                     food_id=food_id,
@@ -204,7 +208,9 @@ def user_food(request):
             food_id = request.GET.get("foodId", "")
             # If the user wants to obtain more detailed data about a specific food
             if food_id:
-                daily_entry_date = request.GET.get("date", str(date.today()))
+                daily_entry_date = request.GET.get(
+                    "daily_entry_date", str(date.today())
+                )
                 # The first object is the one we want
                 food = analyze_food(food_id)[0]
                 user_food_form = UserFoodForm(

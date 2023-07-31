@@ -4,10 +4,11 @@
     {% load static %}
     <script src="{% static 'diary.js' %}"></script>
 {% endblock %}
+<!--Look out for elements with closest in htmx, there might be bugs-->
 
 <!--TODO: CHALLENGE-->
 {% block body %}
-    <div x-data="{ foodModalOpen : false, foodSummaryOpen: false, dailyEntryDate : '' }" class="flex flex-row gap-6 px-12 py-4">
+    <div id="main-container" x-data="{ foodModalOpen : false, foodSummaryOpen: false}" hx-vals='{"daily_entry_date": "{{ date|date:"Y-m-d" }}" }' class="flex flex-row gap-6 px-12 py-4">
         <div id="main" class="grow flex flex-col gap-6">
             <div id="challenge" class="rounded-lg px-4 py-6 border-solid border-2">
                 <h1 class="text-lg font-bold">Challenge</h1>
@@ -164,8 +165,8 @@
                     </div>
                 {% endblock %}
             </div>
-        <div id="calendar-container">
-            <input id="calendar" type="date" name="calendar" hx-on="changed" hx-get="{% url 'home' %}" :value="dailyEntryDate">
+        <div id="date-container">
+            <input id="date" type="date" name="date" value="{{ date|date:'Y-m-d' }}" hx-trigger="input changed" hx-get="{% url 'diary' %}" hx-target="#main-container" hx-swap="outerHTML">
         </div>
     </div>
 {% endblock %}
