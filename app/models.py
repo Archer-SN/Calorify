@@ -412,7 +412,7 @@ class DailyEntry(models.Model):
     user = models.ForeignKey(
         User, related_name="daily_entries", on_delete=models.CASCADE
     )
-    date = models.DateField(default=datetime.now)
+    date = models.DateField(default=datetime.now, unique=True)
 
     # This summary will be used by AI
     # A shortened version of summary to reduce API usage cost

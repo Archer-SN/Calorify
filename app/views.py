@@ -112,10 +112,26 @@ def diary(request):
                     "food_intake": summary["food_intake"],
                     "exercises": summary["exercises"],
                     "nutrient_categories": summary["nutrient_categories"],
-                    "user_food_form": UserFoodForm(),
                     "challenges": challenges_info,
                 },
             )
+
+
+# Handles obtaining nutrients information from daily entries.
+@login_required
+def nutrients(request):
+    if request.htmx:
+        # Given daily entry, returns total nutrients data
+        if request.method == "GET":
+            user = request.user
+            daily_entry, _ = DailyEntry.objects.get_or_create(
+                user=user, date=datetime.now()
+            )
+            context = {"nutrient_categories": daily_entry.summarize_nutrients()}
+            response = render_block_to_string(
+                "diary.html", "nutrients_summary", context
+            )
+            return HttpResponse(response)
 
 
 @login_required
@@ -149,53 +165,56 @@ def food(request):
 # Handles everything related to UserFood object
 @login_required
 def user_food(request):
-    # Creates new UserFood instance
-    if request.method == "POST":
-        user_food_id = request.POST.get("user_food_id")
-        form = UserFoodForm(request.POST)
-        # Given a user_food_id, delete a UserFood instance from the databse
-        if user_food_id:
-            UserFood.objects.filter(id=user_food_id).delete()
-            return HttpResponse()
-        # The user wants to create a new UserFood instance
-        elif form.is_valid():
-            amount = form.cleaned_data["amount"]
-            time_added = form.cleaned_data["time_added"]
-            unit = form.cleaned_data["unit"]
-            food_id = form.cleaned_data["food_id"]
-            daily_entry_date = form.cleaned_data["daily_entry_date"]
-            daily_entry, _ = DailyEntry.objects.get_or_create(
-                user=request.user, date=daily_entry_date
-            )
-            # TODO: Make a system that handle different units
-            new_user_food = UserFood.objects.create(
-                daily_entry=daily_entry,
-                time_added=time_added,
-                weight=amount,
-                food_id=food_id,
-            )
-            context = {"food_intake": [new_user_food.data()]}
-            response = render_block_to_string("diary.html", "food_entries", context)
-            return HttpResponse(response)
-    elif request.method == "GET":
-        food_id = request.GET.get("foodId", "")
-        # If the user wants to obtain more detailed data about a specific food
-        if food_id:
-            daily_entry_date = request.GET.get("date", str(date.today()))
-            # The first object is the one we want
-            food = analyze_food(food_id)[0]
-            user_food_form = UserFoodForm(
-                initial={
-                    "food_id": food_id,
-                    "daily_entry_date": daily_entry_date,
+    if request.htmx:
+        # Creates new UserFood instance
+        if request.method == "POST":
+            user_food_id = request.POST.get("user_food_id")
+            form = UserFoodForm(request.POST)
+            # Given a user_food_id, delete a UserFood instance from the databse
+            if user_food_id:
+                UserFood.objects.filter(id=user_food_id).delete()
+                return HttpResponse()
+            # The user wants to create a new UserFood instance
+            elif form.is_valid():
+                amount = form.cleaned_data["amount"]
+                time_added = form.cleaned_data["time_added"]
+                unit = form.cleaned_data["unit"]
+                food_id = form.cleaned_data["food_id"]
+                daily_entry_date = form.cleaned_data["daily_entry_date"]
+                daily_entry, _ = DailyEntry.objects.get_or_create(user=request.user)
+                # TODO: Make a system that handle different units
+                new_user_food = UserFood.objects.create(
+                    food_id=food_id,
+                    daily_entry=daily_entry,
+                    time_added=time_added,
+                    weight=amount,
+                )
+                context = {
+                    "food_intake": [new_user_food.data()],
+                    "nutrient_categories": daily_entry.summarize_nutrients(),
                 }
-            )
-            context = {
-                "food": food.get_macronutrients(),
-                "user_food_form": user_food_form,
-            }
-            response = render_block_to_string("diary.html", "food_summary", context)
-            return HttpResponse(response)
+                response = render_block_to_string("diary.html", "food_entries", context)
+                return HttpResponse(response)
+            return HttpResponse()
+        elif request.method == "GET":
+            food_id = request.GET.get("foodId", "")
+            # If the user wants to obtain more detailed data about a specific food
+            if food_id:
+                daily_entry_date = request.GET.get("date", str(date.today()))
+                # The first object is the one we want
+                food = analyze_food(food_id)[0]
+                user_food_form = UserFoodForm(
+                    initial={
+                        "food_id": food_id,
+                        "daily_entry_date": daily_entry_date,
+                    }
+                )
+                context = {
+                    "food": food.get_macronutrients(),
+                    "user_food_form": user_food_form,
+                }
+                response = render_block_to_string("diary.html", "food_summary", context)
+                return HttpResponse(response)
 
 
 # Handles everything related to Exercise model
