@@ -32,6 +32,7 @@ AUTH_USER_MODEL = "app.User"
 
 INSTALLED_APPS = [
     "app",
+    "fontawesomefree",
     "field_history",
     "django_browser_reload",
     "django_htmx",

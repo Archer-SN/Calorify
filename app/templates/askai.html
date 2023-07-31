@@ -2,18 +2,57 @@
 
 <!--MAKE SURE YOU USE '' FOR hx-vals!!!!!-->
 
+<!-- TODO: FINISH ALL THE OPTIONS -->
 {% block body %}
-    <div>
-        <div id="gpt-response" class="w-full bg-gray-100 flex flex-col">
+    <div class="flex flex-row">
+        <div id="prompts" class="flex flex-col align-items-end p-2 gap-2">
+            <label class="btn btn-ghost btn-circle self-end">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7" /></svg>
+            </label>
+            <div x-data="{ showOption : false }">
+                <button  @click="showOption = ! showOption" class="btn btn-outline">Analyze my history</button>
+                <div x-show="showOption">
+                    <form hx-get="{% url 'askai' %}" hx-target="#gpt-response" hx-swap="beforeend" hx-vals='{"prompt": "Analyze my history"}' hx-indicator=".htmx-indicator">
+                        <input type="text">
+                        <input value="Ask AI" type="submit" class="btn btn-success">
+                    </form>
+                </div>
+            </div>
+            <div x-data="{ showOption : false }">
+                <button @click="showOption = ! showOption" class="btn btn-outline">Recommend me a meal plan</button>
+                <div x-data="{ dayRange : 30 }" x-show="showOption">
+                    <form hx-get="{% url 'askai' %}" hx-target="#gpt-response" hx-swap="beforeend" hx-vals='{"prompt": "Recommend me a meal plan"}' hx-indicator=".htmx-indicator">
+                        <div class="p-6 flex flex-col align-center">
+                            <div class="flex flex-row justify-between align-center">
+                                <label for="day-range" class="label-text">Day Range</label>
+                                <input :value="dayRange" @input="dayRange = $el.value" type="number" min="1" max="180" value="30" class="input">
+                            </div>
+                            <input @input="dayRange = $el.value" :value="dayRange" name="day-range" type="range" min="1" max="180" value="30" class="range" />
+                        </div>
+                        <input value="Ask AI" type="submit" class="btn btn-success">
+                    </form>
+                </div>
+            </div>
+            <div x-data="{ showOption : false }">
+                <button @click="showOption = ! showOption" class="btn btn-outline">Recommend me an exercise routine</button>
+                <div x-show="showOption">
+                    <form hx-get="{% url 'askai' %}" hx-target="#gpt-response" hx-swap="beforeend" hx-vals='{"prompt": "Recommend me an exercise routine"}' hx-indicator=".htmx-indicator" >
+                        <input type="text">
+                        <input value="Ask AI" type="submit" class="btn btn-success">
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div id="gpt-response" class="w-full flex flex-col p-6">
             <span class="htmx-indicator loading loading-infinity loading-lg"></span> 
             {% block gpt_response %}
                 {% if type == "analysis" %}
-                    <div>
+                    <div class="p-6">
                         <h1 class="text-lg font-bold">History Analysis</h1>
                         <p>{{ paragraph }}</p>
                     </div>
                 {% elif type == "meal" %}
-                    <div x-data="{ foodDictList : {{ food_dict_list }} }" class="border-solid border-2 p-3">   
+                    <div x-data="{ foodDictList : {{ food_dict_list }} }" class="border-solid border-2 p-6">   
                         <h1 class="text-lg font-bold">Meal Plan Recommendation</h1>
                         <p>{{ paragraph }}</p>
                         <table class="table">
@@ -27,7 +66,7 @@
                             </thead>
                             <tbody>
                                 {% for food_dict in food_dict_list %}
-                                    <tr class="hover">
+                                    <tr class="hover rounded border-solid border-y-2">
                                         <td>{{ food_dict.food_name | title }}</td>
                                         <td>{{ food_dict.amount }}</td>
                                         <td>{{ food_dict.unit }}</td>
@@ -47,30 +86,32 @@
                         </span>
                     </div>
                 {% elif type == "exercise" %}
-                    <div x-data="{ exerciseDictList : {{ exercise_dict_list }} }" class="border-solid border-2 p-3">   
+                    <div x-data="{ exerciseDictList : {{ exercise_dict_list }} }" class="border-solid border-2 p-6">   
                         <h1 class="text-lg font-bold">Exercise Routine Recommendation</h1>
                         <p>{{ paragraph }}</p>
-                        <table class="table">
-                            <thead>
-                                <tr>
-                                    <th>Exercise Name</th>
-                                    <th>Sets</th>
-                                    <th>Reps</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for exercise_dict in exercise_dict_list %}
-                                    <tr class="hover">
-                                        <td>{{ exercise_dict.exercise_name | title }}</td>
-                                        <td>{{ exercise_dict.sets }}</td>
-                                        <td>{{ exercise_dict.reps }}</td>
-                                        <td>
-                                            <button x-data="{ index : {{ forloop.counter0 }} }" @click="exerciseDictList.splice(index, 1)" hx-delete="{% url 'empty' %}" hx-target="closest tr" hx-swap="delete" class="btn btn-outline btn-error">Remove</button>
-                                        </td>
+                        <div class="rounded-lg border-solid border-2">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Exercise Name</th>
+                                        <th>Sets</th>
+                                        <th>Reps</th>
                                     </tr>
-                                 {% endfor %}
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    {% for exercise_dict in exercise_dict_list %}
+                                        <tr class="hover rounded border-solid border-y-2">
+                                            <td>{{ exercise_dict.exercise_name | title }}</td>
+                                            <td>{{ exercise_dict.sets }}</td>
+                                            <td>{{ exercise_dict.reps }}</td>
+                                            <td>
+                                                <button x-data="{ index : {{ forloop.counter0 }} }" @click="exerciseDictList.splice(index, 1)" hx-delete="{% url 'empty' %}" hx-target="closest tr" hx-swap="delete" class="btn btn-outline btn-error">Remove</button>
+                                            </td>
+                                        </tr>
+                                     {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
                         <span>
                             <p>Import exercise plan?</p>
                             <input :value="JSON.stringify(exerciseDictList)" class="hidden" name="exerciseDictList" type="text">
@@ -80,11 +121,6 @@
                     </div>
                 {% endif %}
             {% endblock %}
-        </div>
-        <div id="prompts">
-            <button  hx-get="{% url 'askai' %}" hx-target="#gpt-response" hx-swap="beforeend" hx-vals='{"prompt": "Analyze my history"}' hx-indicator=".htmx-indicator" class="btn btn-outline">Analyze my history</button>
-            <button hx-get="{% url 'askai' %}" hx-target="#gpt-response" hx-swap="beforeend" hx-vals='{"prompt": "Recommend me a meal plan"}' hx-indicator=".htmx-indicator" class="btn btn-outline">Recommend me a meal plan</button>
-            <button hx-get="{% url 'askai' %}" hx-target="#gpt-response" hx-swap="beforeend" hx-vals='{"prompt": "Recommend me an exercise routine"}' hx-indicator=".htmx-indicator" class="btn btn-outline">Recommend me an exercise routine</button>
         </div>
     </div>
 {% endblock %}

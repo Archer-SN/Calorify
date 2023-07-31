@@ -279,8 +279,8 @@ def ask_ai(request):
                 return HttpResponse(response)
             # The user asks to recommend an exercise routine
             elif prompt == "Recommend me an exercise routine":
-                gpt_response = ask_exercise_plan_gpt(request.user)
-                context = {"type": "exercise", "paragraph": gpt_response}
+                # The context should be generated if the AI call is successful
+                context = ask_exercise_plan_gpt(request.user)
                 response = render_block_to_string("askai.html", "gpt_response", context)
                 return HttpResponse(response)
             return HttpResponse("Non-existent prompt")

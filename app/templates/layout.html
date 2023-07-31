@@ -17,12 +17,14 @@
     <script src="https://unpkg.com/htmx.org/dist/ext/debug.js"></script>
     <!--Sweetalert2 library for cool alert UI-->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- One file includes all the Font Awesome Free icons and utilities -->
+    <link href="{% static 'fontawesomefree/css/all.min.css' %}" rel="stylesheet" type="text/css">
     {% block script %}
     {% endblock %}
 </head>
 
 <body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}' class="flex flex-col">
-    <div class="navbar bg-base-100">
+    <div class="navbar">
         <div class="navbar-start"> 
             <div class="dropdown">
                 <!--Only shown when the screen is small-->
@@ -52,6 +54,9 @@
             <!--Also shows logout button-->
             {% if request.user.is_authenticated %}
             <ul class="menu menu-horizontal px-1">
+                <li>
+                    <p><i class="fa-solid fa-gem" style="color: #1af9a4;"></i> {{ user.userrpg.gems }}</p>
+                </li>
                 <li><a href="{% url 'logout' %}" class="hover:bg-error">Logout</a></li>
             </ul>
             {% endif %}
@@ -60,29 +65,5 @@
     {% block body %}
     
     {% endblock %}
-    
-    {% comment %} <footer class="justify-self-end footer p-10 bg-neutral text-neutral-content">
-        <div>
-            <span class="footer-title">Services</span>
-            <a class="link link-hover">Branding</a>
-            <a class="link link-hover">Design</a>
-            <a class="link link-hover">Marketing</a>
-            <a class="link link-hover">Advertisement</a>
-        </div>
-        <div>
-            <span class="footer-title">Company</span>
-            <a class="link link-hover">About us</a>
-            <a class="link link-hover">Contact</a>
-            <a class="link link-hover">Jobs</a>
-            <a class="link link-hover">Press kit</a>
-        </div>
-        <div>
-            <span class="footer-title">Legal</span>
-            <a class="link link-hover">Terms of use</a>
-            <a class="link link-hover">Privacy policy</a>
-            <a class="link link-hover">Cookie policy</a>
-        </div>
-    </footer> {% endcomment %}
-    
 </body>
 </html>

@@ -235,9 +235,9 @@ def import_exercise_plan():
     pass
 
 
-# Given a paragraph and a list of dictionary of food names, amounts, units, and calories, create a context that will be used in rendering
+# Given a paragraph and a list of dictionary of exercise names, sets, reps, create a context for rendering in html
 def create_exercise_plan_context(paragraph, exercise_dict_list):
-    vals = {"exercise_dict_list": json.dumps(exercise_dict_list)}
+    print(exercise_dict_list)
     context = {
         "type": "exercise",
         "paragraph": paragraph,
@@ -264,7 +264,7 @@ def ask_exercise_plan_gpt(user):
     functions = [
         {
             "name": "create_exercise_plan_context",
-            "description": "Given a paragraph and a list of dictionary of exercise names, sets, reps, create a context for rendering in html",
+            "description": "Given a paragraph and a list of dictionary of exercise names, sets, reps, create a context that is necessary for rendering html",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -283,11 +283,11 @@ def ask_exercise_plan_gpt(user):
                                 },
                                 "sets": {
                                     "type": "number",
-                                    "description": "Number of sets that the exercise ought to be done",
+                                    "description": "Number of sets",
                                 },
                                 "reps": {
                                     "type": "number",
-                                    "description": "Number of reps that the exercise ought to be done",
+                                    "description": "Number of reps",
                                 },
                             },
                         },
@@ -306,6 +306,7 @@ def ask_exercise_plan_gpt(user):
         top_p=1,
         frequency_penalty=0,
         presence_penalty=0,
+        function_call={"name": "create_exercise_plan_context"},
     )
     response_message = response["choices"][0]["message"]
 
@@ -328,7 +329,6 @@ def ask_exercise_plan_gpt(user):
 
 # Given a paragraph and a list of dictionary of food names, amounts, units, and calories, create a context that will be used in rendering
 def create_meal_plan_context(paragraph, food_dict_list):
-    vals = {"food_dict_list": json.dumps(food_dict_list)}
     context = {
         "type": "meal",
         "paragraph": paragraph,
