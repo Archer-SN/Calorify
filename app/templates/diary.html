@@ -80,11 +80,11 @@
                             </div>
                             <div class="basis-1/2 order-solid border-2 rounded-lg p-6">
                                 <!--Here, we both change the food entries and nutrients summary-->
-                                <form id="userfood-form" hx-post="{% url 'userfood' %}" hx-trigger="click closest from:button queue:first" hx-target="#entries-container" hx-swap="beforeend" class="form-control flex flex-col gap-2">
+                                <form id="userfood-form" hx-post="{% url 'userfood' %}" hx-trigger="click closest from:#submit-user-food queue:all" hx-target="#entries-container" hx-swap="beforeend" class="form-control flex flex-col gap-2">
                                     {{ user_food_form }}
                                     <!--Delay so that the food is added first before we obtain the daily nutrition data-->
                                     <!--Should work 99% of the time-->
-                                    <button type="submit" value="Add To Diary" hx-trigger="click delay:500ms" hx-get="{% url 'nutrients' %}" @click="foodModalOpen = false" hx-target="#summary" hx-swap="outerHTML" class="btn btn-success">Add To Diary</button>
+                                    <button id="submit-user-food" type="submit" value="Add To Diary" hx-trigger="click delay:1ms" hx-get="{% url 'nutrients' %}" @click="foodModalOpen = false" hx-target="#summary" hx-swap="outerHTML" class="btn btn-success">Add To Diary</button>
                                 </form>
                             </div>
                         </div>
@@ -109,12 +109,14 @@
                                         <td>g</td>
                                         <td>{{ food_entry.energy }}</td>
                                         <td>kcal</td>
-                                        <td>
+                                        <!--Delay to prevent race condition. Works 99% of the time I guess.-->
+                                        <td hx-trigger="click delay:1ms" hx-get="{% url 'nutrients' %}" hx-target="#summary" hx-swap="outerHTML">
                                             <button 
                                             hx-trigger="click" 
+                                            hx-sync="closest td:queue all" 
                                             hx-post="{% url 'userfood' %}" 
                                             hx-vals='{{ food_entry.vals }}' 
-                                            hx-swap="delete" 
+                                            hx-swap="delete swap:10ms" 
                                             hx-target="closest tr" 
                                             @click="showFoodEntry = false"
                                             class="btn btn-outline btn-error"

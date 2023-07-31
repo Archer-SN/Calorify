@@ -14,6 +14,7 @@ urlpatterns = [
 
     path("home", views.home, name="home"),
     path("diary", views.diary, name="diary"),
+    path("store", views.store, name="store"),
     path("settings", views.settings, name="settings"),
 
     path("askai", views.ask_ai, name="askai"),

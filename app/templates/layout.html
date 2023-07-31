@@ -1,5 +1,5 @@
 {% load static %}
-
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <title>{% block title %}Calorify{% endblock %}</title>
@@ -14,6 +14,7 @@
     <script src="https://unpkg.com/htmx.org@1.9.3" integrity="sha384-lVb3Rd/Ca0AxaoZg5sACe8FJKF0tnUgR2Kd7ehUOG5GCcROv5uBIZsOqovBAcWua" crossorigin="anonymous"></script>
     <!--this extension allows you to use it as the swapping mechanism in htmx which is necessary to retain Alpine state when you have entire Alpine components swapped by htmx.-->
     <script src="https://unpkg.com/htmx.org/dist/ext/alpine-morph.js"></script>
+    <script src="https://unpkg.com/htmx.org/dist/ext/debug.js"></script>
     <!--Sweetalert2 library for cool alert UI-->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     {% block script %}
@@ -32,6 +33,7 @@
                     <li><a href="{% url 'home' %}" class="hover:bg-primary-content">Home</a></li>
                     <li><a href="{% url 'askai' %}" class="hover:bg-primary-content">Ask AI</a></li>
                     <li><a href="{% url 'diary' %}" class="hover:bg-primary-content">Diary</a></li>
+                    <li><a href="{% url 'store' %}" class="hover:bg-primary-content">Store</a></li>
             </ul>
         </div>
         <a href="{% url 'home' %}" class="btn btn-ghost normal-case text-xl">Calorify</a>
@@ -42,6 +44,7 @@
                 <li><a href="{% url 'home' %}" class="hover:bg-primary-content">Home</a></li>
                 <li><a href="{% url 'askai' %}" class="hover:bg-primary-content">Ask AI</a></li>
                 <li><a href="{% url 'diary' %}" class="hover:bg-primary-content">Diary</a></li>
+                <li><a href="{% url 'store' %}" class="hover:bg-primary-content">Store</a></li>
             </ul>
         </div>
         <div class="navbar-end">

@@ -117,6 +117,11 @@ def diary(request):
             )
 
 
+@login_required
+def store(request):
+    pass
+
+
 # Handles obtaining nutrients information from daily entries.
 @login_required
 def nutrients(request):
@@ -191,7 +196,6 @@ def user_food(request):
                 )
                 context = {
                     "food_intake": [new_user_food.data()],
-                    "nutrient_categories": daily_entry.summarize_nutrients(),
                 }
                 response = render_block_to_string("diary.html", "food_entries", context)
                 return HttpResponse(response)
