@@ -118,7 +118,7 @@ def diary(request):
 
 @login_required
 def store(request):
-    pass
+    return render(request, "store.html")
 
 
 # Handles obtaining nutrients information from daily entries.
@@ -147,11 +147,7 @@ def food(request):
             food_obj_list = []
             search = request.GET.get("search", "")
             if search:
-                # search_results = autocomplete_search(search)
-                # for food_name in search_results:
-                #     # is_importing is True so that we analyze only one food (For performance purpose)
                 food_objs = analyze_food(search)
-                print(food_objs)
                 for food_obj in food_objs:
                     if food_obj not in food_obj_list:
                         food_obj_list.append(food_obj)
@@ -212,7 +208,7 @@ def user_food(request):
                     "daily_entry_date", str(date.today())
                 )
                 # The first object is the one we want
-                food = analyze_food(food_id)[0]
+                food = analyze_food(food_id, is_importing=True)[0]
                 user_food_form = UserFoodForm(
                     initial={
                         "food_id": food_id,
