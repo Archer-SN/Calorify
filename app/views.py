@@ -139,7 +139,7 @@ def food(request):
     if request.htmx:
         if request.method == "GET":
             food_obj_list = []
-            search = request.GET.get("search", "")
+            search = request.GET.get("search_food", "")
             if search:
                 food_objs = analyze_food(search)
                 for food_obj in food_objs:
@@ -152,8 +152,9 @@ def food(request):
                 "type": "food",
                 "food_data_list": [food_obj.get_data() for food_obj in food_obj_list],
             }
+            print(context)
             response = render_block_to_string(
-                "overlay.html", "food_search_result", context
+                "diary.html", "food_search_result", context
             )
             return HttpResponse(response)
 
@@ -215,9 +216,7 @@ def user_food(request):
                     "food": food.get_macronutrients(),
                     "user_food_form": user_food_form,
                 }
-                response = render_block_to_string(
-                    "overlay.html", "food_summary", context
-                )
+                response = render_block_to_string("diary.html", "food_summary", context)
                 return HttpResponse(response)
 
 
@@ -240,7 +239,7 @@ def exercise(request):
                 "food_data_list": [food_obj.get_data() for food_obj in food_obj_list]
             }
             response = render_block_to_string(
-                "overlay.html", "exercise_search_result", context
+                "diary.html", "exercise_search_result", context
             )
             return HttpResponse(response)
 
