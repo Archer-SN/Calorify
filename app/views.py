@@ -225,23 +225,29 @@ def user_food(request):
 def exercise(request):
     if request.htmx:
         if request.method == "GET":
-            food_obj_list = []
             search = request.GET.get("search", "")
+            context = {}
             if search:
-                food_objs = analyze_food(search)
-                for food_obj in food_objs:
-                    if food_obj not in food_obj_list:
-                        food_obj_list.append(food_obj)
+                exercise_list = get_exercise_data(search)
+                context = {"food_data_list": exercise_list}
             else:
-                for food in Food.objects.filter(label__icontains=search)[0:20]:
-                    food_obj_list.append(food)
-            context = {
-                "food_data_list": [food_obj.get_data() for food_obj in food_obj_list]
-            }
+                # TODO: Only handles StrengthExercise instances for now...
+                context = {
+                    "food_data_list": [
+                        food_obj.get_data() for food_obj in food_obj_list
+                    ]
+                }
+                for exercise in StrengthExercise.objects.filter(label__icontains=search)[0:20]:
+                    pass
             response = render_block_to_string(
                 "diary.html", "exercise_search_result", context
             )
             return HttpResponse(response)
+
+
+@login_required
+def user_exercise(request):
+    pass
 
 
 @login_required

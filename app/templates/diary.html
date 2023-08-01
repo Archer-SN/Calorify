@@ -57,7 +57,6 @@
                         class="btn btn-outline btn-success"
                         >
                     </div>
-                    <i class="htmx-indicator fa-solid fa-apple-whole fa-spin fa-2xl"></i>
                     <div class="basis-1/4 overflow-y-auto border-solid border-2 rounded-lg">
                         <table class="table table-pin-cols table-pin-rows">
                             <thead>
@@ -99,7 +98,7 @@
                                     {{ user_food_form }}
                                     <!--Delay so that the food is added first before we obtain the daily nutrition data-->
                                     <!--Should work 99% of the time-->
-                                    <input @click="foodModalOpen = false" id="submit-user-food" value="Add to Diary" type="submit" value="Add To Diary" hx-trigger="click delay:1ms" hx-get="{% url 'nutrients' %}" hx-target="#summary" hx-swap="outerHTML" class="btn btn-success">
+                                    <input @click="foodModalOpen = false" id="submit-user-food" value="Add to Diary" type="submit" value="Add To Diary" hx-trigger="click delay:10ms" hx-get="{% url 'nutrients' %}" hx-target="#summary" hx-swap="outerHTML" class="btn btn-success">
                                 </form>
                             </div>
                         </div>
@@ -125,7 +124,7 @@
                         <table class="table table-pin-cols table-pin-rows">
                             <thead>
                                 <tr>
-                                    <th></th>
+                                    <th>Exercise Name</th>
                                 </tr>
                             </thead>
                             <tbody id="exercise-search-results">

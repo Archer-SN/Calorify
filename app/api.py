@@ -311,7 +311,6 @@ def ask_exercise_plan_gpt(user):
     response_message = response["choices"][0]["message"]
 
     if response_message.get("function_call"):
-        print("HELLOW")
         function_name = response_message["function_call"]["name"]
         if (
             function_name == "create_exercise_plan_context"
