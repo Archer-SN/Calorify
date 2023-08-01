@@ -8,7 +8,7 @@
 
 <!--TODO: CHALLENGE-->
 {% block body %}
-    <div id="main-container" x-data="{ foodModalOpen : false, foodSummaryOpen: false, exerciseSummaryOpen : false }" hx-vals='{"daily_entry_date": "{{ date|date:"Y-m-d" }}" }' class="flex flex-row gap-6 px-12 py-4">
+    <div id="main-container" x-data="{ foodModalOpen : false, foodSummaryOpen: false, exerciseModalOpen : false, exerciseSummaryOpen : false }" hx-vals='{"daily_entry_date": "{{ date|date:"Y-m-d" }}" }' class="flex flex-row gap-6 px-12 py-4">
         <div id="main" class="grow flex flex-col gap-6">
             <div id="challenge" class="rounded-lg px-4 py-6 border-solid border-2">
                 <h1 class="text-lg font-bold">Challenge</h1>
@@ -33,74 +33,16 @@
                     </tbody>
                 </table>
             </div>
-            <!--An overlay for adding exercises-->
-            
             <!--An overlay for adding food-->
-            <div id="food-overlay" class="overflow-auto" style="background-color: rgba(0,0,0,0.5)" x-show="foodModalOpen" :class="{ 'absolute inset-0 z-10 flex items-start justify-center': foodModalOpen }">
-                <!-- overlay -->
-                <span id="food-modal" class="max-h-full rounded-lg px-6 flex flex-col justify-evenly gap-6 w-full border-solid border-2 bg-white shadow-2xl m-4 sm:m-8" x-show="foodModalOpen" x-trap="foodModalOpen" @click.away="foodModalOpen = false" >
-                    <!--This is used for searching food in the database-->
-                    <button class="inline btn btn-sm btn-circle btn-ghost place-self-end right-2 top-2 hover:bg-red-500" @click="foodModalOpen = false">✕</button>              
-                    <h1 class="text-xl font-bold">Add Food to Diary</h1>
-                    <div class="w-full">
-                        <input type="search" name="search" placeholder="Search food here" class="input input-bordered w-full max-w-xl" 
-                            hx-get="{% url 'food' %}" 
-                            hx-trigger="keyup changed delay:500ms, search" 
-                            hx-target="#search-results" 
-                            hx-indicator=".htmx-indicator"
-                            hx-swap="innerHTML"
-                            />
-                    </div>
-                    <div class="basis-1/4 overflow-y-auto border-solid border-2 rounded-lg">
-                        <table class="table table-pin-cols table-pin-rows">
-                            <thead>
-                                <tr>
-                            <th>Description</th>
-                            <th>Source</th>
-                            </tr>
-                            </thead>
-                            <tbody id="search-results">
-                                <span class="htmx-indicator loading loading-infinity loading-lg"></span> 
-                                {% block food_search_result %}
-                                    {% for food_data in food_data_list %}
-                                        <tr @click='foodSummaryOpen = true' hx-trigger='click' hx-get="{% url 'userfood' %}" hx-target='#food-summary-panel' hx-swap='innerHTML' class='hover' hx-vals='{{ food_data.vals }}'>
-                                            <td>{{ food_data.label }}</td>
-                                            <td>EDAMAM</td>
-                                        </tr>
-                                    {% endfor %}
-                                {% endblock %}
-                            </tbody>
-                        </table>
-                    </div>
-                    {% block food_summary %}
-                        <div id="food-summary-panel" x-show="foodSummaryOpen" class="w-full place-self-center flex flex-row justify-evenly p-5 gap-6">
-                            <div class="basis-1/2 border-solid border-2 rounded-lg">
-                                <ul>
-                                    <li>Protein: {{ food.protein }} g</li>
-                                    <li>Carbohydrates: {{ food.carbs }} g</li>
-                                    <li>Fats: {{ food.fats }} g</li>
-                                    <li>Energy: {{ food.energy }} kcal</li>
-                                </ul>
-                            </div>
-                            <div class="basis-1/2 order-solid border-2 rounded-lg p-6">
-                                <!--Here, we both change the food entries and nutrients summary-->
-                                <form id="userfood-form" hx-post="{% url 'userfood' %}" hx-trigger="click closest from:#submit-user-food queue:all" hx-target="#entries-container" hx-swap="beforeend" class="form-control flex flex-col gap-2">
-                                    {{ user_food_form }}
-                                    <!--Delay so that the food is added first before we obtain the daily nutrition data-->
-                                    <!--Should work 99% of the time-->
-                                    <button id="submit-user-food" type="submit" value="Add To Diary" hx-trigger="click delay:1ms" hx-get="{% url 'nutrients' %}" @click="foodModalOpen = false" hx-target="#summary" hx-swap="outerHTML" class="btn btn-success">Add To Diary</button>
-                                </form>
-                            </div>
-                        </div>
-                    {% endblock %}
-                </span>
-            </div>
+            {% include 'overlay.html' with type="food" %}
+            <!--An overlay for adding exercises-->
+            {% include 'overlay.html' with type="exercise" %}
             <div id="log" class="px-4 py-6 rounded-lg border-solid border-2 flex flex-col gap-4">
                 <h1 class="text-lg font-bold">Daily Entries</h1>
                     <div>
                         <!--Contains buttons for adding entries-->
-                        <button id="add-food" class="btn btn-outline" hx-get="{% url 'food' %}" hx-target="#search-results" hx-swap="innerHTML" @click="foodModalOpen = true">Add Food</button>
-                        <button class="btn btn-outline" @click="foodSummaryOpen = true">Add Exercise</button>
+                        <button id="add-food" class="btn btn-outline" hx-get="{% url 'food' %}" hx-target="#food-search-results" hx-swap="innerHTML" @click="foodModalOpen = true">Add Food</button>
+                        <button id="add-exercise" class="btn btn-outline" hx-get="{% url 'exercise' %}" hx-target="#exercise-search-results" hx-swap="innerHTML" @click="exerciseModalOpen = true">Add Exercise</button>
                     </div>
                     <table class="basis-1 table overflow-scroll">
                         <tbody id="entries-container" >

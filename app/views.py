@@ -34,13 +34,6 @@ def index(request):
         return HttpResponseRedirect(reverse("home"))
     return HttpResponseRedirect(reverse("login"))
 
-
-# Handles the page where the user gets asked basic information and health information
-def survey(request):
-    if request.method == "POST":
-        pass
-
-
 # This handles the home page
 # This page should show you weight history and stuffs
 @login_required
@@ -155,10 +148,11 @@ def food(request):
                 for food in Food.objects.filter(label__icontains=search)[0:20]:
                     food_obj_list.append(food)
             context = {
-                "food_data_list": [food_obj.get_data() for food_obj in food_obj_list]
+                "type": "food",
+                "food_data_list": [food_obj.get_data() for food_obj in food_obj_list],
             }
             response = render_block_to_string(
-                "diary.html", "food_search_result", context
+                "overlay.html", "food_search_result", context
             )
             return HttpResponse(response)
 
@@ -216,19 +210,38 @@ def user_food(request):
                     }
                 )
                 context = {
+                    "type": "food",
                     "food": food.get_macronutrients(),
                     "user_food_form": user_food_form,
                 }
-                response = render_block_to_string("diary.html", "food_summary", context)
+                response = render_block_to_string(
+                    "overlay.html", "food_summary", context
+                )
                 return HttpResponse(response)
 
 
 # Handles everything related to Exercise model
 @login_required
 def exercise(request):
-    if request.method == "GET":
-        user = request.user
-        return ask_exercise_plan_gpt(user)
+    if request.htmx:
+        if request.method == "GET":
+            food_obj_list = []
+            search = request.GET.get("search", "")
+            if search:
+                food_objs = analyze_food(search)
+                for food_obj in food_objs:
+                    if food_obj not in food_obj_list:
+                        food_obj_list.append(food_obj)
+            else:
+                for food in Food.objects.filter(label__icontains=search)[0:20]:
+                    food_obj_list.append(food)
+            context = {
+                "food_data_list": [food_obj.get_data() for food_obj in food_obj_list]
+            }
+            response = render_block_to_string(
+                "overlay.html", "exercise_search_result", context
+            )
+            return HttpResponse(response)
 
 
 @login_required
