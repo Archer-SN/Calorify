@@ -23,7 +23,7 @@
     {% endblock %}
 </head>
 
-<body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}' class="flex flex-col">
+<body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}' class="font-sans flex flex-col">
     <div class="navbar">
         <div class="navbar-start"> 
             <div class="dropdown">
@@ -36,12 +36,12 @@
                     <li><a href="{% url 'askai' %}" class="hover:bg-primary-content">Ask AI</a></li>
                     <li><a href="{% url 'diary' %}" class="hover:bg-primary-content">Diary</a></li>
                     <li><a href="{% url 'store' %}" class="hover:bg-primary-content">Store</a></li>
-            </ul>
+                </ul>
+            </div>
+            <a href="{% url 'home' %}" class="btn btn-ghost normal-case text-xl">Calorify</a>
         </div>
-        <a href="{% url 'home' %}" class="btn btn-ghost normal-case text-xl">Calorify</a>
-    </div> 
-    <div class="navbar-center hidden lg:flex">
-        <!--Has the links to each page-->
+        <div class="navbar-center hidden lg:flex">
+            <!--Has the links to each page-->
             <ul class="menu menu-horizontal px-1 ">
                 <li><a href="{% url 'home' %}" class="hover:bg-primary-content">Home</a></li>
                 <li><a href="{% url 'askai' %}" class="hover:bg-primary-content">Ask AI</a></li>
@@ -55,13 +55,13 @@
             {% if request.user.is_authenticated %}
             <ul class="menu menu-horizontal px-1">
                 <li>
-                    <p><i class="fa-solid fa-gem" style="color: #1af9a4;"></i> {{ user.userrpg.gems }}</p>
+                    <p><i class="fa-solid fa-gem fa-xl" style="color: #1af9a4;"></i> {{ user.userrpg.gems }}</p>
                 </li>
                 <li><a href="{% url 'logout' %}" class="hover:bg-error">Logout</a></li>
             </ul>
             {% endif %}
         </div>
-    </div>
+    </div> 
     {% block body %}
     
     {% endblock %}

@@ -8,7 +8,7 @@
 
 <!--TODO: CHALLENGE-->
 {% block body %}
-    <div id="main-container" x-data="{ foodModalOpen : false, foodSummaryOpen: false}" hx-vals='{"daily_entry_date": "{{ date|date:"Y-m-d" }}" }' class="flex flex-row gap-6 px-12 py-4">
+    <div id="main-container" x-data="{ foodModalOpen : false, foodSummaryOpen: false, exerciseSummaryOpen : false }" hx-vals='{"daily_entry_date": "{{ date|date:"Y-m-d" }}" }' class="flex flex-row gap-6 px-12 py-4">
         <div id="main" class="grow flex flex-col gap-6">
             <div id="challenge" class="rounded-lg px-4 py-6 border-solid border-2">
                 <h1 class="text-lg font-bold">Challenge</h1>
@@ -33,7 +33,10 @@
                     </tbody>
                 </table>
             </div>
-            <div class="overflow-auto" style="background-color: rgba(0,0,0,0.5)" x-show="foodModalOpen" :class="{ 'absolute inset-0 z-10 flex items-start justify-center': foodModalOpen }">
+            <!--An overlay for adding exercises-->
+            
+            <!--An overlay for adding food-->
+            <div id="food-overlay" class="overflow-auto" style="background-color: rgba(0,0,0,0.5)" x-show="foodModalOpen" :class="{ 'absolute inset-0 z-10 flex items-start justify-center': foodModalOpen }">
                 <!-- overlay -->
                 <span id="food-modal" class="max-h-full rounded-lg px-6 flex flex-col justify-evenly gap-6 w-full border-solid border-2 bg-white shadow-2xl m-4 sm:m-8" x-show="foodModalOpen" x-trap="foodModalOpen" @click.away="foodModalOpen = false" >
                     <!--This is used for searching food in the database-->
