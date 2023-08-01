@@ -9,9 +9,9 @@
         <h1 class="text-xl font-bold">Add {{ type }} to Diary</h1>
         <div class="w-full">
             <input type="search" name="search" placeholder="Search {{ type }} here" class="input input-bordered w-full max-w-xl" 
-                hx-get="{% url type %}" 
+                hx-get="{% url type %}"
                 hx-trigger="keyup changed delay:500ms, search" 
-                hx-target="#search-results" 
+                hx-target="#{{ type }}-search-results" 
                 hx-indicator=".htmx-indicator"
                 hx-swap="innerHTML"
                 />
@@ -29,7 +29,7 @@
                     </tr>
                 </thead>
                 <tbody id="{{ type }}-search-results">
-                    <i class="htmx-indicator fa-solid fa-atom fa-spin"></i>
+                    <i class="htmx-indicator fa-solid fa-atom fa-spin fa-xl"></i>
                     {% if type == "food" %}
                         {% block food_search_result %}
                             {% for food_data in food_data_list %}

@@ -8,7 +8,7 @@
 
 <!--TODO: CHALLENGE-->
 {% block body %}
-    <div id="main-container" x-data="{ foodModalOpen : false, foodSummaryOpen: false, exerciseModalOpen : false, exerciseSummaryOpen : false }" hx-vals='{"daily_entry_date": "{{ date|date:"Y-m-d" }}" }' class="flex flex-row gap-6 px-12 py-4">
+    <div id="main-container" x-data="{ foodModalOpen : false, foodSummaryOpen: false, exerciseModalOpen : false, exerciseSummaryOpen : false }" hx-vals='{"daily_entry_date": "{{ date|date:"Y-m-d" }}" }' hx-ext="alpine-morph" hx-swap="morph" class="flex flex-row gap-6 px-12 py-4">
         <div id="main" class="grow flex flex-col gap-6">
             <div id="challenge" class="rounded-lg px-4 py-6 border-solid border-2">
                 <h1 class="text-lg font-bold">Challenge</h1>
@@ -33,10 +33,12 @@
                     </tbody>
                 </table>
             </div>
-            <!--An overlay for adding food-->
-            {% include 'overlay.html' with type="food" %}
-            <!--An overlay for adding exercises-->
-            {% include 'overlay.html' with type="exercise" %}
+            {% block overlay %}
+                <!--An overlay for adding food-->
+                {% include 'overlay.html' with type="food" %}
+                <!--An overlay for adding exercises-->
+                {% include 'overlay.html' with type="exercise" %}
+            {% endblock  %}
             <div id="log" class="px-4 py-6 rounded-lg border-solid border-2 flex flex-col gap-4">
                 <h1 class="text-lg font-bold">Daily Entries</h1>
                     <div>

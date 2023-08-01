@@ -34,6 +34,7 @@ def index(request):
         return HttpResponseRedirect(reverse("home"))
     return HttpResponseRedirect(reverse("login"))
 
+
 # This handles the home page
 # This page should show you weight history and stuffs
 @login_required
