@@ -25,7 +25,7 @@
                 </div>
             </div>
             <div x-data="{ showOption : false }">
-                <button @click="showOption = ! showOption" class="btn btn-outline">Recommend me a meal plan</button>
+                <button @click="showOption = ! showOption" class="btn btn-outline flex flex-row">Recommend me a meal plan <i class="fa-solid fa-angle-down" :class="showOption ? 'fa-rotate-180' : '' "></i></button>
                 <div x-data="{ dayRange : 30 }" x-show="showOption">
                     <form hx-get="{% url 'askai' %}" hx-target="#gpt-response" hx-swap="beforeend" hx-vals='{"prompt": "Recommend me a meal plan"}' hx-indicator=".htmx-indicator">
                         <div class="p-6 flex flex-col align-center gap-6">
