@@ -60,7 +60,7 @@ EDAMAM_NUTRIENTS_ANALYSIS_KEY = EDAMAM_NUTRIENTS_ANALYSIS_KEY
 
 EXERCISE_DB_EP = "https://musclewiki.p.rapidapi.com/exercises"
 EXERCISE_DB_HEADERS = {
-    "X-RapidAPI-Key": "<REQUIRED>",
+    "X-RapidAPI-Key": RAPID_API_KEY,
     "X-RapidAPI-Host": "musclewiki.p.rapidapi.com",
 }
 
@@ -115,12 +115,12 @@ def analyze_food(food_name, is_importing=False) -> list:
         data_list = None
         # Parsed returns one food
         # Hints returns many
-        if "parsed" in parser_response and parser_response["parsed"]:
-            data_list = parser_response["parsed"][0:1]
+        if "parsed" in parser_response and parser_response["parsed"] and is_importing:
+            data_list = parser_response["parsed"]
         else:
             data_list = parser_response["hints"]
-            if is_importing:
-                data_list = data_list[0:1]
+        if is_importing:
+            data_list = data_list[0:1]
         # Loop through all the data that is returned from the API call
         for data in data_list:
             food_data = data["food"]
@@ -221,13 +221,23 @@ def import_user_meal_plan(user, food_dict_list, date=datetime.now()):
     return True
 
 
-# Call the api to obtain data about the exercise
+# Call the api to obtain data about the exercise and also create instances of those exercises as StrengthExercise object
 # Usually, multiple exercises will be returned from the api
 # So, a list will be returned
 def get_exercise_data(params) -> list:
     response = requests.get(
         EXERCISE_DB_EP, headers=EXERCISE_DB_HEADERS, params=params
     ).json()
+    exercise_list = []
+    for exercise_data in response:
+        exercise = StrengthExercise(
+            id=exercise_data["id"],
+            name=exercise_data["exercise_name"],
+            # difficulty=exercise_data["difficulty"],
+            # category=exercise_data["Category"],
+        )
+        exercise_list.append(exercise)
+    StrengthExercise.objects.bulk_create(exercise_list, ignore_conflicts=True)
     return response
 
 

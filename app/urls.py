@@ -23,6 +23,7 @@ urlpatterns = [
     path("nutrients", views.nutrients, name="nutrients"),    
     path("userfood", views.user_food, name="userfood"),    
     path("exercise", views.exercise, name="exercise"),
+    path("userexercise", views.user_exercise, name="userexercise"),
     path("challenge", views.challenge, name="challenge"),
 
     path("empty", views.empty, name="empty")

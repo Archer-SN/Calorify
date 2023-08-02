@@ -125,15 +125,17 @@
                             <thead>
                                 <tr>
                                     <th>Exercise Name</th>
+                                    <th>Source</th>
                                 </tr>
                             </thead>
                             <tbody id="exercise-search-results">
                                 <i class="htmx-indicator fa-solid fa-atom fa-spin fa-xl"></i>
                                 {% block exercise_search_result %}
                                     {% for exercise_data in exercise_data_list %}
-                                        <tr @click='exerciseSummaryOpen = true' hx-trigger='click' hx-get="{% url 'userexercise' %}" hx-target='#exercise-summary-panel' hx-swap='innerHTML' class='hover' hx-vals='{{ exercise_data.vals }}'>
-                                            <td>{{ exercise_data.name }}</td>
-                                            <td>EXERCISE!</td>
+                                        <tr @click='exerciseSummaryOpen = true' hx-trigger='click' hx-get="{% url 'userexercise' %}" hx-target='#exercise-summary-panel' hx-swap='innerHTML' hx-vals='{{ exercise_data.vals }}' class='hover' >
+                                            <td>{{ exercise_data.exercise_name }}</td>
+                                            <!--Data Source is hard coded for now-->
+                                            <td>Muscle Wiki</td>
                                         </tr>
                                     {% endfor %}
                                 {% endblock %}
@@ -141,7 +143,7 @@
                         </table>
                     </div>
                     {% block exercise_summary %}
-                        <p>Hello EXERCISE</p>
+                        
                     {% endblock %}
                 </span>
             </div>

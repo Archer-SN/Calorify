@@ -556,35 +556,20 @@ class UserFood(models.Model):
         return self.food.get_nutrient(nutrient_code, self.weight)
 
 
-# Category of the exercise
-class ExerciseCategory(models.Model):
-    # Name of the category
-    name = models.TextField()
-
-
-class ExerciseDifficulty(models.Model):
-    # Name of the difficulty
-    name = models.CharField(max_length=16)
-
-
-# # Type of grip that the strength exercise uses
-# class Grip(models.Model):
-#     pass
-
-
-# # Type of force that the exercise uses. Push or Pull
-# class Force(models.Model):
-#     pass
-
-
 # Stores the name and description of each exercise.
 class StrengthExercise(models.Model):
     name = models.CharField(max_length=64)
-    difficulty = models.ForeignKey(ExerciseDifficulty, on_delete=models.CASCADE)
-    category = models.ForeignKey(ExerciseCategory, on_delete=models.CASCADE)
-    # force = models.ForeignKey(Force, on_delete=models.CASCADE)
-    # grip = models.ForeignKey(Grip, on_delete=models.CASCADE)
+    difficulty = models.CharField(max_length=24)
+    category = models.CharField(max_length=24)
     description = models.TextField()
+
+    # Returns detailed information of the user exercise.
+    # It is used in html
+    def get_data(self):
+        return {
+            "id": self.id,
+            "exercise_name": self.name,
+        }
 
 
 # StrengthExercise entry created by the user
@@ -610,11 +595,3 @@ class UserStrengthExercise(models.Model):
     # Returns basic information of the exercise.
     def info(self):
         return {"n": self.exercise.name}
-
-    # Returns detailed information of the user exercise.
-    # It is used in html
-    def data(self):
-        return {
-            "id": self.id,
-            "name": self.exercise.name,
-        }

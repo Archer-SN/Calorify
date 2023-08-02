@@ -228,19 +228,19 @@ def exercise(request):
             search = request.GET.get("search", "")
             context = {}
             if search:
-                exercise_list = get_exercise_data(search)
-                context = {"food_data_list": exercise_list}
+                params = {"name": search}
+                exercise_data_list = get_exercise_data(params)
+                context = {"exercise_data_list": exercise_data_list}
             else:
                 # TODO: Only handles StrengthExercise instances for now...
                 context = {
-                    "food_data_list": [
-                        food_obj.get_data() for food_obj in food_obj_list
+                    "exercise_data_list": [
+                        exercise_obj.get_data()
+                        for exercise_obj in StrengthExercise.objects.all()[0:20]
                     ]
                 }
-                for exercise in StrengthExercise.objects.filter(label__icontains=search)[0:20]:
-                    pass
             response = render_block_to_string(
-                "diary.html", "exercise_search_result", context
+                "diary.html", "exercise_search_result", context=context, request=request
             )
             return HttpResponse(response)
 
