@@ -499,16 +499,16 @@ class DailyEntry(models.Model):
     # It is used in html templates
     def summarize(self):
         food_intake = []
-        exercises = []
+        user_exercises = []
         for user_food in UserFood.objects.filter(daily_entry=self):
-            food_intake.append(user_food.data())
-        for exercise in UserStrengthExercise.objects.filter(daily_entry=self):
-            exercises.append(exercise.data())
+            food_intake.append(user_food.get_data())
+        for user_exercise in UserStrengthExercise.objects.filter(daily_entry=self):
+            user_exercises.append(user_exercise.get_data())
 
         return {
             "date": self.date,
             "food_intake": food_intake,
-            "exercises": exercises,
+            "user_exercises": user_exercises,
             "nutrient_categories": self.summarize_nutrients(),
         }
 
@@ -538,7 +538,7 @@ class UserFood(models.Model):
 
     # Returns detailed information of the user food.
     # It is used in html
-    def data(self):
+    def get_data(self):
         vals = {"user_food_id": self.id}
         return {
             "label": self.food.label,
@@ -604,3 +604,12 @@ class UserStrengthExercise(models.Model):
     # Returns basic information of the exercise.
     def info(self):
         return {"n": self.exercise.name}
+
+    def get_data(self):
+        return {
+            "id": self.id,
+            "name": self.exercise.name,
+            "sets": self.sets,
+            "reps": self.reps,
+            "weights": self.weights,
+        }

@@ -191,7 +191,7 @@ def user_food(request):
                     weight=amount,
                 )
                 context = {
-                    "food_intake": [new_user_food.data()],
+                    "food_intake": [new_user_food.get_data()],
                 }
                 response = render_block_to_string("diary.html", "food_entries", context)
                 return HttpResponse(response)
@@ -230,81 +230,77 @@ def exercise(request):
             if search:
                 params = {"name": search}
                 exercise_list = get_exercises(params)
-                context = {
-                    "exercise_data_list": [
-                        exercise.get_data() for exercise in exercise_list
-                    ]
-                }
+                context = {"exercise_list": exercise_list}
             else:
                 # TODO: Only handles StrengthExercise instances for now...
-                context = {
-                    "exercise_data_list": [
-                        exercise.get_data()
-                        for exercise in StrengthExercise.objects.all()[0:20]
-                    ]
-                }
+                context = {"exercise_list": StrengthExercise.objects.all()[0:20]}
             response = render_block_to_string(
                 "diary.html", "exercise_search_result", context=context, request=request
             )
             return HttpResponse(response)
 
 
+# Handles the creation, deletion and change of UserExercise object
+# TODO: Handle Cardio
 @login_required
 def user_exercise(request):
     if request.htmx:
         # Creates new UserExercise instance
         if request.method == "POST":
-            user_food_id = request.POST.get("user_food_id")
-            form = UserFoodForm(request.POST)
-            # Given a user_food_id, delete a UserFood instance from the databse
-            if user_food_id:
-                UserFood.objects.filter(id=user_food_id).delete()
+            user_exercise_id = request.POST.get("user_exercise_id")
+            form = UserStengthExerciseForm(request.POST)
+            # Given a user_exercise_id, delete a UserExercise instance from the databse
+            if user_exercise_id:
+                UserStrengthExercise.objects.filter(id=user_exercise_id).delete()
                 return HttpResponse()
-            # The user wants to create a new UserFood instance
+            # The user wants to create a new UserExercise instance
             elif form.is_valid():
-                amount = form.cleaned_data["amount"]
                 time_added = form.cleaned_data["time_added"]
-                unit = form.cleaned_data["unit"]
-                food_id = form.cleaned_data["food_id"]
+                sets = form.cleaned_data["sets"]
+                reps = form.cleaned_data["reps"]
+                weights = form.cleaned_data["weights"]
+                exercise_id = form.cleaned_data["exercise_id"]
                 daily_entry_date = request.POST.get(
                     "daily_entry_date", datetime.today()
                 )
                 daily_entry, _ = DailyEntry.objects.get_or_create(
                     user=request.user, date=daily_entry_date
                 )
-                # TODO: Make a system that handle different units
-                new_user_food = UserFood.objects.create(
-                    food_id=food_id,
+                new_user_exercise = UserStrengthExercise.objects.create(
+                    exercise_id=exercise_id,
                     daily_entry=daily_entry,
                     time_added=time_added,
-                    weight=amount,
+                    sets=sets,
+                    reps=reps,
+                    weights=weights,
                 )
-                context = {
-                    "food_intake": [new_user_food.data()],
-                }
-                response = render_block_to_string("diary.html", "food_entries", context)
+                context = {"user_exercises": [new_user_exercise.get_data()]}
+                response = render_block_to_string(
+                    "diary.html", "exercise_entries", context
+                )
                 return HttpResponse(response)
             return HttpResponse()
         elif request.method == "GET":
-            exercise_id = request.GET.get("exerciseId", "")
+            exercise_id = request.GET.get("exerciseId", None)
             # If the user wants to obtain more detailed data about a specific exercise
             if exercise_id:
                 daily_entry_date = request.GET.get(
                     "daily_entry_date", str(date.today())
                 )
+                # What to be passed into the api
                 params = {"id": exercise_id}
-                # The first object is the one we want
-                exercise = get_exercises(params)[0]
-                user_strength_exercise_form = UserStengthExerciseForm(
+                # The first exercise data is the one we want
+                exercise_data = get_exercise_data(params)[0]
+                user_exercise_form = UserStengthExerciseForm(
                     initial={
-                        "exercise_id": food_id,
+                        "exercise_id": exercise_id,
                         "daily_entry_date": daily_entry_date,
                     }
                 )
                 context = {
                     "type": "exercise",
-                    "exercise": exercise.get_full_data(),
-                    "user_strength_exercise_form": user_strength_exercise_form,
+                    "exercise_data": exercise_data,
+                    "user_exercise_form": user_exercise_form,
                 }
                 response = render_block_to_string(
                     "diary.html", "exercise_summary", context

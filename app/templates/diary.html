@@ -94,7 +94,7 @@
                             </div>
                             <div class="basis-1/2 order-solid border-2 rounded-lg p-6">
                                 <!--Here, we both change the food entries and nutrients summary-->
-                                <form id="userfood-form" hx-post="{% url 'userfood' %}" hx-trigger="click closest from:#submit-user-food queue:all" hx-target="#entries-container" hx-swap="beforeend" class="form-control flex flex-col gap-2">
+                                <form id="userfood-form" hx-post="{% url 'userfood' %}" hx-trigger="click closest from:#submit-user-food queue:all" hx-target="#food-entries-container" hx-swap="beforeend" class="form-control flex flex-col gap-2">
                                     {{ user_food_form }}
                                     <!--Delay so that the food is added first before we obtain the daily nutrition data-->
                                     <!--Should work 99% of the time-->
@@ -131,9 +131,9 @@
                             <tbody id="exercise-search-results">
                                 <i class="htmx-indicator fa-solid fa-atom fa-spin fa-xl"></i>
                                 {% block exercise_search_result %}
-                                    {% for exercise_data in exercise_data_list %}
-                                        <tr x-data="{ exerciseId: {{ exercise_data.id }} }" @click='exerciseSummaryOpen = true' hx-trigger='click' hx-get="{% url 'userexercise' %}" hx-target='#exercise-summary-panel' hx-swap='innerHTML' hx-vals='js:{exercise_id: exerciseId}' class='hover' >
-                                            <td>{{ exercise_data.exercise_name }}</td>
+                                    {% for exercise in exercise_list %}
+                                        <tr @click='exerciseSummaryOpen = true' hx-trigger='click' hx-get="{% url 'userexercise' %}" hx-target='#exercise-summary-panel' hx-vals='{ "exerciseId" : "{{ exercise.id }}" }' hx-swap='innerHTML' class='hover' >
+                                            <td>{{ exercise.name }}</td>
                                             <!--Data Source is hard coded for now-->
                                             <td>Muscle Wiki</td>
                                         </tr>
@@ -143,7 +143,51 @@
                         </table>
                     </div>
                     {% block exercise_summary %}
-                        
+                        <div id="exercise-summary-panel" x-show="exerciseSummaryOpen" class="w-full place-self-center flex flex-row justify-evenly p-5 gap-6">
+                            <div class="basis-1/2 border-solid border-2 rounded-lg p-6 overflow-y-scroll">
+                                <h2 class="text-lg font-bold">{{ exercise_data.exercise_name }}</h2>
+                                <ul>
+                                    <li><p class="font-bold inline">Difficulty:</p> {{ exercise_data.Difficulty }}</li>
+                                    <li><p class="font-bold inline">Category:</p> {{ exercise_data.Category }}</li>
+                                    <li><p class="font-bold inline">Force:</p> {{ exercise_data.Force }}</li>
+                                    <li><p class="font-bold inline">Grips:</p> {{ exercise_data.Grips }}</li>
+                                </ul>
+                                <div x-data="{ showTargets : false }" >
+                                    <div @click="showTargets = ! showTargets" class="hover:bg-primary-content select-none">Muscle Targets</div>
+                                    <div x-show="showTargets" class="">
+                                        <div>
+                                            <p>Primary</p>
+                                            <ul>
+                                                {% for muscle_target in exercise_data.target.Primary %}
+                                                    <li>{{ muscle_target }}</li>
+                                                    {% empty %}
+                                                    <li>None</li>
+                                                    {% endfor %}
+                                                </ul>
+                                            </div>
+                                            <div>
+                                                <p>Secondary</p>
+                                                <ul>
+                                                    {% for muscle_target in exercise_data.target.Secondary %}
+                                                    <li>{{ muscle_target }}</li>
+                                                    {% empty %}
+                                                    <li>None</li>
+                                                {% endfor %}
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="basis-1/2 order-solid border-2 rounded-lg p-6">
+                                <!--Here, we both change the food entries and nutrients summary-->
+                                <form id="userexercise-form" hx-post="{% url 'userexercise' %}" hx-trigger="click closest from:#submit-user-exercise queue:all" hx-target="#exercise-entries-container" hx-swap="beforeend" class="form-control flex flex-col gap-2">
+                                    {{ user_exercise_form }}
+                                    <!--Delay so that the food is added first before we obtain the daily nutrition data-->
+                                    <!--Should work 99% of the time-->
+                                    <input @click="exerciseModalOpen = false" id="submit-user-exercise" value="Add to Diary" type="submit" value="Add To Diary" class="btn btn-success">
+                                </form>
+                            </div>
+                        </div>
                     {% endblock %}
                 </span>
             </div>
@@ -154,24 +198,74 @@
                     <button id="add-food" class="btn btn-outline" hx-get="{% url 'food' %}" hx-target="#food-search-results" hx-swap="innerHTML" @click="foodModalOpen = true">Add Food</button>
                     <button id="add-exercise" class="btn btn-outline" hx-get="{% url 'exercise' %}" hx-target="#exercise-search-results" hx-swap="innerHTML" @click="exerciseModalOpen = true">Add Exercise</button>
                 </div>
-                <table class="basis-1 table overflow-scroll">
-                    <tbody id="entries-container" >
-                        {% block food_entries %}
-                            <!--Food and exercise entries are shown here-->
-                            {% for food_entry in food_intake %}
-                                <tr data="{ showFoodEntry: true }" class="hover rounded border-solid border-y-2" >
-                                    <td>{{ food_entry.label }}</td>
-                                    <td>{{ food_entry.weight }}</td>
-                                    <td>g</td>
-                                    <td>{{ food_entry.energy }}</td>
-                                    <td>kcal</td>
-                                    <!--Delay to prevent race condition. Works 99% of the time I guess.-->
-                                    <td hx-trigger="click delay:1ms" hx-get="{% url 'nutrients' %}" hx-target="#summary" hx-swap="outerHTML">
+                <div>
+                    <table id="food-entries-table" class="table">
+                        <thead>
+                            <tr>
+                                <th></th>
+                                <th>Food Name</th>
+                                <th>Weight</th>
+                                <th>Weight Unit</th>
+                                <th>Energy</th>
+                                <th>Energy Unit</th>
+                            </tr>
+                        </thead>
+                        <tbody id="food-entries-container">
+                            {% block food_entries %}
+                                <!--Food and exercise entries are shown here-->
+                                {% for food_entry in food_intake %}
+                                    <tr data="{ showFoodEntry: true }" class="hover rounded border-solid border-y-2" >
+                                        <td><i class="fa-solid fa-apple-whole"></i></td>
+                                        <td>{{ food_entry.label }}</td>
+                                        <td>{{ food_entry.weight }}</td>
+                                        <td>g</td>
+                                        <td>{{ food_entry.energy }}</td>
+                                        <td>kcal</td>
+                                        <!--Delay to prevent race condition. Works 99% of the time I guess.-->
+                                        <td hx-trigger="click delay:1ms" hx-get="{% url 'nutrients' %}" hx-target="#summary" hx-swap="outerHTML">
+                                            <button 
+                                            hx-trigger="click" 
+                                            hx-sync="closest td:queue all" 
+                                            hx-post="{% url 'userfood' %}" 
+                                            hx-vals='{{ food_entry.vals }}' 
+                                            hx-swap="delete swap:10ms" 
+                                            hx-target="closest tr" 
+                                            @click="showFoodEntry = false"
+                                            class="btn btn-outline btn-error"
+                                                    >Delete</button>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            {% endblock %}
+                        </tbody>
+                    </table>
+                </div>
+                <table id="exercise-entries-table" class="table">
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th>Exercise Name</th>
+                            <th>Sets</th>
+                            <th>Reps</th>
+                            <th>Weights</th>
+                        </tr>
+                    </thead>
+                    <tbody id="exercise-entries-container">
+                        {% block exercise_entries %}
+                            {% for user_exercise in user_exercises %}
+                                <tr class="hover">
+                                    <td>
+                                        <i class="fa-solid fa-person-running"></i>
+                                    </td>
+                                    <td>{{ user_exercise.name }}</td>
+                                    <td>{{ user_exercise.sets }}</td>
+                                    <td>{{ user_exercise.reps }}</td>
+                                    <td>{{ user_exercise.weights }}</td>
+                                    <td>
                                         <button 
                                         hx-trigger="click" 
-                                        hx-sync="closest td:queue all" 
-                                        hx-post="{% url 'userfood' %}" 
-                                        hx-vals='{{ food_entry.vals }}' 
+                                        hx-post="{% url 'userexercise' %}" 
+                                        hx-vals='{ "user_exercise_id": {{ user_exercise.id }} }' 
                                         hx-swap="delete swap:10ms" 
                                         hx-target="closest tr" 
                                         @click="showFoodEntry = false"
@@ -181,13 +275,6 @@
                                 </tr>
                             {% endfor %}
                         {% endblock %}
-                        {% for exercise in exercises %}
-                            <tr class="hover">
-                                <td>{{ exercise.name }}</td>
-                                <td>{{ exercise.duration }}</td>
-                                <td>minutes</td>
-                            </tr>
-                        {% endfor %}
                     </tbody>
                 </table>
             </div>

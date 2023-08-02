@@ -117,8 +117,8 @@ class UserStengthExerciseForm(forms.Form):
         widget=forms.TimeInput(format="%H:%M", attrs={"type": "time"}),
     )
     sets = forms.IntegerField(initial=1)
-    # TODO: Unit Feature omitted for now
     reps = forms.IntegerField(initial=1)
+    weights = forms.FloatField(initial=1)
 
     def __init__(self, *args, **kwargs):
         super(UserStengthExerciseForm, self).__init__(*args, **kwargs)
