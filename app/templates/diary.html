@@ -132,7 +132,7 @@
                                 <i class="htmx-indicator fa-solid fa-atom fa-spin fa-xl"></i>
                                 {% block exercise_search_result %}
                                     {% for exercise_data in exercise_data_list %}
-                                        <tr @click='exerciseSummaryOpen = true' hx-trigger='click' hx-get="{% url 'userexercise' %}" hx-target='#exercise-summary-panel' hx-swap='innerHTML' hx-vals='{{ exercise_data.vals }}' class='hover' >
+                                        <tr x-data="{ exerciseId: {{ exercise_data.id }} }" @click='exerciseSummaryOpen = true' hx-trigger='click' hx-get="{% url 'userexercise' %}" hx-target='#exercise-summary-panel' hx-swap='innerHTML' hx-vals='js:{exercise_id: exerciseId}' class='hover' >
                                             <td>{{ exercise_data.exercise_name }}</td>
                                             <!--Data Source is hard coded for now-->
                                             <td>Muscle Wiki</td>

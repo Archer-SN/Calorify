@@ -224,7 +224,7 @@ def import_user_meal_plan(user, food_dict_list, date=datetime.now()):
 # Call the api to obtain data about the exercise and also create instances of those exercises as StrengthExercise object
 # Usually, multiple exercises will be returned from the api
 # So, a list will be returned
-def get_exercise_data(params) -> list:
+def get_exercises(params) -> list:
     response = requests.get(
         EXERCISE_DB_EP, headers=EXERCISE_DB_HEADERS, params=params
     ).json()
@@ -238,7 +238,7 @@ def get_exercise_data(params) -> list:
         )
         exercise_list.append(exercise)
     StrengthExercise.objects.bulk_create(exercise_list, ignore_conflicts=True)
-    return response
+    return exercise_list
 
 
 def import_exercise_plan():

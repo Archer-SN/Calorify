@@ -229,14 +229,18 @@ def exercise(request):
             context = {}
             if search:
                 params = {"name": search}
-                exercise_data_list = get_exercise_data(params)
-                context = {"exercise_data_list": exercise_data_list}
+                exercise_list = get_exercises(params)
+                context = {
+                    "exercise_data_list": [
+                        exercise.get_data() for exercise in exercise_list
+                    ]
+                }
             else:
                 # TODO: Only handles StrengthExercise instances for now...
                 context = {
                     "exercise_data_list": [
-                        exercise_obj.get_data()
-                        for exercise_obj in StrengthExercise.objects.all()[0:20]
+                        exercise.get_data()
+                        for exercise in StrengthExercise.objects.all()[0:20]
                     ]
                 }
             response = render_block_to_string(
@@ -247,7 +251,65 @@ def exercise(request):
 
 @login_required
 def user_exercise(request):
-    pass
+    if request.htmx:
+        # Creates new UserExercise instance
+        if request.method == "POST":
+            user_food_id = request.POST.get("user_food_id")
+            form = UserFoodForm(request.POST)
+            # Given a user_food_id, delete a UserFood instance from the databse
+            if user_food_id:
+                UserFood.objects.filter(id=user_food_id).delete()
+                return HttpResponse()
+            # The user wants to create a new UserFood instance
+            elif form.is_valid():
+                amount = form.cleaned_data["amount"]
+                time_added = form.cleaned_data["time_added"]
+                unit = form.cleaned_data["unit"]
+                food_id = form.cleaned_data["food_id"]
+                daily_entry_date = request.POST.get(
+                    "daily_entry_date", datetime.today()
+                )
+                daily_entry, _ = DailyEntry.objects.get_or_create(
+                    user=request.user, date=daily_entry_date
+                )
+                # TODO: Make a system that handle different units
+                new_user_food = UserFood.objects.create(
+                    food_id=food_id,
+                    daily_entry=daily_entry,
+                    time_added=time_added,
+                    weight=amount,
+                )
+                context = {
+                    "food_intake": [new_user_food.data()],
+                }
+                response = render_block_to_string("diary.html", "food_entries", context)
+                return HttpResponse(response)
+            return HttpResponse()
+        elif request.method == "GET":
+            exercise_id = request.GET.get("exerciseId", "")
+            # If the user wants to obtain more detailed data about a specific exercise
+            if exercise_id:
+                daily_entry_date = request.GET.get(
+                    "daily_entry_date", str(date.today())
+                )
+                params = {"id": exercise_id}
+                # The first object is the one we want
+                exercise = get_exercises(params)[0]
+                user_strength_exercise_form = UserStengthExerciseForm(
+                    initial={
+                        "exercise_id": food_id,
+                        "daily_entry_date": daily_entry_date,
+                    }
+                )
+                context = {
+                    "type": "exercise",
+                    "exercise": exercise.get_full_data(),
+                    "user_strength_exercise_form": user_strength_exercise_form,
+                }
+                response = render_block_to_string(
+                    "diary.html", "exercise_summary", context
+                )
+                return HttpResponse(response)
 
 
 @login_required
@@ -261,7 +323,6 @@ def challenge(request):
                 return HttpResponse(
                     "Challenge does not exist. Challenge ID: " + challenge_id
                 )
-            print(1)
             user_challenge = Challenge.objects.get(id=challenge_id, user=user)
             if user_challenge.is_completed:
                 return HttpResponse("ALready Done")

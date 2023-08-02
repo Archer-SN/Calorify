@@ -571,6 +571,15 @@ class StrengthExercise(models.Model):
             "exercise_name": self.name,
         }
 
+    def get_full_data(self):
+        return {
+            "id": self.id,
+            "exercise_name": self.name,
+            "difficulty": self.difficulty,
+            "category": self.category,
+            "description": self.description,
+        }
+
 
 # StrengthExercise entry created by the user
 class UserStrengthExercise(models.Model):
