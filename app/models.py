@@ -249,41 +249,6 @@ class Difficulty(models.Model):
         return self.name
 
 
-class Challenge(models.Model):
-    user = models.ManyToManyField(User)
-    difficulty = models.ForeignKey(Difficulty, on_delete=models.CASCADE)
-    # The challenge's name
-    name = models.CharField(max_length=64)
-    # The description of the challenge
-    description = models.TextField()
-    is_completed = models.BooleanField(default=False)
-    date_created = models.DateField(default=datetime.now)
-    expire_date = models.DateField(default=tomorrow)
-
-    def complete_challenge(self):
-        self.is_completed = True
-        # TODO: Fix this bug
-        # self.user.userrpg.gain_xp(self.difficulty.xp)
-        # self.user.userrpg.gain_gems(self.difficulty.gems)
-
-    def is_expired(self):
-        if datetime.now() > self.expire_date:
-            return True
-        return False
-
-    def html_format(self):
-        response = TR(TD(self.name), TD(self.difficulty), TD(self.expire_date))
-        return render(response, {})
-
-    def info(self):
-        return {
-            "id": self.id,
-            "name": self.name,
-            "difficulty": self.difficulty,
-            "expire_date": self.expire_date,
-        }
-
-
 class Nutrient(models.Model):
     # The code that the food database uses for identifying the nutrient
     id = models.CharField(max_length=32, unique=True, primary_key=True)
@@ -421,6 +386,13 @@ class DailyEntry(models.Model):
                 name="There cant be 2 same daily entries for one user!",
             )
         ]
+
+    # TODO: Create Daily, Weekly, and Monthly challenges here.
+    def save(self, *args, **kwargs):
+        created = not self.pk
+        super().save(*args, **kwargs)
+        if created:
+            pass
 
     # This summary will be used by AI
     # A shortened version of summary to reduce API usage cost
@@ -612,4 +584,35 @@ class UserStrengthExercise(models.Model):
             "sets": self.sets,
             "reps": self.reps,
             "weights": self.weights,
+        }
+
+
+class Challenge(models.Model):
+    daily_entry = models.ManyToManyField(DailyEntry)
+    difficulty = models.ForeignKey(Difficulty, on_delete=models.CASCADE)
+    # The challenge's name
+    name = models.CharField(max_length=64)
+    # The description of the challenge
+    description = models.TextField()
+    is_completed = models.BooleanField(default=False)
+    date_created = models.DateField(default=datetime.now)
+    expire_date = models.DateField(default=tomorrow)
+
+    def complete_challenge(self):
+        self.is_completed = True
+        # TODO: Fix this bug
+        # self.user.userrpg.gain_xp(self.difficulty.xp)
+        # self.user.userrpg.gain_gems(self.difficulty.gems)
+
+    def is_expired(self):
+        if datetime.now() > self.expire_date:
+            return True
+        return False
+
+    def info(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "difficulty": self.difficulty,
+            "expire_date": self.expire_date,
         }

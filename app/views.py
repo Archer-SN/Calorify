@@ -32,7 +32,7 @@ AVAILABLE_PROMPTS = {
 def index(request):
     if request.user.is_authenticated:
         return HttpResponseRedirect(reverse("home"))
-    return HttpResponseRedirect(reverse("login"))
+    return render(request, "hero.html")
 
 
 # This handles the home page
@@ -78,11 +78,7 @@ def home(request):
 def diary(request):
     if request.method == "GET":
         user = request.user
-        challenges = Challenge.objects.filter(user=user)
         challenges_info = []
-        for challenge in challenges:
-            if not challenge.is_completed:
-                challenges_info.append(challenge.info())
         # Renders part of the page (Though almost the whole page)
         if request.htmx:
             # Given a new date, renders the body of the page
@@ -91,6 +87,10 @@ def diary(request):
                 user=user, date=chosen_date
             )
             summary = daily_entry.summarize()
+            challenges = Challenge.objects.filter(daily_entry=daily_entry)
+            for challenge in challenges:
+                if not challenge.is_completed:
+                    challenges_info.append(challenge.info())
             context = {**summary, "challenges": challenges_info}
             response = render_block_to_string("diary.html", "body", context)
             return HttpResponse(response)
@@ -99,6 +99,10 @@ def diary(request):
             daily_entry, _ = DailyEntry.objects.get_or_create(
                 user=user, date=datetime.now()
             )
+            challenges = Challenge.objects.filter(daily_entry=daily_entry)
+            for challenge in challenges:
+                if not challenge.is_completed:
+                    challenges_info.append(challenge.info())
             summary = daily_entry.summarize()
             return render(
                 request,
@@ -342,21 +346,28 @@ def ask_ai(request):
                 return HttpResponse("NOT WORKING!")
             # The user asks to analyze their history
             elif prompt == "Analyze my history":
-                number_of_days = request.GET.get("days", 30)
+                number_of_days = int(request.GET.get("numberOfDays", 30))
                 gpt_response = ai_analyze_history(request.user, number_of_days)
                 context = {"type": "analysis", "paragraph": gpt_response}
                 response = render_block_to_string("askai.html", "gpt_response", context)
                 return HttpResponse(response)
             # The user asks to recommend a meal plan
             elif prompt == "Recommend me a meal plan":
+                number_of_days = int(request.GET.get("numberOfDays", 30))
                 # If the api call is successful, a context should be returned
                 context = ask_meal_plan_gpt(request.user)
                 response = render_block_to_string("askai.html", "gpt_response", context)
                 return HttpResponse(response)
             # The user asks to recommend an exercise routine
             elif prompt == "Recommend me an exercise routine":
+                time_available = request.GET.get("timeAvailable", 60)
+                exercise_type = request.GET.get("exerciseType")
                 # The context should be generated if the AI call is successful
-                context = ask_exercise_plan_gpt(request.user)
+                context = ask_exercise_plan_gpt(
+                    request.user,
+                    time_available=time_available,
+                    exercise_type=exercise_type,
+                )
                 response = render_block_to_string("askai.html", "gpt_response", context)
                 return HttpResponse(response)
             return HttpResponse("Non-existent prompt")

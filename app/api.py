@@ -250,73 +250,135 @@ def import_exercise_plan():
 
 
 # Given a paragraph and a list of dictionary of exercise names, sets, reps, create a context for rendering in html
-def create_exercise_plan_context(paragraph, exercise_dict_list):
-    print(exercise_dict_list)
-    context = {
-        "type": "exercise",
-        "paragraph": paragraph,
-        "exercise_dict_list": exercise_dict_list,
-    }
+def create_exercise_plan_context(exercise_schedule):
+    # TODO: VIDEO
+    # all_exercise_data = get_exercise_data()
+    # for exercise_routine in exercise_schedule:
+    #     if type(exercise_routine) == list:
+    #         for exercise in exercise_routine:
+    #             exercise_schedule
+    context = {"type": "exercise", "exercise_schedule": exercise_schedule}
     return context
 
 
 # Ask ChatGPT for the exercise plan
-def ask_exercise_plan_gpt(user):
+def ask_exercise_plan_gpt(user, time_available=60, exercise_type="Weight Lifting"):
     messages = [
         DEFAULT_SYSTEM_MESSAGE,
         {
             "role": "system",
-            "content": "The exercise routine must specify the name of the exercise, number of reps, and number of sets. Also, specify the estimated time that it will take to finish",
+            "content": "The exercise routine must fully specify the name of the exercise, the weight, number of reps, and number of sets. Also, specify the estimated time that it will take to finish",
+        },
+        {
+            "role": "system",
+            "content": "I want to do {exercise_type} exercises.".format(
+                exercise_type=exercise_type
+            ),
         },
         {
             "role": "user",
-            "content": "Recommend me an exercise routine based on the following information: {info}".format(
-                info=user.info()
+            "content": "Recommend me a full week exercise schedule. Each session can completed within {time_available} minutes. Base your recommendation on the following information: {info}".format(
+                time_available=time_available, info=user.info()
             ),
         },
     ]
     functions = [
         {
             "name": "create_exercise_plan_context",
-            "description": "Given a paragraph and a list of dictionary of exercise names, sets, reps, create a context that is necessary for rendering html",
+            "description": "Given an array of exercise routine, create a context that is necessary for rendering html",
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "paragraph": {
-                        "type": "string",
-                        "description": "A paragraph of what ChatGPT wants to say before recommending the exercise plan",
-                    },
-                    "exercise_dict_list": {
+                    "exercise_schedule": {
                         "type": "array",
                         "items": {
                             "type": "object",
                             "properties": {
-                                "exercise_name": {
+                                "is_rest_day": {
+                                    "type": "boolean",
+                                    "description": "True if you don't have to do any exercise on that day",
+                                },
+                                "day_of_the_week": {
                                     "type": "string",
-                                    "description": "Name of the exercise",
+                                    "description": "Day of the week. Ex: Monday, Friday, Tuesday, etc.",
                                 },
-                                "sets": {
-                                    "type": "number",
-                                    "description": "Number of sets",
+                                "warmup": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "exercise_name": {
+                                                "type": "string",
+                                                "description": "Name of the exercise",
+                                            },
+                                            "duration": {
+                                                "type": "number",
+                                                "description": "Time it takes to complete the exercise (in minutes)",
+                                            },
+                                        },
+                                    },
                                 },
-                                "reps": {
-                                    "type": "number",
-                                    "description": "Number of reps",
+                                "strength_exercises": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "exercise_name": {
+                                                "type": "string",
+                                                "description": "Name of the exercise",
+                                            },
+                                            "sets": {
+                                                "type": "number",
+                                                "description": "Number of sets",
+                                            },
+                                            "reps": {
+                                                "type": "number",
+                                                "description": "Number of reps",
+                                            },
+                                        },
+                                    },
+                                },
+                                "cardio": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exercise_name": {
+                                            "type": "string",
+                                            "description": "Name of the exercise",
+                                        },
+                                        "duration": {
+                                            "type": "number",
+                                            "description": "Time it takes to complete the exercise (in minutes)",
+                                        },
+                                    },
+                                    "description": "A list of exercises to do during cardio",
+                                },
+                                "cooldown": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exercise_name": {
+                                            "type": "string",
+                                            "description": "Name of the exercise",
+                                        },
+                                        "duration": {
+                                            "type": "number",
+                                            "description": "Time it takes to complete the exercise (in minutes)",
+                                        },
+                                    },
+                                    "description": "Exercise to do during cooldown",
                                 },
                             },
                         },
                     },
                 },
-                "required": ["paragraph", "exercise_dict_list"],
+                "required": ["exercise_schedule"],
             },
         }
     ]
     response = openai.ChatCompletion.create(
-        model=GPT_MODEL,
+        model=GPT_MODEL_16K,
         messages=messages,
         functions=functions,
         temperature=1,
-        max_tokens=512,
         top_p=1,
         frequency_penalty=0,
         presence_penalty=0,
@@ -332,8 +394,7 @@ def ask_exercise_plan_gpt(user):
         ):
             function_args = json.loads(response_message["function_call"]["arguments"])
             function_response = create_exercise_plan_context(
-                paragraph=function_args.get("paragraph"),
-                exercise_dict_list=function_args.get("exercise_dict_list"),
+                exercise_schedule=function_args.get("exercise_schedule"),
             )
             return function_response
 

@@ -10,46 +10,51 @@
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7" /></svg>
             </label>
             <div x-data="{ showOption : false }">
-                <button  @click="showOption = ! showOption" class="btn btn-outline">Analyze my history</button>
+                <button  @click="showOption = ! showOption" class="btn btn-outline p-4">Analyze my history <i class="fa-solid fa-angle-down" :class="showOption ? 'fa-rotate-180' : '' "></i></button>
                 <div x-data="{ dayRange : 30 }" x-show="showOption">
                     <form hx-get="{% url 'askai' %}" hx-target="#gpt-response" hx-swap="beforeend" hx-vals='{"prompt": "Analyze my history"}' hx-indicator=".htmx-indicator">
                         <div class="p-6 flex flex-col align-center gap-6">
                             <div class="flex flex-row justify-between align-center">
                                 <label for="day-range" class="label-text">Day Range</label>
-                                <input :value="dayRange" @input="dayRange = $el.value" type="number" min="1" max="180" value="30" class="">
+                                <input :value="dayRange" @input="dayRange = $el.value" name="numberOfDays" type="number" min="1" max="180" value="30" class="">
                             </div>
-                            <input @input="dayRange = $el.value" :value="dayRange" name="day-range" type="range" min="1" max="180" value="30" class="range" />
+                            <input @input="dayRange = $el.value" :value="dayRange" type="range" min="1" max="180" value="30" class="range" />
                             <input value="Ask AI" type="submit" class="btn btn-success">
                         </div>
                     </form>
                 </div>
             </div>
             <div x-data="{ showOption : false }">
-                <button @click="showOption = ! showOption" class="btn btn-outline flex flex-row">Recommend me a meal plan <i class="fa-solid fa-angle-down" :class="showOption ? 'fa-rotate-180' : '' "></i></button>
+                <button @click="showOption = ! showOption" class="btn btn-outline flex flex-row p-4">Recommend me a meal plan <i class="fa-solid fa-angle-down" :class="showOption ? 'fa-rotate-180' : '' "></i></button>
                 <div x-data="{ dayRange : 30 }" x-show="showOption">
                     <form hx-get="{% url 'askai' %}" hx-target="#gpt-response" hx-swap="beforeend" hx-vals='{"prompt": "Recommend me a meal plan"}' hx-indicator=".htmx-indicator">
                         <div class="p-6 flex flex-col align-center gap-6">
                             <div class="flex flex-row justify-between align-center">
                                 <label for="day-range" class="label-text">Day Range</label>
-                                <input :value="dayRange" @input="dayRange = $el.value" type="number" min="1" max="180" value="30" class="">
+                                <input :value="dayRange" @input="dayRange = $el.value" name="numberOfDays" type="number" min="1" max="180" value="30" class="">
                             </div>
-                            <input @input="dayRange = $el.value" :value="dayRange" name="day-range" type="range" min="1" max="180" value="30" class="range" />
+                            <input @input="dayRange = $el.value" :value="dayRange" type="range" min="1" max="180" value="30" class="range" />
                             <input value="Ask AI" type="submit" class="btn btn-success">
                         </div>
                     </form>
                 </div>
             </div>
             <div x-data="{ showOption : false }">
-                <button @click="showOption = ! showOption" class="btn btn-outline">Recommend me an exercise routine</button>
-                <div x-data="{ timeAvailable : 1 }" x-show="showOption">
-                    <form hx-get="{% url 'askai' %}" hx-target="#gpt-response" hx-swap="beforeend" hx-vals='{"prompt": "Recommend me an exercise routine"}' hx-indicator=".htmx-indicator" >
+                <button @click="showOption = ! showOption" class="btn btn-outline flex flex-row p-4">Recommend me an exercise routine <i class="fa-solid fa-angle-down" :class="showOption ? 'fa-rotate-180' : '' "></i></button>
+                <div x-data="{ timeAvailable : 60 }" x-show="showOption">
+                    <form hx-get="{% url 'askai' %}" hx-target="#gpt-response" hx-swap="beforeend" hx-vals='{"prompt": "Recommend me an exercise routine"}' hx-include="[name='exerciseType']" hx-indicator=".htmx-indicator" >
                         <div class="p-6 flex flex-col align-center gap-6">
                             <div class="flex flex-row justify-between align-center">
                                 <label for="time-range" class="label-text">Time Available</label>
-                                <input :value="timeAvailable" @input="timeAvailable = $el.value" type="number" min="1" max="1440" value="60" class="">
+                                <input :value="timeAvailable" @input="timeAvailable = $el.value" name="timeAvailable" type="number" min="1" max="1440" value="60" class="">
                                 <label class="label-text">minutes</label>
                             </div>
-                            <input @input="timeAvailable = $el.value" :value="timeAvailable" name="time-range" type="range" min="1" max="1440" value="60" class="range" />
+                            <input @input="timeAvailable = $el.value" :value="timeAvailable" type="range" min="1" max="1440" value="60" class="range" />
+                            <select name="exerciseType" class="select select-bordered w-full max-w-xs" required>
+                                <option disabled selected>Exercise Type</option>
+                                <option>Calisthenics</option>
+                                <option>Weight Lifting</option>
+                              </select>
                             <input value="Ask AI" type="submit" class="btn btn-success">
                         </div>
                     </form>
@@ -99,33 +104,130 @@
                         </span>
                     </div>
                 {% elif type == "exercise" %}
-                    <div x-data="{ exerciseDictList : {{ exercise_dict_list }} }" class="border-solid border-2 p-6">   
-                        <h1 class="text-lg font-bold">Exercise Routine Recommendation</h1>
-                        <p>{{ paragraph }}</p>
-                        <div class="rounded-lg border-solid border-2">
-                            <table class="table">
-                                <thead>
-                                    <tr>
-                                        <th>Exercise Name</th>
-                                        <th>Sets</th>
-                                        <th>Reps</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for exercise_dict in exercise_dict_list %}
-                                        <tr class="hover rounded border-solid border-y-2">
-                                            <td>{{ exercise_dict.exercise_name | title }}</td>
-                                            <td>{{ exercise_dict.sets }}</td>
-                                            <td>{{ exercise_dict.reps }}</td>
-                                            <td>
-                                                <button x-data="{ index : {{ forloop.counter0 }} }" @click="exerciseDictList.splice(index, 1)" hx-delete="{% url 'empty' %}" hx-target="closest tr" hx-swap="delete" class="btn btn-outline btn-error">Remove</button>
-                                            </td>
-                                        </tr>
-                                     {% endfor %}
-                                </tbody>
-                            </table>
+                    <div x-data="{ exerciseDictList : {{ exercise_dict_list }} }" class="flex flex-col gap-4 border-solid border-2 p-6">   
+                        <h1 class="text-xl font-bold">Exercise Routine Recommendation</h1>
+                        {% for exercise_routine in exercise_schedule %}
+                            <div class="flex flex-col gap-4 p-6 border-solid border-2 rounded-lg">
+                                <h2 class="text-lg font-bold">{{ exercise_routine.day_of_the_week }}</h2>
+                                {% if is_rest_day is True %}
+                                    <h2 class="text-lg font-bold">Rest Day</h2>
+                                {% else %}
+                                    {% if exercise_routine.warmup %}
+                                        <div class="rounded-lg border-solid border-2 p-4">
+                                            <h1 class="text-lg font-bold">Warm-up</h1>
+                                            <table class="table">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Exercise Name</th>
+                                                        <th>Duration</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {% for exercise in exercise_routine.warmup %}
+                                                        <tr x-data="{ showDemo : false }" class="hover rounded border-solid border-y-2">
+                                                            <td>{{ exercise.exercise_name | title }}</td>
+                                                            <td>{{ exercise.duration }}</td>
+                                                            <td>
+                                                                <button x-data="{ index : {{ forloop.counter0 }} }" @click="exerciseDictList.splice(index, 1)" hx-delete="{% url 'empty' %}" hx-target="closest tr" hx-swap="delete" class="btn btn-outline btn-error">Remove</button>
+                                                            </td>
+                                                            <td @click="showDemo = ! showDemo">
+                                                                <i class="fa-solid fa-angle-down" :class="showDemo ? 'fa-rotate-180' : '' "></i>
+                                                                <div :class="{ 'hidden' : ! showDemo }">
+                                                                    <iframe src="" frameborder="0"></iframe>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    {% endif %}
+                                    {% if exercise_routine.strength_exercises %}
+                                        <div class="rounded-lg border-solid border-2 p-4">
+                                            <h1 class="text-lg font-bold">Strength Exercises</h1>
+                                            <table class="table">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Exercise Name</th>
+                                                        <th>Sets</th>
+                                                        <th>Reps</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {% for exercise in exercise_routine.strength_exercises %}
+                                                        <tr x-data="{ showDemo : false }" @click="showDemo = ! showDemo" class="hover rounded border-solid border-y-2">
+                                                            <td>{{ exercise.exercise_name | title }}</td>
+                                                            <td>{{ exercise.sets }}</td>
+                                                            <td>{{ exercise.reps }}</td>
+                                                            <td>
+                                                                <button x-data="{ index : {{ forloop.counter0 }} }" @click="exerciseDictList.splice(index, 1)" hx-delete="{% url 'empty' %}" hx-target="closest tr" hx-swap="delete" class="btn btn-outline btn-error">Remove</button>
+                                                            </td>
+                                                            <td>
+                                                                <i class="fa-solid fa-angle-down" :class="showDemo ? 'fa-rotate-180' : '' "></i>
+                                                                <!--TODO-->
+                                                                <div :class="{ 'hidden' : ! showDemo }">
+                                                                    <iframe src="" frameborder="0"></iframe>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    {% endif %}
+                                    {% if exercise_routine.cardio %}
+                                        <div class="rounded-lg border-solid border-2 p-4">
+                                            <h1 class="text-lg font-bold">Cardiovascular Exercises</h1>
+                                            <table class="table">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Exercise Name</th>
+                                                        <th>Duration</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr class="hover rounded border-solid border-y-2">
+                                                        <td>{{ exercise_routine.cardio.exercise_name | title }}</td>
+                                                        <td>{{ exercise_routine.cardio.duration }}</td>
+                                                        <td>
+                                                            <button x-data="{ index : {{ forloop.counter0 }} }" @click="exerciseDictList.splice(index, 1)" hx-delete="{% url 'empty' %}" hx-target="closest tr" hx-swap="delete" class="btn btn-outline btn-error">Remove</button>
+                                                        </td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    {% endif %}
+                                    {% if exercise_routine.cooldown %}
+                                        <div class="rounded-lg border-solid border-2 p-4">
+                                            <h1 class="text-lg font-bold">Cool-down</h1>
+                                            <table class="table">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Exercise Name</th>
+                                                        <th>Duration</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr class="hover rounded border-solid border-y-2">
+                                                        <td>{{ exercise_routine.cooldown.exercise_name | title }}</td>
+                                                        <td>{{ exercise_routine.cooldown.duration }}</td>
+                                                        <td>
+                                                            <button x-data="{ index : {{ forloop.counter0 }} }" @click="exerciseDictList.splice(index, 1)" hx-delete="{% url 'empty' %}" hx-target="closest tr" hx-swap="delete" class="btn btn-outline btn-error">Remove</button>
+                                                        </td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    {% endif %}
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                        <div>
+
                         </div>
                         <span>
+                            <!--TODO-->
                             <p>Import exercise plan?</p>
                             <input :value="JSON.stringify(exerciseDictList)" class="hidden" name="exerciseDictList" type="text">
                             <button hx-post="{% url 'askai' %}" hx-include="[name='exerciseDictList']" hx-swap="outerHTML" hx-target="closest span" hx-indicator=".htmx-indicator" class="btn btn-outline btn-success">YES</button>
