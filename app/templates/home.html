@@ -2,7 +2,7 @@
 
 {% block body %}
 <div class="flex flex-col">
-    <div id="user-info">
+    {% comment %} <div id="user-info">
         <h1 class="text-lg font-bold">User Information</h1>
         {{ user_info }}
     </div>
@@ -11,6 +11,10 @@
         {% for nutrient, value in AVG.items %}
             <h2 class="text-base font-bold">{{ nutrient|title }}: {{ value }} {% if nutrient == "energy" %}kcal{% else %}g{% endif %}</h2>
         {% endfor %}
+    </div> {% endcomment %}
+    <div class="p-6 border-2 border-solid rounded-lg">
+        <h1 class="text-xl font-bold">Your Streaks</h1>
+        <p>{{ streaks }}</p>
     </div>
 </div>
 

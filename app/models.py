@@ -70,6 +70,9 @@ READABLE_ACTIVITY_LEVEL = {
 READABLE_SEX = {"M": "Male", "F": "Female"}
 
 
+DATE_FORMAT = "%Y-%m-%d"
+
+
 def tomorrow():
     return datetime.now() + timedelta(1)
 
@@ -231,6 +234,37 @@ class User(AbstractUser):
             tdeg=self.get_tdeg(),
             goal=goal,
         )
+
+    def get_average_nutrients(self):
+        total_nutrients = Counter()
+        daily_entries = DailyEntry.objects.filter(user=self)
+        daily_entries_count = daily_entries.count()
+        for daily_entry in daily_entries:
+            total_nutrients += Counter(daily_entry.total_nutrients())
+        average_nutrients = total_nutrients
+        for nutrient in total_nutrients.keys():
+            average_nutrients[nutrient] = round(
+                average_nutrients[nutrient] / daily_entries_count, 1
+            )
+        return average_nutrients
+
+    def get_streaks(self):
+        user_daily_entries = DailyEntry.objects.filter(user=self)
+        streaks = 0
+        for i in range(user_daily_entries.count()):
+            user_daily_entry = user_daily_entries[i]
+            if (
+                i > 0
+                and (
+                    user_daily_entry.user_foods
+                    or user_daily_entry.user_strength_exercises
+                )
+                and (user_daily_entry.date - timedelta(1)) == user_daily_entries[i - 1]
+            ):
+                streaks += 1
+            else:
+                streaks = 0
+        return streaks
 
 
 # This model handles user's target for macronutrients, weight, etc.
@@ -458,6 +492,7 @@ class DailyEntry(models.Model):
                 name="hard", xp=125, gems=125
             )
 
+            # TODO: There are still bugs fix it.
             # Create a daily challenge
             daily_entries = DailyEntry.objects.filter(user=self.user)
             daily_challenge = Challenge.objects.create(
@@ -586,9 +621,8 @@ class DailyEntry(models.Model):
             food_intake.append(user_food.get_data())
         for user_exercise in UserStrengthExercise.objects.filter(daily_entry=self):
             user_exercises.append(user_exercise.get_data())
-
         return {
-            "date": self.date,
+            "daily_entry_date": str_to_datetime(self.date).strftime(DATE_FORMAT),
             "food_intake": food_intake,
             "user_exercises": user_exercises,
             "nutrient_categories": self.summarize_nutrients(),

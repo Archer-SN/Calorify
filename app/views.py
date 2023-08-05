@@ -27,6 +27,8 @@ AVAILABLE_PROMPTS = {
     "Recommend me an exercise routine": ask_exercise_plan_gpt,
 }
 
+DATE_FORMAT = "%Y-%m-%d"
+
 
 # This function handles the index page
 def index(request):
@@ -46,17 +48,7 @@ def home(request):
         if not Nutrient.objects.filter().exists():
             food_database_init()
         user = request.user
-        # Put this in models.py
-        total_nutrients = Counter()
-        daily_entries = DailyEntry.objects.filter(user=user)
-        daily_entries_count = daily_entries.count()
-        for daily_entry in daily_entries:
-            total_nutrients += Counter(daily_entry.total_nutrients())
-        average_nutrients = total_nutrients
-        for nutrient in total_nutrients.keys():
-            average_nutrients[nutrient] = round(
-                average_nutrients[nutrient] / daily_entries_count, 1
-            )
+        average_nutrients = user.get_average_nutrients()
 
         return render(
             request,
@@ -69,6 +61,7 @@ def home(request):
                     "carbs": average_nutrients[CARBS],
                     "fats": average_nutrients[FATS],
                 },
+                "streaks": user.get_streaks(),
             },
         )
 
@@ -82,7 +75,7 @@ def diary(request):
         # Renders part of the page (Though almost the whole page)
         if request.htmx:
             # Given a new date, renders the body of the page
-            chosen_date = request.GET.get("date", datetime.now())
+            chosen_date = request.GET.get("date", datetime.now().strftime(DATE_FORMAT))
             daily_entry, _ = DailyEntry.objects.get_or_create(
                 user=user, date=chosen_date
             )
@@ -97,7 +90,7 @@ def diary(request):
         # Renders the whole page if not an htmx request
         else:
             daily_entry, _ = DailyEntry.objects.get_or_create(
-                user=user, date=datetime.now()
+                user=user, date=datetime.now().strftime(DATE_FORMAT)
             )
             challenges = Challenge.objects.filter(daily_entry=daily_entry)
             for challenge in challenges:
@@ -116,6 +109,10 @@ def diary(request):
 
 @login_required
 def store(request):
+    if request.htmx:
+        # If the user bought something
+        if request.method == "POST":
+            pass
     return render(request, "store.html")
 
 
@@ -334,7 +331,9 @@ def challenge(request):
             if user_challenge.is_completed:
                 return HttpResponse("Already Done")
             user_challenge.complete_challenge(user)
-            return HttpResponse()
+            context = {"user": user}
+            response = render_block_to_string("diary.html", "currency", context)
+            return HttpResponse(response)
     else:
         pass
 

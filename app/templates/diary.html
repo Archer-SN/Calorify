@@ -8,7 +8,7 @@
 
 <!--TODO: CHALLENGE-->
 {% block body %}
-    <div id="main-container" x-effect="console.log(foodModalOpen)" x-data="{ foodModalOpen : false, foodSummaryOpen: false, exerciseModalOpen : false, exerciseSummaryOpen : false }" hx-vals='{"daily_entry_date": "{{ date|date:"Y-m-d" }}" }' hx-ext="alpine-morph" hx-swap="morph" class="flex flex-row gap-6 px-12 py-4">
+    <div id="main-container" x-init="console.log(dailyEntryDate)" x-data="{ foodModalOpen : false, foodSummaryOpen: false, exerciseModalOpen : false, exerciseSummaryOpen : false, dailyEntryDate : '{{ daily_entry_date }}' }" hx-vals='{"daily_entry_date": "{{ daily_entry_date }}" }' class="flex flex-row gap-6 px-12 py-4">
         <div id="main" class="grow flex flex-col gap-6">
             <div id="challenge" class="rounded-lg px-4 py-6 border-solid border-2">
                 <h1 class="text-lg font-bold">Challenge</h1>
@@ -23,11 +23,11 @@
                     </thead>
                     <tbody>
                         {% for challenge in challenges %}
-                            <tr class="hover">
+                            <tr x-data="{ show : true }" x-show="show"  class="hover">
                                 <td>{{ challenge.name | title }}</td>
                                 <td>{{ challenge.difficulty | title }}</td>
                                 <td>{{ challenge.expire_date }}</td>
-                                <td hx-post="{% url 'challenge' %}" hx-target="closest tr" hx-swap="innerHTML" hx-vals='{"challengeId" : {{ challenge.id }} }' class="btn btn-outline btn-success">Complete Challenge</td>
+                                <td @click="show = false" hx-post="{% url 'challenge' %}" hx-target="#gems" hx-swap="outerHTML" hx-vals='{"challengeId" : {{ challenge.id }} }' class="btn btn-outline btn-success">Complete Challenge</td>
                             </tr>
                         {% endfor %}
                     </tbody>
@@ -298,17 +298,24 @@
                     </div>
                     <div id="nutrients-summary">
                         <!--Summarize each nutrients-->
-                        {% for  nutrient_category in nutrient_categories  %}
+                        <!--TODO-->
+                        {% comment %} {% for  nutrient_category in nutrient_categories  %}
                             <div>
-
+                                <h2>{{ nutrient_category | title }}</h2>
+                                {% for nutrient, nutrient_value in nutrient_category.items %}
+                                    <div>
+                                        <p>{{ nutrient }}</p>
+                                        <p>{{ nutrient_value }}</p>
+                                    </div>
+                                {% endfor %}
                             </div>
-                        {% endfor %}
+                        {% endfor %} {% endcomment %}
                     </div>
                 </div>
             {% endblock %}
         </div>
         <div id="date-container">
-            <input id="date" type="date" name="date" value="{{ date|date:'Y-m-d' }}" hx-trigger="input changed" hx-get="{% url 'diary' %}" hx-target="#main-container" hx-swap="outerHTML">
+            <input id="date" type="date" name="date" value="{{ daily_entry_date }}" hx-trigger="input changed" hx-get="{% url 'diary' %}" hx-target="#main-container" hx-swap="outerHTML">
         </div>
     </div>
 {% endblock %}
