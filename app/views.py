@@ -62,6 +62,7 @@ def home(request):
                     "fats": average_nutrients[FATS],
                 },
                 "streaks": user.get_streaks(),
+                "energy_history": user.get_energy_history(),
             },
         )
 

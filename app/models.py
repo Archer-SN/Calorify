@@ -248,6 +248,8 @@ class User(AbstractUser):
             )
         return average_nutrients
 
+    # TODO
+    # The end of streak counting is the current day
     def get_streaks(self):
         user_daily_entries = DailyEntry.objects.filter(user=self)
         streaks = 0
@@ -259,12 +261,28 @@ class User(AbstractUser):
                     user_daily_entry.user_foods
                     or user_daily_entry.user_strength_exercises
                 )
-                and (user_daily_entry.date - timedelta(1)) == user_daily_entries[i - 1]
+                and (user_daily_entry.date - timedelta(1))
+                == user_daily_entries[i - 1].date
             ):
                 streaks += 1
+                if user_daily_entry.date == date.today():
+                    break
             else:
                 streaks = 0
         return streaks
+
+    # Returns a dataset that will be used in creating graphs
+    def get_energy_history(self):
+        user_daily_entries = DailyEntry.objects.filter(user=self)
+        data = []
+        for user_daily_entry in user_daily_entries:
+            data.append(
+                {
+                    "x": user_daily_entry.date.strftime("%b. %d, %Y"),  # X-axis
+                    "y": user_daily_entry.total_nutrients().get(ENERGY, 0),  # Y-axis
+                }
+            )
+        return data
 
 
 # This model handles user's target for macronutrients, weight, etc.
