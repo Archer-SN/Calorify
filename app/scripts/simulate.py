@@ -14,7 +14,7 @@ from app.api import *
 from app.models import *
 
 # We are going to make a simulation of 180 days or 6 months
-NUMBER_OF_DAYS = 180
+NUMBER_OF_DAYS = 90
 
 HEALTHY_MEAL_PLAN_MESSAGE = (
     "Recommend me a healthy meal plan based on the following information: {info}"
@@ -25,7 +25,7 @@ RANDOM_MEAL_PLAN_MESSAGE = "Recommend me a meal plan that is composed of fast fo
 # Some consistent, some inconsistent. Some users change their plans.
 
 # Male 35 years old. Overweight. Not active and eats poorly.
-# Does well in the first few weeks but after, loses motivation and false behind.
+# Does well in the first few weeks but after, loses motivation and falls behind.
 A1, _ = User.objects.get_or_create(
     username="A1",
     email="A1@gmail.com",
@@ -120,43 +120,61 @@ def create_challenge():
     A1.challenge_set.add(goggins_challenge)
 
 
-def create_daily_challenge():
-    pass
-
-
-def create_weekly_challenge():
-    pass
-
-
-def create_monthly_challenge():
-    pass
-
-
 def clear_daily_entry(user):
     DailyEntry.objects.filter(user=user).delete()
 
 
 # TODO
+# Male 35 years old. Overweight. Not active and eats poorly.
+# Does well in the first few weeks but after, loses motivation and falls behind.
 def simulate_a1():
-    # unhealthy_foods = [
-    #     {"food_name": "pizza", "food_portion": 500},
-    #     {"food_name": "Extra Crispy Chicken- Thigh", "food_portion": 500},
-    #     {"food_name": "Pancake", "food_portion": 300},
-    #     {"food_name": "Coke", "food_portion": 722},
-    # ]
+    healthy_foods = [
+        {"food_name": "Salmon", "amount": 300},
+        {"food_name": "Quinoa", "amount": 100},
+        {"food_name": "Broccoli", "amount": 150},
+        {"food_name": "Chicken Breast", "amount": 150},
+        {"food_name": "Sweet Potato", "amount": 200},
+        {"food_name": "Spinach", "amount": 100},
+        {"food_name": "Tofu", "amount": 150},
+    ]
+    unhealthy_foods = [
+        {"food_name": "pizza", "food_portion": 500},
+        {"food_name": "Extra Crispy Chicken- Thigh", "food_portion": 500},
+        {"food_name": "Pancake", "food_portion": 300},
+        {"food_name": "Coke", "food_portion": 722},
+    ]
+    now = datetime.now()
     for i in range(NUMBER_OF_DAYS + 1, 1, -1):
-        pass
+        if i > 24:
+            import_user_meal_plan(A1, unhealthy_foods, now - timedelta(i))
+        else:
+            import_user_meal_plan(A1, healthy_foods, now - timedelta(i))
+
     print("A1 Simulation Done!")
 
 
 # TODO
+# Same as profile A1 but can be easily motivated if results are good.
+# Later changes goal.
 def simulate_a2():
-    for i in range(NUMBER_OF_DAYS, 0, -1):
-        pass
+    healthy_foods = [
+        {"food_name": "Salmon", "amount": 300},
+        {"food_name": "Quinoa", "amount": 100},
+        {"food_name": "Broccoli", "amount": 150},
+        {"food_name": "Chicken Breast", "amount": 150},
+        {"food_name": "Sweet Potato", "amount": 200},
+        {"food_name": "Spinach", "amount": 100},
+        {"food_name": "Tofu", "amount": 150},
+    ]
+    now = datetime.now()
+    for i in range(NUMBER_OF_DAYS + 1, 1, -1):
+        import_user_meal_plan(A1, healthy_foods, now - timedelta(i))
     print("A2 Simulation Done!")
 
 
 # TODO
+# Not overweight but high fat ratio.
+# Lazy to workout but eats normal.
 def simulate_b1():
     for i in range(NUMBER_OF_DAYS, 0, -1):
         pass
@@ -164,6 +182,7 @@ def simulate_b1():
 
 
 # TODO
+# Same as b1 but doesn't eat well
 def simulate_b2():
     for i in range(NUMBER_OF_DAYS, 0, -1):
         pass
@@ -171,12 +190,10 @@ def simulate_b2():
 
 
 def run():
-    create_daily_challenge()
-    create_challenge()
     simulate_a1()
     simulate_a2()
-    simulate_b1()
-    simulate_b2()
+    # simulate_b1()
+    # simulate_b2()
 
 
 run()

@@ -213,6 +213,7 @@ def import_user_food(user, food_obj_dict, date=datetime.now()):
 # Use this after you've asked gpt
 # TODO: The longest part of import is probably analyzing the food. Optimize it.
 def import_user_meal_plan(user, food_dict_list, date=datetime.now()):
+    print(food_dict_list)
     food_obj_dict_list = analyze_meal_plan(food_dict_list, is_importing=True)
     for food_obj_dict in food_obj_dict_list:
         user_food = import_user_food(user, food_obj_dict, date)
