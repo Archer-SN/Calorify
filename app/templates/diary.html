@@ -24,8 +24,8 @@
                     <tbody>
                         {% for challenge in challenges %}
                             <tr class="hover">
-                                <td>{{ challenge.name }}</td>
-                                <td>{{ challenge.difficulty }}</td>
+                                <td>{{ challenge.name | title }}</td>
+                                <td>{{ challenge.difficulty | title }}</td>
                                 <td>{{ challenge.expire_date }}</td>
                                 <td hx-post="{% url 'challenge' %}" hx-target="closest tr" hx-swap="innerHTML" hx-vals='{"challengeId" : {{ challenge.id }} }' class="btn btn-outline btn-success">Complete Challenge</td>
                             </tr>

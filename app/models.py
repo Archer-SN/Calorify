@@ -11,6 +11,7 @@ from field_history.tracker import FieldHistoryTracker
 from django.middleware.csrf import get_token
 from collections import Counter
 import json
+import random
 
 from . import fields
 from .forms import *
@@ -71,6 +72,52 @@ READABLE_SEX = {"M": "Male", "F": "Female"}
 
 def tomorrow():
     return datetime.now() + timedelta(1)
+
+
+def get_monday():
+    now = datetime.now()
+    monday = now - timedelta(days=now.weekday())
+    return monday
+
+
+def next_week():
+    return get_monday() + timedelta(7)
+
+
+def first_day_of_month():
+    return datetime.today().replace(day=1)
+
+
+def last_day_of_month():
+    # The day 28 exists in every month. 4 days later, it's always next month
+    next_month = datetime.today().replace(day=28) + timedelta(days=4)
+    # subtracting the number of the current day brings us back one month
+    return next_month - timedelta(days=next_month.day)
+
+
+# TODO: Hard CODED for now
+daily_challenges = [
+    "Do 50 jumping jacks",
+    "Hold a plank for 1 minute",
+    "Complete 20 push-ups",
+    "Take a 30-minute brisk walk",
+    "Perform 30 squats",
+]
+
+weekly_challenges = [
+    "Run for a total of 15 kilometers",
+    "Complete 100 abdominal crunches",
+    "Attend at least 3 workout classes or sessions",
+    "Try a new type of exercise or sport",
+    "Practice yoga or stretching for 30 minutes every day",
+]
+monthly_challenges = [
+    "Run a total of 80 kilometers",
+    "Complete 500 burpees",
+    "Participate in a charity run or fitness event",
+    "Take a fitness class or workshop to learn a new skill",
+    "Set a specific fitness goal and work towards it daily",
+]
 
 
 # Create your models here.
@@ -392,7 +439,58 @@ class DailyEntry(models.Model):
         created = not self.pk
         super().save(*args, **kwargs)
         if created:
-            pass
+            easy_difficulty, _ = Difficulty.objects.get_or_create(
+                name="easy", xp=5, gems=5
+            )
+            medium_difficulty, _ = Difficulty.objects.get_or_create(
+                name="medium", xp=25, gems=25
+            )
+            hard_difficulty, _ = Difficulty.objects.get_or_create(
+                name="hard", xp=125, gems=125
+            )
+
+            # Create a daily challenge
+            daily_challenge = Challenge.objects.create(
+                difficulty=easy_difficulty,
+                name=random.choice(daily_challenges),
+            )
+            self.challenge_set.add(daily_challenge)
+
+            # Create a weekly challenge
+            weekly_challenge = Challenge.objects.filter(
+                daily_entry=self,
+                difficulty=medium_difficulty,
+                date_created=get_monday(),
+                expire_date=next_week(),
+            )
+            if not weekly_challenge.exists():
+                weekly_challenge = Challenge.objects.create(
+                    difficulty=medium_difficulty,
+                    name=random.choice(weekly_challenges),
+                    date_created=get_monday(),
+                    expire_date=next_week(),
+                )
+                self.challenge_set.add(weekly_challenge)
+            else:
+                self.challenge_set.add(*weekly_challenge)
+
+            # Create a monthly challenge
+            monthly_challenge = Challenge.objects.filter(
+                daily_entry=self,
+                difficulty=hard_difficulty,
+                date_created=first_day_of_month(),
+                expire_date=last_day_of_month(),
+            )
+            if not monthly_challenge.exists():
+                monthly_challenge, _ = Challenge.objects.get_or_create(
+                    difficulty=hard_difficulty,
+                    name=random.choice(weekly_challenges),
+                    date_created=first_day_of_month(),
+                    expire_date=last_day_of_month(),
+                )
+                self.challenge_set.add(monthly_challenge)
+            else:
+                self.challenge_set.add(*monthly_challenge)
 
     # This summary will be used by AI
     # A shortened version of summary to reduce API usage cost
@@ -563,6 +661,9 @@ class UserStrengthExercise(models.Model):
     daily_entry = models.ForeignKey(
         DailyEntry, related_name="user_strength_exercises", on_delete=models.CASCADE
     )
+    user = models.ForeignKey(
+        User, related_name="user_strength_exercises", on_delete=models.CASCADE
+    )
     # How many reps the user performed the exercise
     sets = models.PositiveSmallIntegerField(default=1)
     # How many reps the user performed the exercise
@@ -591,7 +692,7 @@ class Challenge(models.Model):
     daily_entry = models.ManyToManyField(DailyEntry)
     difficulty = models.ForeignKey(Difficulty, on_delete=models.CASCADE)
     # The challenge's name
-    name = models.CharField(max_length=64)
+    name = models.CharField(max_length=128)
     # The description of the challenge
     description = models.TextField()
     is_completed = models.BooleanField(default=False)
@@ -600,9 +701,8 @@ class Challenge(models.Model):
 
     def complete_challenge(self):
         self.is_completed = True
-        # TODO: Fix this bug
-        # self.user.userrpg.gain_xp(self.difficulty.xp)
-        # self.user.userrpg.gain_gems(self.difficulty.gems)
+        self.daily_entry.user.userrpg.gain_xp(self.difficulty.xp)
+        self.daily_entry.user.userrpg.gain_gems(self.difficulty.gems)
 
     def is_expired(self):
         if datetime.now() > self.expire_date:

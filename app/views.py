@@ -277,6 +277,7 @@ def user_exercise(request):
                     sets=sets,
                     reps=reps,
                     weights=weights,
+                    user=request.user,
                 )
                 context = {"user_exercises": [new_user_exercise.get_data()]}
                 response = render_block_to_string(
@@ -299,7 +300,7 @@ def user_exercise(request):
                     initial={
                         "exercise_id": exercise_id,
                         "daily_entry_date": daily_entry_date,
-                    }
+                    },
                 )
                 context = {
                     "type": "exercise",
@@ -318,18 +319,21 @@ def challenge(request):
         # User checks out the challenge
         if request.method == "POST":
             challenge_id = request.POST.get("challengeId", "")
+            daily_entry_date = request.POST.get("daily_entry_date")
+            daily_entry, _ = DailyEntry.objects.get_or_create(
+                user=request.user, date=daily_entry_date
+            )
             user = request.user
             if not challenge_id:
                 return HttpResponse(
                     "Challenge does not exist. Challenge ID: " + challenge_id
                 )
-            user_challenge = Challenge.objects.get(id=challenge_id, user=user)
+            user_challenge = Challenge.objects.get(
+                id=challenge_id, daily_entry=daily_entry
+            )
             if user_challenge.is_completed:
-                return HttpResponse("ALready Done")
+                return HttpResponse("Already Done")
             user_challenge.complete_challenge()
-            # TODO: Make this more elegant
-            user_challenge.is_completed = True
-            user_challenge.save()
             return HttpResponse()
     else:
         pass
