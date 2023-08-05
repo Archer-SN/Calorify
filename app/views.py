@@ -378,6 +378,7 @@ def ask_ai(request):
         # If user wants to import
         elif request.method == "POST":
             import_type = request.POST.get("importType")
+            print(import_type)
             if import_type == "food":
                 food_dict_list_json = request.POST.get("foodDictList")
                 food_dict_list = json.loads(food_dict_list_json)
@@ -388,9 +389,10 @@ def ask_ai(request):
                 else:
                     return HttpResponse()
             elif import_type == "exercise":
-                exercise_schedule = json.loads(request.POST.get("exerciseSchedule"))
+                exercise_schedule = json.loads(request.POST.get("exercise-schedule"))
+                print(exercise_schedule)
                 # Import successful
-                if import_exercise_plan(exercise_schedule):
+                if import_exercise_plan(request, exercise_schedule):
                     return HttpResponse()
                 # Import failed
                 else:

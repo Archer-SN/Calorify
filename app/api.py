@@ -244,16 +244,36 @@ def get_exercises(params) -> list:
     StrengthExercise.objects.bulk_create(exercise_list, ignore_conflicts=True)
     return exercise_list
 
+
 # TODO
-def import_exercise_plan(exercise_schedule):
-    for exercise_routine in exercise_schedule:
-        if exercise_routine == "strength_exercises":
-            for exercise in exercise_routine:
-                params = {""}
-                exercise_data = get_exercise_data
-                strength_exercise, _ = StrengthExercise.objects.get_or_create(
-                    name=exercise["exercise_name"]
+# Given a requesta dnd exercise schedule, import it into the database
+def import_exercise_plan(request, exercise_schedule):
+    user = request.user
+    now = datetime.now()
+    for i in range(len(exercise_schedule)):
+        print(i)
+        exercise_routine = exercise_schedule[i]
+        if exercise_routine["is_rest_day"]:
+            continue
+        daily_entry_date = now + timedelta(i)
+        daily_entry, _ = DailyEntry.objects.get_or_create(
+            user=user, date=daily_entry_date
+        )
+
+        for exercise in exercise_routine["strength_exercises"]:
+            params = {"name": exercise["exercise_name"]}
+            exercise_obj = get_exercises(params)
+            if exercise_obj:
+                user_strength_exercise, _ = UserStrengthExercise.objects.get_or_create(
+                    user=user,
+                    daily_entry=daily_entry,
+                    exercise=exercise_obj[0],
+                    sets=exercise["sets"],
+                    reps=exercise["reps"],
                 )
+            else:
+                print("Exercise not found!")
+    return True
 
 
 # Given a list of dictionary of exercise names, sets, reps, create a context for rendering in html
@@ -264,7 +284,11 @@ def create_exercise_plan_context(exercise_schedule):
     #     if type(exercise_routine) == list:
     #         for exercise in exercise_routine:
     #             exercise_schedule
-    context = {"type": "exercise", "exercise_schedule": exercise_schedule}
+    context = {
+        "type": "exercise",
+        "exercise_schedule": exercise_schedule,
+        "vals": json.dumps(exercise_schedule),
+    }
     return context
 
 
@@ -274,7 +298,7 @@ def ask_exercise_plan_gpt(user, time_available=60, exercise_type="Weight Lifting
         DEFAULT_SYSTEM_MESSAGE,
         {
             "role": "system",
-            "content": "The exercise routine must fully specify the name of the exercise, the weight, number of reps, and number of sets. Also, specify the estimated time that it will take to finish",
+            "content": "The exercise routine must fully specify the name of the exercise, the weight, number of reps, and number of sets. Also, specify the estimated time that it will take to finish. Make sure to include rest days in your response",
         },
         {
             "role": "system",
@@ -509,7 +533,7 @@ def ai_analyze_history(user, number_of_days):
         DEFAULT_SYSTEM_MESSAGE,
         {
             "role": "system",
-            "content": "When I give you a history of food intake and exercises in the following python format (portion is in grams) (duration is in minutes):\n'''\n[\n{'d': '', 'i': [{'l': ''}], 'k':0, 'm': {'p':0, 'c': 0, 'f': 0}, 'e': [{'n': '', 't': 0}]}\n]\n'''\nd stands for date\ni stands for food intake\nl stands for food name\ne stands for exercise\nn stands for exercise name\nt stands for exercise duration\nk stands for total calories intake\nm stands for macronutrients\np stands for protein\nc stands for carbohydrates\nf stands for total fats\nI want you to customly create an advice for me and tell me whether I hit my calories target and what are my errors. Make an overall summary. Don't list day by day.\n",
+            "content": "When I give you a history of food intake and exercises in the following python format (portion is in grams) (duration is in minutes):\n'''\n[\n{'d': '', 'i': [{'l': ''}], 'k':0, 'm': {'p':0, 'c': 0, 'f': 0}, 'e': [{'n': '', 's': 0, 'r': 0}]}\n]\n'''\nd stands for date\ni stands for food intake\nl stands for food name\ne stands for exercise\nn stands for exercise name\ns stands for number ofexercise sets\nr stands for number of exercise reps\nk stands for total calories intake\nm stands for macronutrients\np stands for protein\nc stands for carbohydrates\nf stands for total fats\nI want you to customly create an advice for me and tell me whether I hit my calories target and what are my errors. Make an overall summary. Don't list day by day.\n",
         },
         {
             "role": "system",

@@ -495,7 +495,6 @@ class DailyEntry(models.Model):
             )
         ]
 
-    # TODO: Create Daily, Weekly, and Monthly challenges here.
     def save(self, *args, **kwargs):
         created = not self.pk
         super().save(*args, **kwargs)
@@ -740,7 +739,7 @@ class UserStrengthExercise(models.Model):
 
     # Returns basic information of the exercise.
     def info(self):
-        return {"n": self.exercise.name}
+        return {"n": self.exercise.name, "s": self.sets, "r": self.reps, "w": self.weights}
 
     def get_data(self):
         return {

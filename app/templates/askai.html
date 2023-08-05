@@ -99,12 +99,16 @@
                         <span>
                             <p>Import meal plan?</p>
                             <input :value="JSON.stringify(foodDictList)" class="hidden" name="foodDictList" type="text">
-                            <button hx-post="{% url 'askai' %}" hx-vals='{ "importType": "food" }' hx-include="[name='foodDictList']" hx-swap="outerHTML" hx-target="closest span" hx-indicator=".htmx-indicator" class="btn btn-outline btn-success">YES</button>
+                            <button @htmx:afterRequest="Swal.fire(
+                                'Good job!',
+                                'You clicked the button!',
+                                'success'
+                              )" hx-post="{% url 'askai' %}" hx-vals='{ "importType": "food" }' hx-include="[name='foodDictList']" hx-swap="outerHTML" hx-target="closest span" hx-indicator=".htmx-indicator" class="btn btn-outline btn-success">YES</button>
                             <button hx-get="empty" hx-swap="delete" hx-indicator=".htmx-indicator" hx-target="closest span" class="btn btn-outline btn-error">NO</button>
                         </span>
                     </div>
                 {% elif type == "exercise" %}
-                    <div x-data="{ exerciseSchedule : {{ exercise_schedule }} }" class="flex flex-col gap-4 border-solid border-2 p-6">   
+                    <div class="flex flex-col gap-4 border-solid border-2 p-6">   
                         <h1 class="text-xl font-bold">Exercise Routine Recommendation</h1>
                         {% for exercise_routine in exercise_schedule %}
                             <div class="flex flex-col gap-4 p-6 border-solid border-2 rounded-lg">
@@ -128,7 +132,7 @@
                                                             <td>{{ exercise.exercise_name | title }}</td>
                                                             <td>{{ exercise.duration }}</td>
                                                             <td>
-                                                                <button x-data="{ index : {{ forloop.counter0 }} }" @click="exerciseDictList.splice(index, 1)" hx-delete="{% url 'empty' %}" hx-target="closest tr" hx-swap="delete" class="btn btn-outline btn-error">Remove</button>
+                                                                <button x-data="{ index : {{ forloop.counter0 }} }" @click="exercise_schedule.exercise_routine.warmup.splice(index, 1)" hx-delete="{% url 'empty' %}" hx-target="closest tr" hx-swap="delete" class="btn btn-outline btn-error">Remove</button>
                                                             </td>
                                                             <td @click="showDemo = ! showDemo">
                                                                 <i class="fa-solid fa-angle-down" :class="showDemo ? 'fa-rotate-180' : '' "></i>
@@ -229,8 +233,12 @@
                         <span>
                             <!--TODO-->
                             <p>Import exercise plan?</p>
-                            <input :value="JSON.stringify(exerciseSchedule)" class="hidden" name="exerciseSchedule" type="text">
-                            <button hx-post="{% url 'askai' %}" hx-vals="{ 'importType': 'exercise' }" hx-include="[name='exerciseSchedule']" hx-swap="outerHTML" hx-target="closest span" hx-indicator=".htmx-indicator" class="btn btn-outline btn-success">YES</button>
+                            <input value="{{ vals }}" name="exercise-schedule" type="text" class="hidden">
+                            <button @htmx:afterRequest="Swal.fire(
+                                'Import Successful!',
+                                'You successfully imported it!',
+                                'success'
+                              )" hx-post="{% url 'askai' %}" hx-vals='{ "importType": "exercise"}' hx-include="[name='exercise-schedule']"  hx-swap="outerHTML" hx-target="closest span" hx-indicator=".htmx-indicator" class="btn btn-outline btn-success">YES</button>
                             <button hx-get="empty" hx-swap="delete" hx-indicator=".htmx-indicator" hx-target="closest span" class="btn btn-outline btn-error">NO</button>
                         </span>
                     </div>
