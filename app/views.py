@@ -333,7 +333,7 @@ def challenge(request):
             )
             if user_challenge.is_completed:
                 return HttpResponse("Already Done")
-            user_challenge.complete_challenge()
+            user_challenge.complete_challenge(user)
             return HttpResponse()
     else:
         pass

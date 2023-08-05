@@ -95,6 +95,13 @@ def last_day_of_month():
     return next_month - timedelta(days=next_month.day)
 
 
+def str_to_datetime(dt):
+    if type(dt) == str:
+        return datetime.strptime(dt, "%Y-%m-%d")
+    # Already a datetime
+    return dt
+
+
 # TODO: Hard CODED for now
 daily_challenges = [
     "Do 50 jumping jacks",
@@ -277,9 +284,11 @@ class UserRPG(models.Model):
         self.current_xp += xp_amount
         # In case the current xp exceeds the max xp
         self.level_up()
+        self.save()
 
     def gain_gems(self, gems_amount):
         self.gems += gems_amount
+        self.save()
 
 
 class Difficulty(models.Model):
@@ -450,6 +459,7 @@ class DailyEntry(models.Model):
             )
 
             # Create a daily challenge
+            daily_entries = DailyEntry.objects.filter(user=self.user)
             daily_challenge = Challenge.objects.create(
                 difficulty=easy_difficulty,
                 name=random.choice(daily_challenges),
@@ -457,13 +467,8 @@ class DailyEntry(models.Model):
             self.challenge_set.add(daily_challenge)
 
             # Create a weekly challenge
-            weekly_challenge = Challenge.objects.filter(
-                daily_entry=self,
-                difficulty=medium_difficulty,
-                date_created=get_monday(),
-                expire_date=next_week(),
-            )
-            if not weekly_challenge.exists():
+            # Create a new challenge every first day of the week
+            if str_to_datetime(self.date).weekday() == 1:
                 weekly_challenge = Challenge.objects.create(
                     difficulty=medium_difficulty,
                     name=random.choice(weekly_challenges),
@@ -472,16 +477,17 @@ class DailyEntry(models.Model):
                 )
                 self.challenge_set.add(weekly_challenge)
             else:
+                weekly_challenge = Challenge.objects.filter(
+                    daily_entry__in=daily_entries,
+                    difficulty=medium_difficulty,
+                    date_created=get_monday(),
+                    expire_date=next_week(),
+                )
                 self.challenge_set.add(*weekly_challenge)
 
             # Create a monthly challenge
-            monthly_challenge = Challenge.objects.filter(
-                daily_entry=self,
-                difficulty=hard_difficulty,
-                date_created=first_day_of_month(),
-                expire_date=last_day_of_month(),
-            )
-            if not monthly_challenge.exists():
+            # Create a new challenge every first day of the month
+            if str_to_datetime(self.date).day == 1:
                 monthly_challenge, _ = Challenge.objects.get_or_create(
                     difficulty=hard_difficulty,
                     name=random.choice(weekly_challenges),
@@ -490,6 +496,12 @@ class DailyEntry(models.Model):
                 )
                 self.challenge_set.add(monthly_challenge)
             else:
+                monthly_challenge = Challenge.objects.filter(
+                    daily_entry__in=daily_entries,
+                    difficulty=hard_difficulty,
+                    date_created=first_day_of_month(),
+                    expire_date=last_day_of_month(),
+                )
                 self.challenge_set.add(*monthly_challenge)
 
     # This summary will be used by AI
@@ -699,10 +711,11 @@ class Challenge(models.Model):
     date_created = models.DateField(default=datetime.now)
     expire_date = models.DateField(default=tomorrow)
 
-    def complete_challenge(self):
+    def complete_challenge(self, user):
         self.is_completed = True
-        self.daily_entry.user.userrpg.gain_xp(self.difficulty.xp)
-        self.daily_entry.user.userrpg.gain_gems(self.difficulty.gems)
+        user.userrpg.gain_xp(self.difficulty.xp)
+        user.userrpg.gain_gems(self.difficulty.gems)
+        self.save()
 
     def is_expired(self):
         if datetime.now() > self.expire_date:
