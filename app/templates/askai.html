@@ -170,7 +170,7 @@
                                                                 <i class="fa-solid fa-angle-down" :class="showDemo ? 'fa-rotate-180' : '' "></i>
                                                                 <!--TODO-->
                                                                 <div :class="{ 'hidden' : ! showDemo }">
-                                                                    <iframe src="" frameborder="0"></iframe>
+                                                                    <iframe src="{{ exercise.videoURL|first }}" frameborder="0"></iframe>
                                                                 </div>
                                                             </td>
                                                         </tr>

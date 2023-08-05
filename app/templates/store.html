@@ -1,24 +1,28 @@
 {% extends "layout.html" %}
 
 {% block body %}
-    <div class="flex flex-row gap-6 p-6">
+    <div x-init="console.log('WFWF')" class="flex flex-row gap-6 p-6">
         <div class="card w-96 bg-base-100 shadow-xl">
-            <figure><img src="/images/stock/photo-1606107557195-0e29a4b5b4aa.jpg" alt="Shoes" /></figure>
+            <figure><img src="#" alt="Discount" /></figure>
             <div class="card-body">
               <h2 class="card-title">Healthy Food Store 15% Discount</h2>
               <p>Lorem ipsum dolor, sit amet consectetur adipisicing elit.</p>
               <div class="card-actions justify-end">
-                <button class="btn btn-primary">Buy Now</button>
+                <button @click="Swal.fire('Purchase Unsuccessful', 'You don't have enough gems!','error')" class="btn btn-primary">Buy Now</button>
               </div>
             </div>
           </div>
         <div class="card w-96 bg-base-100 shadow-xl">
-            <figure><img src="/images/stock/photo-1606107557195-0e29a4b5b4aa.jpg" alt="Shoes" /></figure>
+            <figure><img src="#" alt="Discount" /></figure>
             <div class="card-body">
               <h2 class="card-title">Healthy Food Store 25% Discount</h2>
               <p>Lorem ipsum dolor, sit amet consectetur adipisicing elit.</p>
               <div class="card-actions justify-end">
-                <button class="btn btn-primary">Buy Now</button>
+                <button @click="Swal.fire(
+                  'Purchase Successful',
+                  'You got a discount!',
+                  'success'
+                )" class="btn btn-primary">Buy Now</button>
               </div>
             </div>
           </div>

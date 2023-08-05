@@ -280,11 +280,11 @@ def import_exercise_plan(request, exercise_schedule):
 # Given a list of dictionary of exercise names, sets, reps, create a context for rendering in html
 def create_exercise_plan_context(exercise_schedule):
     # TODO: VIDEO
-    # all_exercise_data = get_exercise_data()
-    # for exercise_routine in exercise_schedule:
-    #     if type(exercise_routine) == list:
-    #         for exercise in exercise_routine:
-    #             exercise_schedule
+    for exercise_routine in exercise_schedule:
+        for exercise in exercise_routine["strength_exercises"]:
+            exercise_data = get_exercise_data({"name": exercise["exercise_name"]})
+            if exercise_data:
+                exercise.update({"videoURL": exercise_data[0]["videoURL"]})
     context = {
         "type": "exercise",
         "exercise_schedule": exercise_schedule,
