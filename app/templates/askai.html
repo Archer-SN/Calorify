@@ -29,11 +29,11 @@
                 <div x-data="{ dayRange : 30 }" x-show="showOption">
                     <form hx-get="{% url 'askai' %}" hx-target="#gpt-response" hx-swap="beforeend" hx-vals='{"prompt": "Recommend me a meal plan"}' hx-indicator=".htmx-indicator">
                         <div class="p-6 flex flex-col align-center gap-6">
-                            <div class="flex flex-row justify-between align-center">
+                            {% comment %} <div class="flex flex-row justify-between align-center">
                                 <label for="day-range" class="label-text">Day Range</label>
                                 <input :value="dayRange" @input="dayRange = $el.value" name="numberOfDays" type="number" min="1" max="180" value="30" class="">
                             </div>
-                            <input @input="dayRange = $el.value" :value="dayRange" type="range" min="1" max="180" value="30" class="range" />
+                            <input @input="dayRange = $el.value" :value="dayRange" type="range" min="1" max="180" value="30" class="range" /> {% endcomment %}
                             <input value="Ask AI" type="submit" class="btn btn-success">
                         </div>
                     </form>
@@ -99,12 +99,12 @@
                         <span>
                             <p>Import meal plan?</p>
                             <input :value="JSON.stringify(foodDictList)" class="hidden" name="foodDictList" type="text">
-                            <button hx-post="{% url 'askai' %}" hx-include="[name='foodDictList']" hx-swap="outerHTML" hx-target="closest span" hx-indicator=".htmx-indicator" class="btn btn-outline btn-success">YES</button>
+                            <button hx-post="{% url 'askai' %}" hx-vals='{ "importType": "food" }' hx-include="[name='foodDictList']" hx-swap="outerHTML" hx-target="closest span" hx-indicator=".htmx-indicator" class="btn btn-outline btn-success">YES</button>
                             <button hx-get="empty" hx-swap="delete" hx-indicator=".htmx-indicator" hx-target="closest span" class="btn btn-outline btn-error">NO</button>
                         </span>
                     </div>
                 {% elif type == "exercise" %}
-                    <div x-data="{ exerciseDictList : {{ exercise_dict_list }} }" class="flex flex-col gap-4 border-solid border-2 p-6">   
+                    <div x-data="{ exerciseSchedule : {{ exercise_schedule }} }" class="flex flex-col gap-4 border-solid border-2 p-6">   
                         <h1 class="text-xl font-bold">Exercise Routine Recommendation</h1>
                         {% for exercise_routine in exercise_schedule %}
                             <div class="flex flex-col gap-4 p-6 border-solid border-2 rounded-lg">
@@ -229,8 +229,8 @@
                         <span>
                             <!--TODO-->
                             <p>Import exercise plan?</p>
-                            <input :value="JSON.stringify(exerciseDictList)" class="hidden" name="exerciseDictList" type="text">
-                            <button hx-post="{% url 'askai' %}" hx-include="[name='exerciseDictList']" hx-swap="outerHTML" hx-target="closest span" hx-indicator=".htmx-indicator" class="btn btn-outline btn-success">YES</button>
+                            <input :value="JSON.stringify(exerciseSchedule)" class="hidden" name="exerciseSchedule" type="text">
+                            <button hx-post="{% url 'askai' %}" hx-vals="{ 'importType': 'exercise' }" hx-include="[name='exerciseSchedule']" hx-swap="outerHTML" hx-target="closest span" hx-indicator=".htmx-indicator" class="btn btn-outline btn-success">YES</button>
                             <button hx-get="empty" hx-swap="delete" hx-indicator=".htmx-indicator" hx-target="closest span" class="btn btn-outline btn-error">NO</button>
                         </span>
                     </div>

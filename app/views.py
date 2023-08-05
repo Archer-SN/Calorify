@@ -377,15 +377,24 @@ def ask_ai(request):
             return HttpResponse("Non-existent prompt")
         # If user wants to import
         elif request.method == "POST":
-            print(request.POST)
-            food_dict_list_json = request.POST.get("foodDictList")
-            food_dict_list = json.loads(food_dict_list_json)
-            # Import successful
-            if import_user_meal_plan(request.user, food_dict_list):
-                return HttpResponse()
-            # Import failed
-            else:
-                return HttpResponse()
+            import_type = request.POST.get("importType")
+            if import_type == "food":
+                food_dict_list_json = request.POST.get("foodDictList")
+                food_dict_list = json.loads(food_dict_list_json)
+                # Import successful
+                if import_user_meal_plan(request.user, food_dict_list):
+                    return HttpResponse()
+                # Import failed
+                else:
+                    return HttpResponse()
+            elif import_type == "exercise":
+                exercise_schedule = json.loads(request.POST.get("exerciseSchedule"))
+                # Import successful
+                if import_exercise_plan(exercise_schedule):
+                    return HttpResponse()
+                # Import failed
+                else:
+                    return HttpResponse()
         # If the user wants remove something that the AI recommends
         elif request.method == "DELETE":
             pass

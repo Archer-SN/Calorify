@@ -244,12 +244,19 @@ def get_exercises(params) -> list:
     StrengthExercise.objects.bulk_create(exercise_list, ignore_conflicts=True)
     return exercise_list
 
+# TODO
+def import_exercise_plan(exercise_schedule):
+    for exercise_routine in exercise_schedule:
+        if exercise_routine == "strength_exercises":
+            for exercise in exercise_routine:
+                params = {""}
+                exercise_data = get_exercise_data
+                strength_exercise, _ = StrengthExercise.objects.get_or_create(
+                    name=exercise["exercise_name"]
+                )
 
-def import_exercise_plan():
-    pass
 
-
-# Given a paragraph and a list of dictionary of exercise names, sets, reps, create a context for rendering in html
+# Given a list of dictionary of exercise names, sets, reps, create a context for rendering in html
 def create_exercise_plan_context(exercise_schedule):
     # TODO: VIDEO
     # all_exercise_data = get_exercise_data()
