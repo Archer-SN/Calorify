@@ -6,7 +6,7 @@ from django.shortcuts import reverse
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from math import floor
-from datetime import datetime, time, timedelta
+from datetime import date, datetime, time, timedelta
 from field_history.tracker import FieldHistoryTracker
 from django.middleware.csrf import get_token
 from collections import Counter
@@ -239,6 +239,8 @@ class User(AbstractUser):
         total_nutrients = Counter()
         daily_entries = DailyEntry.objects.filter(user=self)
         daily_entries_count = daily_entries.count()
+        if daily_entries_count == 0:
+            return total_nutrients
         for daily_entry in daily_entries:
             total_nutrients += Counter(daily_entry.total_nutrients())
         average_nutrients = total_nutrients
@@ -500,13 +502,13 @@ class DailyEntry(models.Model):
         super().save(*args, **kwargs)
         if created:
             easy_difficulty, _ = Difficulty.objects.get_or_create(
-                name="easy", xp=5, gems=5
+                name="easy", defaults={"xp": 5, "gems": 5, "description": ""}
             )
             medium_difficulty, _ = Difficulty.objects.get_or_create(
-                name="medium", xp=25, gems=25
+                name="medium", defaults={"xp": 25, "gems": 25, "description": ""}
             )
             hard_difficulty, _ = Difficulty.objects.get_or_create(
-                name="hard", xp=125, gems=125
+                name="hard", defaults={"xp": 125, "gems": 125, "description": ""}
             )
 
             # TODO: There are still bugs fix it.
@@ -542,7 +544,7 @@ class DailyEntry(models.Model):
             if str_to_datetime(self.date).day == 1:
                 monthly_challenge, _ = Challenge.objects.get_or_create(
                     difficulty=hard_difficulty,
-                    name=random.choice(weekly_challenges),
+                    name=random.choice(monthly_challenges),
                     date_created=first_day_of_month(),
                     expire_date=last_day_of_month(),
                 )
@@ -769,7 +771,7 @@ class Challenge(models.Model):
         self.save()
 
     def is_expired(self):
-        if datetime.now() > self.expire_date:
+        if datetime.now().date() > self.expire_date:
             return True
         return False
 

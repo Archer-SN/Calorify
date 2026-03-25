@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Skill(fullstack-dev-skills:code-reviewer)",
+      "Bash(.venv/Scripts/python manage.py migrate 2>&1)",
+      "Bash(.venv/Scripts/python -m pip install --upgrade setuptools 2>&1)",
+      "Bash(.venv/Scripts/python -m pip install --upgrade django-model-utils 2>&1)",
+      "Bash(.venv/Scripts/python manage.py makemigrations)",
+      "Bash(.venv/Scripts/python manage.py migrate)",
+      "Bash(.venv/Scripts/python manage.py check 2>&1)"
+    ]
+  }
+}

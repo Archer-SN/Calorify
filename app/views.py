@@ -56,10 +56,10 @@ def home(request):
             {
                 "user_info": user.info(),
                 "AVG": {
-                    "energy": average_nutrients[ENERGY],
-                    "protein": average_nutrients[PROTEIN],
-                    "carbs": average_nutrients[CARBS],
-                    "fats": average_nutrients[FATS],
+                    "energy": average_nutrients.get(ENERGY, 0),
+                    "protein": average_nutrients.get(PROTEIN, 0),
+                    "carbs": average_nutrients.get(CARBS, 0),
+                    "fats": average_nutrients.get(FATS, 0),
                 },
                 "streaks": user.get_streaks(),
                 "energy_history": user.get_energy_history(),
@@ -171,7 +171,7 @@ def user_food(request):
             form = UserFoodForm(request.POST)
             # Given a user_food_id, delete a UserFood instance from the databse
             if user_food_id:
-                UserFood.objects.filter(id=user_food_id).delete()
+                UserFood.objects.filter(id=user_food_id, daily_entry__user=request.user).delete()
                 return HttpResponse()
             # The user wants to create a new UserFood instance
             elif form.is_valid():
@@ -253,7 +253,7 @@ def user_exercise(request):
             form = UserStengthExerciseForm(request.POST)
             # Given a user_exercise_id, delete a UserExercise instance from the databse
             if user_exercise_id:
-                UserStrengthExercise.objects.filter(id=user_exercise_id).delete()
+                UserStrengthExercise.objects.filter(id=user_exercise_id, user=request.user).delete()
                 return HttpResponse()
             # The user wants to create a new UserExercise instance
             elif form.is_valid():
@@ -411,7 +411,7 @@ def settings(request):
 
 def login_view(request):
     if request.user.is_authenticated:
-        return request(reverse("home"))
+        return redirect(reverse("home"))
     if request.method == "POST":
         print(request.POST)
         # Attempt to sign user in

@@ -1,3 +1,4 @@
 /app/scripts/credentials.py
 /db.sqlite3
 /app/static/output.css
+.env
